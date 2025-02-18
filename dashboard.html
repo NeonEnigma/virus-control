@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+
+  <!-- Google-Font als moderne Schrift -->
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* Browser-Reset & Vollbild */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+    }
+
+    /* Hintergrund und Fonts */
+    body {
+      font-family: 'Calibri', sans-serif;
+      color: #fdfdfd;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Haupt-Container: Heading (fix) + main-rows (flex) */
+    .dashboard {
+      flex: 1; 
+      display: flex;
+      flex-direction: column;
+    }
+
+    /************************************************
+     * Überschrift (Heading) links mit viel Abstand
+     ************************************************/
+    .heading {
+      padding-left: 20px;
+      padding-top: 20px;
+    }
+    .text {
+      padding-left: 20px;
+      padding-bottom: 20px;
+    }
+    .heading h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-align: left; 
+    }
+
+    /************************************************
+     * Container für die Zeilen (top & bottom)
+     ************************************************/
+    .main-rows {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px; 
+      padding: 0 20px 20px 20px; 
+      box-sizing: border-box;
+    }
+
+    /* Vertikale Aufteilung:
+       .top-row    => flex: 1
+       .bottom-row => flex: 2
+    */
+    .top-row {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap; 
+      gap: 20px; 
+      box-sizing: border-box;
+    }
+    .bottom-row {
+      flex: 2;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      box-sizing: border-box;
+      /* Sorgt dafür, dass Kinder die volle Zeilenhöhe nutzen */
+      align-items: stretch;
+    }
+
+    /************************************************
+     * Gemeinsamer Box-Stil
+     ************************************************/
+    .box {
+      background-color: #011d09;
+      border-radius: 12px;
+      padding: 20px;
+      box-sizing: border-box;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(18, 1, 65, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .box:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Zusätzliche Klasse für schwarzen Hintergrund */
+    .black-box {
+      background-color: #000 !important;
+    }
+
+    /************************************************
+     * Erste Zeile: Part A, B, C (Quadrate) + Shutdown
+     ************************************************/
+    /* Quadratische Boxen in Zeile 1 (Part A/B/C):
+       - aspect-ratio: 1/1
+       - min-width: 300px */
+    .square {
+      aspect-ratio: 1 / 1;
+      flex: 0 0 auto;
+      width: 0;
+      min-width: 300px;
+    }
+    /* Boxen in zweiter Zeile, z.B. Virus-Control => größer */
+    .square_bottom {
+      aspect-ratio: 1 / 1;
+      flex: 0 0 auto;
+      width: 0;
+      min-width: 480px;
+    }
+
+    /* Shutdown-Box => flex: 1 => nimmt restliche Breite, schwarzer Hintergrund */
+    .flex-grow {
+      flex: 1;
+    }
+
+    /************************************************
+     * Zweite Zeile: Infizierte Server + Virus-Control
+     ************************************************/
+    /* Linker Block => flex: 1 => füllt Platz */
+    .left-flex {
+      flex: 1;
+    }
+    /* Rechter Block => echtes Quadrat (Höhe = Breite) */
+    .right-square {
+      flex: 0 0 auto;
+      aspect-ratio: 1 / 1;
+      width: auto;
+      min-width: 300px;
+    }
+
+    /************************************************
+     * Part-Boxen (A, B, C) => grüner Rand + Glow
+     ************************************************/
+    .part {
+      border: 1px solid #0f0;
+    }
+    .part::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      pointer-events: none;
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .part:hover::before {
+      opacity: 1;
+    }
+    .part h2 {
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    .status-btn {
+      background-color: #0f0;
+      color: #000;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    .status-btn:hover {
+      background-color: #6f6;
+      transform: scale(1.02);
+    }
+
+    /************************************************
+     * Shutdown => weißer Rand + Hover-Glow
+     ************************************************/
+    .shutdown {
+      border: 1px solid #ccc;
+    }
+    .shutdown::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .shutdown:hover::before {
+      opacity: 1;
+    }
+    .shutdown .title {
+      color: #f66;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+    }
+    /* Hier ersetzt sich der statische Timer durch den Countdown */
+    .shutdown .timer {
+      font-size: 2.5rem;
+      font-weight: 600;
+    }
+
+    /************************************************
+     * Infizierte Server => weißer Rand
+     ************************************************/
+    .servers-box {
+      border: 1px solid #ccc;
+    }
+    .servers-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .servers-box:hover::before {
+      opacity: 1;
+    }
+    /* Beschriftung links vertikal */
+    .label-vertical {
+      position: absolute;
+      top: 50%;
+      left: 15px;
+      transform: translate(0, -50%) rotate(-90deg);
+      font-size: 1rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .map {
+      width: 90%;
+      background-color: #444;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /************************************************
+     * Virus-Control => grüner Rand + Glow
+     ************************************************/
+    .virus-box {
+      border: 1px solid #0f0;
+    }
+    .virus-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .virus-box:hover::before {
+      opacity: 1;
+    }
+    .virus-box h2 {
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    .deactivate-btn {
+      background-color: #777;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    .deactivate-btn:hover {
+      background-color: #999;
+      transform: scale(1.02);
+    }
+    .virus-circles {
+      display: flex;
+      gap: 10px;
+    }
+    .virus-circle {
+      width: 40px;
+      height: 40px;
+      background-color: #0f0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    .virus-circle:hover {
+      transform: scale(1.1) rotate(-5deg);
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Überschrift -->
+    <div class="heading">
+      <h1>Willkommen, John!</h1>
+    </div>
+
+    <div class="text">
+      <p>Verwalte hier deinen SAP-Virus.</p>
+    </div>
+
+    <!-- Container für beide Zeilen (top/bottom) -->
+    <div class="main-rows">
+      <!-- Erste Zeile (1 Teil) -->
+      <div class="top-row">
+        <!-- Part A, B, C => Quadrate (min. 300px breit) -->
+        <div class="box part square">
+          <h2>Part A</h2>
+          <button class="status-btn">active</button>
+        </div>
+        <div class="box part square">
+          <h2>Part B</h2>
+          <button class="status-btn">active</button>
+        </div>
+        <div class="box part square">
+          <h2>Part C</h2>
+          <button class="status-btn">active</button>
+        </div>
+
+        <!-- Shutdown => nimmt restliche Breite, schwarzer Hintergrund -->
+        <div class="box shutdown flex-grow black-box">
+          <div class="title">Shutdown in</div>
+          <div class="timer" id="shutdownTimer">10:00</div>
+        </div>
+      </div>
+
+      <!-- Zweite Zeile (2 Teile) -->
+      <div class="bottom-row">
+        <!-- Infizierte Server => flex: 1 => füllt übrige Breite, schwarzer Hintergrund -->
+        <div class="box servers-box left-flex black-box">
+          <span class="label-vertical">Infizierte Server</span>
+          <img src="/image.png" alt="Map" class="map">
+        </div>
+
+        <!-- Virus-Control => echtes Quadrat (Breite = Höhe), vergrößert (min. 480px) -->
+        <div class="box virus-box square_bottom">
+          <h2>Virus-Control</h2>
+          <button class="deactivate-btn">deactivate</button>
+          <div class="virus-circles">
+            <div class="virus-circle">A</div>
+            <div class="virus-circle">B</div>
+            <div class="virus-circle">C</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timer-Logik für die Shutdown-Box -->
+  <script>
+    const LOCAL_STORAGE_KEY = "countdownEnd";
+    let shutdownTimerInterval = null;
+
+    function initShutdownTimer() {
+      const storedEnd = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const shutdownTimerEl = document.getElementById("shutdownTimer");
+      if (!storedEnd) {
+        shutdownTimerEl.textContent = "Timer inaktiv";
+        return;
+      }
+      startShutdownTimer();
+    }
+
+    function startShutdownTimer() {
+      const endTime = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY), 10);
+      if (!endTime) return;
+      updateShutdownTimer(endTime);
+      shutdownTimerInterval = setInterval(() => {
+        updateShutdownTimer(endTime);
+      }, 1000);
+    }
+
+    function updateShutdownTimer(endTime) {
+      const now = Date.now();
+      const diffMs = endTime - now;
+      const shutdownTimerEl = document.getElementById("shutdownTimer");
+      if (diffMs <= 0) {
+        shutdownTimerEl.textContent = "00:00";
+        clearInterval(shutdownTimerInterval);
+        return;
+      }
+      const diffSec = Math.floor(diffMs / 1000);
+      const mm = Math.floor(diffSec / 60);
+      const ss = diffSec % 60;
+      const mmStr = mm < 10 ? "0" + mm : mm;
+      const ssStr = ss < 10 ? "0" + ss : ss;
+      shutdownTimerEl.textContent = mmStr + ":" + ssStr;
+    }
+
+    // Timer initialisieren, sobald die Seite geladen wird
+    initShutdownTimer();
+  </script>
+</body>
+</html>

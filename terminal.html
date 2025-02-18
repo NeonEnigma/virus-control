@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Terminal</title>
+  <style>
+    /* Body und Grundlayout */
+    body {
+      background-color: #000;
+      color: #0f0;
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Timer-Bereich oben rechts */
+    .timer-area {
+      position: absolute; /* oder fixed, wie du magst */
+      top: 10px;
+      right: 10px;
+      color: #0f0;
+      font-family: monospace;
+      text-align: right;
+    }
+
+    #terminal {
+      width: 80%;
+      height: 80vh;
+      margin: 40px auto;
+      padding: 10px;
+      border: 2px solid #0f0;
+      overflow-y: auto;
+      white-space: pre-wrap; /* Zeilenumbrüche */
+      position: relative; /* Damit wir z.B. absolute Kinder haben könnten */
+    }
+
+    /* Prompt- und Eingabezeile */
+    .prompt-line {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .prompt {
+      margin-right: 5px;
+    }
+
+    .input {
+      flex: 1;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #0f0;
+      width: 100%;
+      font-family: monospace;
+    }
+
+    /* Markierung in manchen Browsern */
+    input[type="text"]::selection,
+    input[type="password"]::selection {
+      background: #444;
+      color: #0f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Timer oben rechts -->
+  <div class="timer-area" id="globalTimer">Kein Timer</div>
+
+  <div id="terminal"></div>
+
+  <script>
+    /***********************************************************
+     * TIMER-LOGIK OBEN RECHTS
+     ***********************************************************/
+    const LOCAL_STORAGE_KEY = "countdownEnd"; // Endzeit-Speicher
+    let timerInterval = null;
+
+    initTimerDisplay();
+
+    function initTimerDisplay() {
+      const storedEnd = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (!storedEnd) {
+        // Kein Timer gespeichert
+        document.getElementById("globalTimer").textContent = "Kein Timer";
+        return;
+      }
+      // Timer existiert => Start
+      startTimer();
+    }
+
+    function startTimer() {
+      const endTime = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY), 10);
+      if (!endTime) return;
+
+      // Jede Sekunde aktualisieren
+      timerInterval = setInterval(() => {
+        updateGlobalTimer(endTime);
+      }, 1000);
+
+      // Initialer Aufruf
+      updateGlobalTimer(endTime);
+    }
+
+    function updateGlobalTimer(endTime) {
+      const now = Date.now();
+      const diffMs = endTime - now;
+      const displayEl = document.getElementById("globalTimer");
+
+      if (diffMs <= 0) {
+        displayEl.textContent = "00:00";
+        clearInterval(timerInterval);
+        return;
+      }
+      const diffSec = Math.floor(diffMs / 1000);
+      const mm = Math.floor(diffSec / 60);
+      const ss = diffSec % 60;
+      const mmStr = mm < 10 ? "0" + mm : mm;
+      const ssStr = ss < 10 ? "0" + ss : ss;
+      displayEl.textContent = mmStr + ":" + ssStr;
+    }
+
+    /***********************************************************
+     * 1) Simuliertes Dateisystem
+     ***********************************************************/
+    const fileSystem = {
+      name: "/",
+      type: "directory",
+      children: [
+        {
+          name: "home",
+          type: "directory",
+          children: [
+            {
+              name: "documents",
+              type: "directory",
+              children: [
+                {
+                  name: "secret.txt",
+                  type: "file",
+                  // Inhalt der Datei
+                  content:
+`Zugang geheime Virtual Machine:
+ssh -p 2432 john@secretserver
+Pwd: d4Gfdee`
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    /***********************************************************
+     * 2) Terminal-Logik
+     ***********************************************************/
+    let terminalMode = "command";
+    let pendingFileContent = null;
+    let currentPath = [fileSystem];
+    const terminal = document.getElementById("terminal");
+
+    initTerminal();
+
+    function initTerminal() {
+      printLine("Willkommen in deinem digitalen Tresor, John.\nGib 'help' ein für Befehlsübersicht.\n");
+      newPrompt("command");
+    }
+
+    function newPrompt(mode = "command") {
+      terminalMode = mode;
+
+      const promptLine = document.createElement("div");
+      promptLine.classList.add("prompt-line");
+
+      const promptSpan = document.createElement("span");
+      promptSpan.classList.add("prompt");
+
+      if (mode === "sshPassword") {
+        promptSpan.textContent = "password:";
+      } else if (mode === "filePassword") {
+        promptSpan.textContent = "password:";
+      } else {
+        // Normaler Modus: user@web:/pfad$
+        const pathString = getCurrentPathString();
+        promptSpan.textContent = `user@web:${pathString}$`;
+      }
+
+      const inputContainer = document.createElement("div");
+      inputContainer.classList.add("input");
+
+      const inputField = document.createElement("input");
+      if (mode === "sshPassword" || mode === "filePassword") {
+        inputField.type = "password"; // Passwort => Sternchen
+      } else {
+        inputField.type = "text";
+      }
+
+      inputField.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const userInput = inputField.value.trim();
+          inputContainer.remove();
+
+          // Im Terminal nur " ********" bei Password
+          const commandSpan = document.createElement("span");
+          if (mode === "command") {
+            commandSpan.textContent = " " + userInput;
+          } else {
+            commandSpan.textContent = " ********";
+          }
+          promptLine.appendChild(commandSpan);
+
+          handleInput(userInput, mode);
+        }
+      });
+
+      inputContainer.appendChild(inputField);
+      promptLine.appendChild(promptSpan);
+      promptLine.appendChild(inputContainer);
+      terminal.appendChild(promptLine);
+
+      inputField.focus();
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function handleInput(userInput, mode) {
+      if (mode === "sshPassword") {
+        checkSSHPassword(userInput);
+      } else if (mode === "filePassword") {
+        checkFilePassword(userInput);
+      } else {
+        executeCommand(userInput);
+      }
+    }
+
+    function checkSSHPassword(password) {
+      if (password === "d4Gfdee") {
+        printLine("Zugriff gewährt. Leite zum Dashboard weiter ...");
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 1000);
+      } else {
+        printLine("Falsches Passwort!");
+        newPrompt("command");
+      }
+    }
+
+    function checkFilePassword(password) {
+      if (password === "2463") {
+        if (pendingFileContent) {
+          printLine(pendingFileContent);
+        }
+        newPrompt("command");
+      } else {
+        printLine("Falsches Datei-Passwort!");
+        newPrompt("command");
+      }
+      pendingFileContent = null;
+    }
+
+    function executeCommand(command) {
+      const args = command.split(" ").filter(Boolean);
+      const mainCmd = args[0] ? args[0].toLowerCase() : "";
+
+      // SSH-Befehl
+      if (command.toLowerCase() === "ssh -p 2432 john@secretserver") {
+        newPrompt("sshPassword");
+        return;
+      }
+
+      switch (mainCmd) {
+        case "help":
+          printLine(
+`Verfügbare Befehle:
+  ls              - Zeige Inhalte des aktuellen Verzeichnisses
+  cd <pfad>       - Wechsle in ein anderes Verzeichnis (.. für zurück)
+  cat <datei>     - Zeige den Inhalt einer Datei an (ggf. Passwort)
+  clear           - Leere das Terminal
+  help            - Zeige diese Hilfe an
+`);
+          break;
+
+        case "ls":
+          lsCommand();
+          break;
+
+        case "cd":
+          cdCommand(args[1]);
+          break;
+
+        case "cat":
+          const promptTriggered = catCommand(args[1]);
+          if (!promptTriggered) {
+            newPrompt("command");
+          }
+          return;
+
+        case "clear":
+          clearTerminal();
+          break;
+
+        case "":
+          // nichts tun
+          break;
+
+        default:
+          printLine(`Unbekanntes Kommando: ${mainCmd}. Tipp 'help' für Hilfe.`);
+      }
+      newPrompt("command");
+    }
+
+    function lsCommand() {
+      const dir = currentPath[currentPath.length - 1];
+      if (dir.type === "directory") {
+        if (!dir.children || dir.children.length === 0) {
+          printLine("Keine Inhalte in diesem Verzeichnis.");
+        } else {
+          let list = "";
+          dir.children.forEach(child => {
+            const prefix = (child.type === "directory") ? "[DIR]  " : "       ";
+            list += prefix + child.name + "\n";
+          });
+          printLine(list.trimEnd());
+        }
+      } else {
+        printLine("Das ist kein Verzeichnis.");
+      }
+    }
+
+    function cdCommand(path) {
+      if (!path) {
+        printLine("Bitte einen Pfad angeben. Beispiel: cd /home");
+        return;
+      }
+      if (path === "/") {
+        currentPath = [fileSystem];
+        return;
+      }
+      if (path === "..") {
+        if (currentPath.length > 1) {
+          currentPath.pop();
+        }
+        return;
+      }
+      const targetDir = findChildDirectory(path);
+      if (targetDir) {
+        currentPath.push(targetDir);
+      } else {
+        printLine(`Verzeichnis '${path}' nicht gefunden oder kein Verzeichnis.`);
+      }
+    }
+
+    function catCommand(fileName) {
+      if (!fileName) {
+        printLine("Bitte Dateinamen angeben, z.B.: cat secret.txt");
+        return false;
+      }
+      const dir = currentPath[currentPath.length - 1];
+      if (!dir.children) {
+        printLine("Keine Dateien hier.");
+        return false;
+      }
+      const fileObj = dir.children.find(child => child.name === fileName && child.type === "file");
+      if (!fileObj) {
+        printLine(`Datei '${fileName}' existiert nicht oder ist kein File.`);
+        return false;
+      }
+
+      // Wenn es secret.txt ist => Passwort
+      if (fileObj.name === "secret.txt") {
+        pendingFileContent = fileObj.content;
+        newPrompt("filePassword");
+        return true; 
+      } else {
+        // Normale Datei
+        printLine(fileObj.content);
+        return false;
+      }
+    }
+
+    function clearTerminal() {
+      terminal.innerHTML = "";
+    }
+
+    function getCurrentPathString() {
+      const pathNames = currentPath.map(obj => obj.name);
+      return "/" + pathNames.slice(1).join("/");
+    }
+
+    function findChildDirectory(name) {
+      const dir = currentPath[currentPath.length - 1];
+      if (!dir.children) return null;
+      return dir.children.find(child => child.name === name && child.type === "directory");
+    }
+
+    function printLine(text) {
+      const line = document.createElement("div");
+      line.textContent = text;
+      terminal.appendChild(line);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+  </script>
+</body>
+</html>

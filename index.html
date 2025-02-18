@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login</title>
+  <style>
+    body {
+      background-color: #000; /* Hacker-Style */
+      color: #0f0;
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .invisible {
+      display: none !important;
+    }
+
+    /* Button zum Reset des Timers oben links */
+    .admin-reset-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #000;
+      color: #0f0;
+      border: 2px solid #0f0;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-family: monospace;
+    }
+    .admin-reset-btn:hover {
+      background-color: #0f0;
+      color: #000;
+    }
+
+    /* Timer-Bereich oben rechts */
+    .timer-area {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-family: monospace;
+      color: #0f0;
+      text-align: right;
+    }
+    .timer-area button {
+      background: #000;
+      border: 2px solid #0f0;
+      color: #0f0;
+      padding: 4px 8px;
+      font-family: monospace;
+      cursor: pointer;
+    }
+    .timer-area button:hover {
+      background: #0f0;
+      color: #000;
+    }
+
+    /* Container für das Login-Formular */
+    #login-container {
+      border: 2px solid #0f0;
+      padding: 20px;
+      width: 300px;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-weight: normal;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+      border: 1px solid #0f0;
+      background: #000;
+      color: #0f0;
+      font-family: monospace;
+    }
+    input[type="button"] {
+      background-color: #000;
+      color: #0f0;
+      border: 2px solid #0f0;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-family: monospace;
+    }
+    input[type="button"]:hover {
+      background-color: #0f0;
+      color: #000;
+    }
+    .error {
+      color: #f00;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Reset Timer-Button oben links -->
+  <button class="admin-reset-btn" id="resetTimerBtn">Reset Timer</button>
+
+  <!-- Timer (oben rechts) -->
+  <div class="timer-area">
+    <div id="globalTimer" class="invisible">Timer inaktiv</div>
+    <button id="startTimerBtn">Timer starten</button>
+  </div>
+
+  <!-- Login-Formular -->
+  <div id="login-container">
+    <h2>Anmeldung</h2>
+    <div id="error-message" class="error" style="display: none;"></div>
+
+    <label for="username">Benutzername:</label>
+    <input type="text" id="username" placeholder="Nutzername" />
+
+    <label for="password">Passwort:</label>
+    <input type="password" id="password" placeholder="Password" />
+
+    <input type="button" id="loginButton" value="Anmelden" />
+  </div>
+
+  <script>
+    /**********************************************************
+     * 1) Login-Logik
+     **********************************************************/
+    const validUser = "John";
+    const validPass = "GreenOnion2025";
+
+    const loginButton = document.getElementById("loginButton");
+    const errorDiv = document.getElementById("error-message");
+
+    loginButton.addEventListener("click", () => {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (username === validUser && password === validPass) {
+        window.location.href = "terminal.html";
+      } else {
+        errorDiv.style.display = "block";
+        errorDiv.textContent = "Falscher Benutzer oder Passwort!";
+      }
+    });
+
+    /**********************************************************
+     * 2) Countdown-Timer-Logik
+     **********************************************************/
+    const COUNTDOWN_SECONDS = 3600; // 60 Minuten
+    const LOCAL_STORAGE_KEY = "countdownEnd";
+    let timerInterval = null;
+
+    const globalTimerEl = document.getElementById("globalTimer");
+    const startTimerBtn = document.getElementById("startTimerBtn");
+    const resetTimerBtn = document.getElementById("resetTimerBtn");
+
+    initTimerDisplay();
+
+    // Button "Timer starten" klick
+    startTimerBtn.addEventListener("click", () => {
+      if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+        alert("Timer läuft bereits!");
+        return;
+      }
+      const endTime = Date.now() + COUNTDOWN_SECONDS * 1000;
+      localStorage.setItem(LOCAL_STORAGE_KEY, endTime.toString());
+      initTimerDisplay();
+    });
+
+    // Button "Timer Reset" klick
+    resetTimerBtn.addEventListener("click", () => {
+      const adminPass = prompt("Admin Passwort eingeben:");
+      if (adminPass === "GrünesZebra") {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        alert("Timer wurde zurückgesetzt!");
+        clearInterval(timerInterval);
+        globalTimerEl.textContent = "Timer inaktiv";
+        startTimerBtn.style.display = "inline-block";
+        globalTimerEl.classList.add("invisible");
+      } else {
+        alert("Falsches Admin-Passwort!");
+      }
+    });
+
+    function initTimerDisplay() {
+      const storedEnd = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (!storedEnd) {
+        globalTimerEl.textContent = "Timer inaktiv";
+        startTimerBtn.style.display = "inline-block";
+        return;
+      }
+      // Timer-Ende ist vorhanden -> Timer starten
+      globalTimerEl.classList.remove("invisible"); // Timer sichtbar machen
+      startTimerEl();
+      startTimerBtn.style.display = "none";
+    }
+
+    function startTimerEl() {
+      const endTime = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY), 10);
+      if (!endTime) return;
+      updateGlobalTimer(endTime);
+      timerInterval = setInterval(() => {
+        updateGlobalTimer(endTime);
+      }, 1000);
+    }
+
+    function updateGlobalTimer(endTime) {
+      const now = Date.now();
+      const diffMs = endTime - now;
+      if (diffMs <= 0) {
+        clearInterval(timerInterval);
+        globalTimerEl.textContent = "00:00";
+        return;
+      }
+      const diffSec = Math.floor(diffMs / 1000);
+      const mm = Math.floor(diffSec / 60);
+      const ss = diffSec % 60;
+      const mmStr = mm < 10 ? "0" + mm : mm;
+      const ssStr = ss < 10 ? "0" + ss : ss;
+      globalTimerEl.textContent = mmStr + ":" + ssStr;
+    }
+  </script>
+</body>
+</html>
