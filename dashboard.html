@@ -4,9 +4,8 @@
   <meta charset="UTF-8">
   <title>Dashboard</title>
 
-  <!-- Google-Font als moderne Schrift -->
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Google-Font entfernen wir hier, da wir monospace verwenden -->
+  <!-- Alternativ könntest du auch "Source Code Pro" o.Ä. nutzen -->
 
   <style>
     /* Browser-Reset & Vollbild */
@@ -18,9 +17,9 @@
       background-color: #000;
     }
 
-    /* Hintergrund und Fonts */
+    /* Hintergrund und Fonts – jetzt Monospace */
     body {
-      font-family: 'Calibri', sans-serif;
+      font-family: monospace;
       color: #fdfdfd;
       display: flex;
       flex-direction: column;
@@ -43,6 +42,7 @@
     .text {
       padding-left: 20px;
       padding-bottom: 20px;
+      color: #a5a5a5;
     }
     .heading h1 {
       margin: 0;
@@ -81,7 +81,6 @@
       flex-wrap: wrap;
       gap: 20px;
       box-sizing: border-box;
-      /* Sorgt dafür, dass Kinder die volle Zeilenhöhe nutzen */
       align-items: stretch;
     }
 
@@ -115,24 +114,18 @@
     /************************************************
      * Erste Zeile: Part A, B, C (Quadrate) + Shutdown
      ************************************************/
-    /* Quadratische Boxen in Zeile 1 (Part A/B/C):
-       - aspect-ratio: 1/1
-       - min-width: 300px */
     .square {
       aspect-ratio: 1 / 1;
       flex: 0 0 auto;
       width: 0;
       min-width: 300px;
     }
-    /* Boxen in zweiter Zeile, z.B. Virus-Control => größer */
     .square_bottom {
       aspect-ratio: 1 / 1;
       flex: 0 0 auto;
       width: 0;
       min-width: 480px;
     }
-
-    /* Shutdown-Box => flex: 1 => nimmt restliche Breite, schwarzer Hintergrund */
     .flex-grow {
       flex: 1;
     }
@@ -140,11 +133,9 @@
     /************************************************
      * Zweite Zeile: Infizierte Server + Virus-Control
      ************************************************/
-    /* Linker Block => flex: 1 => füllt Platz */
     .left-flex {
       flex: 1;
     }
-    /* Rechter Block => echtes Quadrat (Höhe = Breite) */
     .right-square {
       flex: 0 0 auto;
       aspect-ratio: 1 / 1;
@@ -212,15 +203,15 @@
       opacity: 1;
     }
     .shutdown .title {
-      color: #f66;
-      font-weight: 600;
+      color: rgb(255, 255, 255);
+      font-weight: 500;
       margin-bottom: 8px;
-      font-size: 1.1rem;
+      font-size: 3rem;
       letter-spacing: 0.5px;
     }
-    /* Hier ersetzt sich der statische Timer durch den Countdown */
+    /* Der Timer in der Shutdown-Box */
     .shutdown .timer {
-      font-size: 2.5rem;
+      font-size: 7rem;
       font-weight: 600;
     }
 
@@ -354,7 +345,7 @@
         <!-- Shutdown => nimmt restliche Breite, schwarzer Hintergrund -->
         <div class="box shutdown flex-grow black-box">
           <div class="title">Shutdown in</div>
-          <div class="timer" id="shutdownTimer">10:00</div>
+          <div class="timer" id="shutdownTimer">00:00</div>
         </div>
       </div>
 
@@ -366,7 +357,7 @@
           <img src="/image.png" alt="Map" class="map">
         </div>
 
-        <!-- Virus-Control => echtes Quadrat (Breite = Höhe), vergrößert (min. 480px) -->
+        <!-- Virus-Control => echtes Quadrat (min. 480px) -->
         <div class="box virus-box square_bottom">
           <h2>Virus-Control</h2>
           <button class="deactivate-btn">deactivate</button>
@@ -419,6 +410,13 @@
       const mmStr = mm < 10 ? "0" + mm : mm;
       const ssStr = ss < 10 ? "0" + ss : ss;
       shutdownTimerEl.textContent = mmStr + ":" + ssStr;
+
+      // Wenn weniger als 10 Minuten übrig sind, Farbe auf rot ändern
+      if(diffSec <= 600) {
+        shutdownTimerEl.style.color = "red";
+      } else {
+        shutdownTimerEl.style.color = "#fdfdfd";
+      }
     }
 
     // Timer initialisieren, sobald die Seite geladen wird
