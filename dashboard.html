@@ -3,10 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard</title>
-
-  <!-- Google-Font entfernen wir hier, da wir monospace verwenden -->
-  <!-- Alternativ könntest du auch "Source Code Pro" o.Ä. nutzen -->
-
   <style>
     /* Browser-Reset & Vollbild */
     html, body {
@@ -16,7 +12,7 @@
       height: 100%;
       background-color: #000;
     }
-
+    
     /* Hintergrund und Fonts – jetzt Monospace */
     body {
       font-family: monospace;
@@ -25,15 +21,19 @@
       flex-direction: column;
     }
 
-    /* Haupt-Container: Heading (fix) + main-rows (flex) */
+    .server-status {
+      padding-bottom: 10px;
+    }
+    
+    /* Haupt-Container: Überschrift + Hauptbereich */
     .dashboard {
-      flex: 1; 
+      flex: 1;
       display: flex;
       flex-direction: column;
     }
-
+    
     /************************************************
-     * Überschrift (Heading) links mit viel Abstand
+     * Überschrift (Heading)
      ************************************************/
     .heading {
       padding-left: 20px;
@@ -49,53 +49,49 @@
       font-size: 2rem;
       font-weight: 600;
       letter-spacing: 1px;
-      text-align: left; 
+      text-align: left;
     }
-
+    
     /************************************************
-     * Container für die Zeilen (top & bottom)
+     * Container für beide Zeilen
      ************************************************/
     .main-rows {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 20px; 
-      padding: 0 20px 20px 20px; 
+      gap: 20px;
+      padding: 0 20px 20px 20px;
       box-sizing: border-box;
     }
-
-    /* Vertikale Aufteilung:
-       .top-row    => flex: 1
-       .bottom-row => flex: 2
-    */
+    
     .top-row {
-      flex: 1;
-      display: flex;
-      flex-wrap: wrap; 
-      gap: 20px; 
-      box-sizing: border-box;
-    }
-    .bottom-row {
-      flex: 2;
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
       box-sizing: border-box;
-      align-items: stretch;
     }
-
+    
+    .bottom-row {
+      display: flex;
+      gap: 20px;
+      box-sizing: border-box;
+      align-items: flex-start;
+    }
+    
     /************************************************
      * Gemeinsamer Box-Stil
      ************************************************/
     .box {
       background-color: #011d09;
-      border-radius: 12px;
+      border-radius: 20px;
       padding: 20px;
       box-sizing: border-box;
       text-align: center;
       box-shadow: 0 4px 12px rgba(18, 1, 65, 0.3);
       transition: transform 0.2s, box-shadow 0.2s;
       position: relative;
+      
+      /* Inhalt zentrieren */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -105,46 +101,67 @@
       transform: translateY(-3px);
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
     }
-
-    /* Zusätzliche Klasse für schwarzen Hintergrund */
+    
     .black-box {
       background-color: #000 !important;
     }
-
+    
+    /* Standardmargen in Box-Inhalten entfernen */
+    .box h2, .box h1, .box p {
+      margin: 0;
+    }
+    .box h2 {
+      margin-bottom: 15px;
+    }
+    
+    /* Neue Regel für Server-Status */
+    .server-status {
+      font-size: 0.9rem;
+      color: #0f0;
+    }
+    
+    /* Wrapper für die Verbindungsmeldungen */
+    .connection-group {
+      width: 80%;
+      text-align: left;
+      margin: 30px auto;
+      padding-left: 30px;
+    }
+    
     /************************************************
-     * Erste Zeile: Part A, B, C (Quadrate) + Shutdown
+     * Erste Zeile: Part A, B, C (grüne, quadratische Boxen)
      ************************************************/
     .square {
-      aspect-ratio: 1 / 1;
+      width: 300px;
+      height: 300px;
       flex: 0 0 auto;
-      width: 0;
-      min-width: 300px;
-    }
-    .square_bottom {
-      aspect-ratio: 1 / 1;
-      flex: 0 0 auto;
-      width: 0;
-      min-width: 480px;
     }
     .flex-grow {
       flex: 1;
     }
-
+    
     /************************************************
      * Zweite Zeile: Infizierte Server + Virus-Control
      ************************************************/
-    .left-flex {
-      flex: 1;
+    /* Infizierte Server: Außenhöhe fix auf 480px, scrollt bei Bedarf */
+    .servers-box {
+      width: 100%;
+      height: 480px;
+      max-height: 480px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
     }
-    .right-square {
-      flex: 0 0 auto;
-      aspect-ratio: 1 / 1;
-      width: auto;
-      min-width: 300px;
+    
+    /* Virus-Control: Fest 480×480px – bleibt unverändert */
+    .virus-box.square_bottom {
+      width: 480px;
+      height: 480px;
+      flex-shrink: 0;
+      border: 1px solid #0f0;
     }
-
+    
     /************************************************
-     * Part-Boxen (A, B, C) => grüner Rand + Glow
+     * Grüne Boxen: Rahmen, Glow etc.
      ************************************************/
     .part {
       border: 1px solid #0f0;
@@ -153,7 +170,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      border-radius: 12px;
+      border-radius: 20px;
       pointer-events: none;
       box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
       opacity: 0;
@@ -162,11 +179,7 @@
     .part:hover::before {
       opacity: 1;
     }
-    .part h2 {
-      margin-bottom: 10px;
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
+    
     .status-btn {
       background-color: #0f0;
       color: #000;
@@ -182,9 +195,9 @@
       background-color: #6f6;
       transform: scale(1.02);
     }
-
+    
     /************************************************
-     * Shutdown => weißer Rand + Hover-Glow
+     * Shutdown-Box (nicht grün)
      ************************************************/
     .shutdown {
       border: 1px solid #ccc;
@@ -194,7 +207,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      border-radius: 12px;
+      border-radius: 20px;
       box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
       opacity: 0;
       transition: opacity 0.3s;
@@ -209,24 +222,20 @@
       font-size: 3rem;
       letter-spacing: 0.5px;
     }
-    /* Der Timer in der Shutdown-Box */
     .shutdown .timer {
       font-size: 7rem;
       font-weight: 600;
     }
-
+    
     /************************************************
-     * Infizierte Server => weißer Rand
+     * Infizierte Server: Weißer Rand
      ************************************************/
-    .servers-box {
-      border: 1px solid #ccc;
-    }
     .servers-box::before {
       content: "";
       position: absolute;
       inset: 0;
       pointer-events: none;
-      border-radius: 12px;
+      border-radius: 20px;
       box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
       opacity: 0;
       transition: opacity 0.3s;
@@ -234,7 +243,6 @@
     .servers-box:hover::before {
       opacity: 1;
     }
-    /* Beschriftung links vertikal */
     .label-vertical {
       position: absolute;
       top: 50%;
@@ -245,25 +253,22 @@
       white-space: nowrap;
     }
     .map {
-      width: 90%;
+      width: 75%;
       background-color: #444;
       border-radius: 8px;
       position: relative;
       overflow: hidden;
     }
-
+    
     /************************************************
-     * Virus-Control => grüner Rand + Glow
+     * Virus-Control: Grüner Rand + Glow
      ************************************************/
-    .virus-box {
-      border: 1px solid #0f0;
-    }
     .virus-box::before {
       content: "";
       position: absolute;
       inset: 0;
       pointer-events: none;
-      border-radius: 12px;
+      border-radius: 20px;
       box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
       opacity: 0;
       transition: opacity 0.3s;
@@ -319,63 +324,79 @@
     <div class="heading">
       <h1>Willkommen, John!</h1>
     </div>
-
+    
     <div class="text">
       <p>Verwalte hier deinen SAP-Virus.</p>
     </div>
-
-    <!-- Container für beide Zeilen (top/bottom) -->
+    
+    <!-- Container für beide Zeilen -->
     <div class="main-rows">
-      <!-- Erste Zeile (1 Teil) -->
+      <!-- Erste Zeile -->
       <div class="top-row">
-        <!-- Part A, B, C => Quadrate (min. 300px breit) -->
+        <!-- Grüne Part-Boxen: quadratisch 300×300px mit modernem Content -->
         <div class="box part square">
-          <h2>Part A</h2>
-          <button class="status-btn">active</button>
+          <h2>Webserver</h2>
+          <div class="connection-group">
+            <p class="server-status">Status: infiziert</p>
+            <p class="server-status">Firewall: down</p>
+            <p class="server-status">Ports: offen</p>
+          </div>
+          <button class="status-btn">Server-Verwaltung</button>
         </div>
         <div class="box part square">
-          <h2>Part B</h2>
-          <button class="status-btn">active</button>
+          <h2>Datenbank</h2>
+          <div class="connection-group">
+            <p class="server-status">Status: infiziert</p>
+            <p class="server-status">Firewall: down</p>
+            <p class="server-status">Ports: offen</p>
+          </div>
+          <button class="status-btn">Datenbank verwalten</button>
         </div>
         <div class="box part square">
-          <h2>Part C</h2>
-          <button class="status-btn">active</button>
+          <h2>Applikation-Server</h2>
+          <div class="connection-group">
+            <p class="server-status">Status: infiziert</p>
+            <p class="server-status">Firewall: down</p>
+            <p class="server-status">Ports: offen</p>
+          </div>
+          <button class="status-btn">Server-Verwaltung</button>
         </div>
-
-        <!-- Shutdown => nimmt restliche Breite, schwarzer Hintergrund -->
+        
+        <!-- Shutdown-Box: nimmt den restlichen Platz, schwarzer Hintergrund -->
         <div class="box shutdown flex-grow black-box">
           <div class="title">Shutdown in</div>
           <div class="timer" id="shutdownTimer">00:00</div>
         </div>
       </div>
-
-      <!-- Zweite Zeile (2 Teile) -->
+      
+      <!-- Zweite Zeile -->
       <div class="bottom-row">
-        <!-- Infizierte Server => flex: 1 => füllt übrige Breite, schwarzer Hintergrund -->
-        <div class="box servers-box left-flex black-box">
+        <!-- Infizierte Server: Außenhöhe fix 480px, scrollt bei Bedarf -->
+        <div class="box servers-box black-box">
           <span class="label-vertical">Infizierte Server</span>
           <img src="/image.png" alt="Map" class="map">
         </div>
-
-        <!-- Virus-Control => echtes Quadrat (min. 480px) -->
+        
+        <!-- Virus-Control: Quadratisch 480×480px -->
         <div class="box virus-box square_bottom">
-          <h2>Virus-Control</h2>
-          <button class="deactivate-btn">deactivate</button>
-          <div class="virus-circles">
-            <div class="virus-circle">A</div>
-            <div class="virus-circle">B</div>
-            <div class="virus-circle">C</div>
+          <h1>Main Server</h1>
+          <div class="connection-group">
+            <p class="server-status">Connecting to Webserver...</p>
+            <p class="server-status">Connecting to Database...</p>
+            <p class="server-status">Connecting to Application-Server...</p>
+          </div>
+          <button class="deactivate-btn">Server-Verwaltung</button>
           </div>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Timer-Logik für die Shutdown-Box -->
+    
+  <!-- Timer-Logik für Shutdown -->
   <script>
     const LOCAL_STORAGE_KEY = "countdownEnd";
     let shutdownTimerInterval = null;
-
+    
     function initShutdownTimer() {
       const storedEnd = localStorage.getItem(LOCAL_STORAGE_KEY);
       const shutdownTimerEl = document.getElementById("shutdownTimer");
@@ -385,7 +406,7 @@
       }
       startShutdownTimer();
     }
-
+    
     function startShutdownTimer() {
       const endTime = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY), 10);
       if (!endTime) return;
@@ -394,7 +415,7 @@
         updateShutdownTimer(endTime);
       }, 1000);
     }
-
+    
     function updateShutdownTimer(endTime) {
       const now = Date.now();
       const diffMs = endTime - now;
@@ -410,16 +431,14 @@
       const mmStr = mm < 10 ? "0" + mm : mm;
       const ssStr = ss < 10 ? "0" + ss : ss;
       shutdownTimerEl.textContent = mmStr + ":" + ssStr;
-
-      // Wenn weniger als 10 Minuten übrig sind, Farbe auf rot ändern
+    
       if(diffSec <= 600) {
         shutdownTimerEl.style.color = "red";
       } else {
         shutdownTimerEl.style.color = "#fdfdfd";
       }
     }
-
-    // Timer initialisieren, sobald die Seite geladen wird
+    
     initShutdownTimer();
   </script>
 </body>
