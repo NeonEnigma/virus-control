@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Brückenrätsel – Datenbank verwalten</title>
+  <style>
+    /* Vollbild & Reset */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      font-family: monospace;
+      color: #fdfdfd;
+    }
+    /* Zentrale Ausrichtung */
+    .dashboard {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+      position: relative;
+      height: 100%;
+    }
+    .back-arrow {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 1rem;
+      color: #0f0;
+      cursor: pointer;
+    }
+    .heading h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .description {
+      max-width: 600px;
+      text-align: left;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .input-group {
+      width: 100%;
+      max-width: 600px;
+    }
+    .input-group ol {
+      padding-left: 20px;
+    }
+    .input-group li {
+      margin-bottom: 15px;
+    }
+    /* Die Inputfelder – bei zwei Feldern erscheinen sie nebeneinander */
+    .input-group input {
+      background-color: #222;
+      color: #fdfdfd;
+      border: 1px solid #0f0;
+      border-radius: 5px;
+      padding: 5px;
+      font-family: monospace;
+      width: 40px;
+      text-align: center;
+      margin-right: 5px;
+    }
+    .input-group button {
+      background-color: #0f0;
+      color: #000;
+      border: none;
+      border-radius: 7px;
+      padding: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-top: 10px;
+    }
+    .input-group button:hover {
+      background-color: #6f6;
+    }
+    .error {
+      color: red;
+      font-size: 1rem;
+      min-height: 1.2em;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="back-arrow" onclick="window.location.href='dashboard.html'">&#8592; Dashboard</div>
+  <div class="dashboard">
+    <div class="heading">
+      <h1>Brückenrätsel</h1>
+    </div>
+    <div class="description">
+      <p>Fünf Personen (Anna, Berta, Charlie, Dennis und Eva) müssen über eine Brücke. Es können immer nur zwei Personen gleichzeitig überqueren, und sie haben nur eine Taschenlampe, die stets zurückgebracht werden muss.</p>
+      <p>Die Zeiten betragen:</p>
+      <ul>
+        <li>Anna: 1 Minute</li>
+        <li>Berta: 3 Minuten</li>
+        <li>Charlie: 6 Minuten</li>
+        <li>Dennis: 8 Minuten</li>
+        <li>Eva: 12 Minuten</li>
+      </ul>
+      <p>Fülle die Lücken mit den <strong>Anfangsbuchstaben</strong> (A, B, C, D, E) in der richtigen Reihenfolge ein.</p>
+      <p>Bei Schritten mit zwei Feldern: Gib in jedes Feld einen Buchstaben ein – die Lösung wird als <code>X+Y</code> zusammengefügt. Dabei ist die Reihenfolge egal (z. B. "A" und "B" oder "B" und "A" ergeben beide "A+B").</p>
+    </div>
+    <div class="input-group">
+      <ol>
+        <!-- Schritt 1: Zwei Buchstaben -->
+        <li>
+          Schritt 1: 
+          <input type="text" id="step1a" maxlength="1" placeholder="A">
+          <input type="text" id="step1b" maxlength="1" placeholder="B">
+        </li>
+        <!-- Schritt 2: Ein Buchstabe -->
+        <li>
+          Schritt 2: 
+          <input type="text" id="step2" maxlength="1" placeholder="A">
+        </li>
+        <!-- Schritt 3: Zwei Buchstaben -->
+        <li>
+          Schritt 3: 
+          <input type="text" id="step3a" maxlength="1" placeholder="D">
+          <input type="text" id="step3b" maxlength="1" placeholder="E">
+        </li>
+        <!-- Schritt 4: Ein Buchstabe -->
+        <li>
+          Schritt 4: 
+          <input type="text" id="step4" maxlength="1" placeholder="B">
+        </li>
+        <!-- Schritt 5: Zwei Buchstaben -->
+        <li>
+          Schritt 5: 
+          <input type="text" id="step5a" maxlength="1" placeholder="A">
+          <input type="text" id="step5b" maxlength="1" placeholder="C">
+        </li>
+        <!-- Schritt 6: Ein Buchstabe -->
+        <li>
+          Schritt 6: 
+          <input type="text" id="step6" maxlength="1" placeholder="A">
+        </li>
+        <!-- Schritt 7: Zwei Buchstaben -->
+        <li>
+          Schritt 7: 
+          <input type="text" id="step7a" maxlength="1" placeholder="A">
+          <input type="text" id="step7b" maxlength="1" placeholder="B">
+        </li>
+      </ol>
+      <button onclick="checkSolution()">Lösung prüfen</button>
+      <p class="error" id="errorDisplay"></p>
+    </div>
+  </div>
+  
+  <script>
+    // Liste der gültigen Lösungen als Arrays – die Schreibweise ist case-insensitive.
+    // Bei Schritten mit zwei Feldern wird der String im Format "X+Y" erwartet.
+    const validSolutions = [
+      ["A+B", "A", "D+E", "B", "A+C", "A", "A+B"],
+      ["A+B", "A", "A+C", "A", "D+E", "B", "A+B"],
+      ["A+C", "A", "A+B", "A", "D+E", "B", "A+B"],
+      ["A+B", "B", "D+E", "A", "A+C", "A", "A+B"]
+    ];
+    
+    // Entfernt Leerzeichen und wandelt in Großbuchstaben um
+    function normalize(str) {
+      return str.replace(/\s+/g, '').toUpperCase();
+    }
+    
+    // Kombiniert zwei Buchstaben, sortiert sie alphabetisch, und gibt einen String im Format "X+Y" zurück
+    function combineTwo(val1, val2) {
+      const letters = [normalize(val1), normalize(val2)];
+      letters.sort(); // Alphabetisch sortieren – so wird A+B aus B und A
+      return letters.join("+");
+    }
+    
+    function checkSolution() {
+      // Für Schritte mit zwei Input-Feldern werden beide Buchstaben kombiniert und sortiert.
+      const sol1 = combineTwo(document.getElementById("step1a").value, document.getElementById("step1b").value);
+      const sol2 = normalize(document.getElementById("step2").value);
+      const sol3 = combineTwo(document.getElementById("step3a").value, document.getElementById("step3b").value);
+      const sol4 = normalize(document.getElementById("step4").value);
+      const sol5 = combineTwo(document.getElementById("step5a").value, document.getElementById("step5b").value);
+      const sol6 = normalize(document.getElementById("step6").value);
+      const sol7 = combineTwo(document.getElementById("step7a").value, document.getElementById("step7b").value);
+      
+      const steps = [sol1, sol2, sol3, sol4, sol5, sol6, sol7];
+      
+      // Vergleiche die eingegebene Lösung mit den gültigen Lösungen
+      const isValid = validSolutions.some(solution =>
+        solution.every((step, index) => step === steps[index])
+      );
+      
+      if (isValid) {
+        window.location.href = "success.html";
+      } else {
+        document.getElementById("errorDisplay").textContent = "Falsche Lösung! Bitte überprüfe deine Eingaben.";
+      }
+    }
+  </script>
+</body>
+</html>

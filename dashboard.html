@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard</title>
+  <title>Server-Verwaltung – Labyrinth Rätsel</title>
   <style>
     /* Browser-Reset & Vollbild */
     html, body {
@@ -13,16 +13,12 @@
       background-color: #000;
     }
     
-    /* Hintergrund und Fonts – jetzt Monospace */
+    /* Grundlegender Stil – Monospace, dunkler Hintergrund */
     body {
       font-family: monospace;
       color: #fdfdfd;
       display: flex;
       flex-direction: column;
-    }
-
-    .server-status {
-      padding-bottom: 10px;
     }
     
     /* Haupt-Container: Überschrift + Hauptbereich */
@@ -82,7 +78,7 @@
      * Gemeinsamer Box-Stil
      ************************************************/
     .box {
-      background-color: #011d09;
+      background-color: #1d0101;
       border-radius: 20px;
       padding: 20px;
       box-sizing: border-box;
@@ -117,15 +113,36 @@
     /* Neue Regel für Server-Status */
     .server-status {
       font-size: 0.9rem;
-      color: #0f0;
+      color: rgb(255, 0, 0);
+      padding-bottom: 10px;
+    }
+    
+    .server-status-main {
+      font-size: 1.0rem;
+      color: rgb(255, 0, 0);
+      padding-bottom: 10px;
     }
     
     /* Wrapper für die Verbindungsmeldungen */
+    .connection-group-main {
+      width: 80%;
+      text-align: left;
+      margin: 30px auto;
+      padding-left: 90px;
+    }
     .connection-group {
       width: 80%;
       text-align: left;
       margin: 30px auto;
-      padding-left: 30px;
+      padding-left: 20px;
+    }
+    
+    .main-server {
+      color: rgb(255, 0, 0);
+      text-align: left;
+      font-size: 2rem;
+      font-weight: 600;
+      padding-bottom: 30px;
     }
     
     /************************************************
@@ -157,14 +174,14 @@
       width: 480px;
       height: 480px;
       flex-shrink: 0;
-      border: 1px solid #0f0;
+      border: 1px solid rgb(255, 0, 0);
     }
     
     /************************************************
      * Grüne Boxen: Rahmen, Glow etc.
      ************************************************/
     .part {
-      border: 1px solid #0f0;
+      border: 1px solid rgb(255, 0, 0);
     }
     .part::before {
       content: "";
@@ -181,7 +198,7 @@
     }
     
     .status-btn {
-      background-color: #0f0;
+      background-color: rgb(255, 0, 0);
       color: #000;
       padding: 10px 20px;
       border-radius: 6px;
@@ -192,7 +209,7 @@
       transition: background-color 0.2s, transform 0.2s;
     }
     .status-btn:hover {
-      background-color: #6f6;
+      background-color: rgb(171, 21, 21);
       transform: scale(1.02);
     }
     
@@ -290,32 +307,28 @@
       font-weight: 600;
       border: none;
       margin-bottom: 15px;
+      margin-top: 30px;
       cursor: pointer;
       transition: background-color 0.2s, transform 0.2s;
     }
-    .deactivate-btn:hover {
-      background-color: #999;
-      transform: scale(1.02);
+    
+    /* Zusätzliche Regel für erfolgreich abgeschlossene Labyrinthe */
+    .success {
+      background-color: rgba(51, 172, 51, 0.318) !important;
+      border-color: #0f0 !important;
+      color: #0f0 !important;
     }
-    .virus-circles {
-      display: flex;
-      gap: 10px;
+    .success .server-status{
+      color: #0f0 !important;
     }
-    .virus-circle {
-      width: 40px;
-      height: 40px;
-      background-color: #0f0;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #000;
-      font-weight: bold;
-      transition: transform 0.2s;
+
+    .success .status-btn {
+      background-color: #0f0 !important;
     }
-    .virus-circle:hover {
-      transform: scale(1.1) rotate(-5deg);
+    .success .status-btn:hover {
+      background-color: #0a0 !important;
     }
+
   </style>
 </head>
 <body>
@@ -333,15 +346,16 @@
     <div class="main-rows">
       <!-- Erste Zeile -->
       <div class="top-row">
-        <!-- Grüne Part-Boxen: quadratisch 300×300px mit modernem Content -->
-        <div class="box part square">
+        <!-- Webserver-Box – erhält als erstes ein eigenes ID-Attribut -->
+        <div id="webserverBox" class="box part square">
           <h2>Webserver</h2>
           <div class="connection-group">
             <p class="server-status">Status: infiziert</p>
             <p class="server-status">Firewall: down</p>
             <p class="server-status">Ports: offen</p>
           </div>
-          <button class="status-btn">Server-Verwaltung</button>
+          <!-- Beim Klick auf diesen Button wird zur webserver.html weitergeleitet -->
+          <button class="status-btn" onclick="window.location.href='webserver.html'">Server-Verwaltung</button>
         </div>
         <div class="box part square">
           <h2>Datenbank</h2>
@@ -350,7 +364,7 @@
             <p class="server-status">Firewall: down</p>
             <p class="server-status">Ports: offen</p>
           </div>
-          <button class="status-btn">Datenbank verwalten</button>
+          <button class="status-btn" onclick="window.location.href='datenbank.html'">Datenbank verwalten</button>
         </div>
         <div class="box part square">
           <h2>Applikation-Server</h2>
@@ -359,10 +373,10 @@
             <p class="server-status">Firewall: down</p>
             <p class="server-status">Ports: offen</p>
           </div>
-          <button class="status-btn">Server-Verwaltung</button>
+          <button class="status-btn">App-Verwaltung</button>
         </div>
         
-        <!-- Shutdown-Box: nimmt den restlichen Platz, schwarzer Hintergrund -->
+        <!-- Shutdown-Box (schwarzer Hintergrund) -->
         <div class="box shutdown flex-grow black-box">
           <div class="title">Shutdown in</div>
           <div class="timer" id="shutdownTimer">00:00</div>
@@ -371,21 +385,20 @@
       
       <!-- Zweite Zeile -->
       <div class="bottom-row">
-        <!-- Infizierte Server: Außenhöhe fix 480px, scrollt bei Bedarf -->
+        <!-- Infizierte Server -->
         <div class="box servers-box black-box">
           <span class="label-vertical">Infizierte Server</span>
           <img src="/image.png" alt="Map" class="map">
         </div>
         
-        <!-- Virus-Control: Quadratisch 480×480px -->
+        <!-- Virus-Control -->
         <div class="box virus-box square_bottom">
-          <h1>Main Server</h1>
-          <div class="connection-group">
-            <p class="server-status">Connecting to Webserver...</p>
-            <p class="server-status">Connecting to Database...</p>
-            <p class="server-status">Connecting to Application-Server...</p>
-          </div>
-          <button class="deactivate-btn">Server-Verwaltung</button>
+          <div class="connection-group-main">
+            <p class="main-server">Main Server</p>
+            <p class="server-status-main">Connecting to Webserver...</p>
+            <p class="server-status-main">Connecting to Database...</p>
+            <p class="server-status-main">Connecting to Application...</p>
+            <button class="deactivate-btn">Access main</button>
           </div>
         </div>
       </div>
@@ -440,6 +453,18 @@
     }
     
     initShutdownTimer();
+  </script>
+  
+  <!-- Prüfen, ob das Labyrinth bereits abgeschlossen wurde, um die Webserver-Box anzupassen -->
+  <script>
+    window.addEventListener("load", () => {
+      if (localStorage.getItem("labyrinthCompleted") === "true") {
+        const webserverBox = document.getElementById("webserverBox");
+        if (webserverBox) {
+          webserverBox.classList.add("success");
+        }
+      }
+    });
   </script>
 </body>
 </html>
