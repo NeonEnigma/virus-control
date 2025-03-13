@@ -53,7 +53,6 @@
     .input-group li {
       margin-bottom: 15px;
     }
-    /* Die Inputfelder – bei zwei Feldern erscheinen sie nebeneinander */
     .input-group input {
       background-color: #222;
       color: #fdfdfd;
@@ -89,7 +88,7 @@
 </head>
 <body>
   <div class="back-arrow" onclick="window.location.href='dashboard.html'">&#8592; Dashboard</div>
-  <div class="dashboard">
+  <div class="dashboard" id="dashboardContent">
     <div class="heading">
       <h1>Brückenrätsel</h1>
     </div>
@@ -108,40 +107,33 @@
     </div>
     <div class="input-group">
       <ol>
-        <!-- Schritt 1: Zwei Buchstaben -->
         <li>
           Schritt 1: 
           <input type="text" id="step1a" maxlength="1" placeholder="A">
           <input type="text" id="step1b" maxlength="1" placeholder="B">
         </li>
-        <!-- Schritt 2: Ein Buchstabe -->
         <li>
           Schritt 2: 
           <input type="text" id="step2" maxlength="1" placeholder="A">
         </li>
-        <!-- Schritt 3: Zwei Buchstaben -->
         <li>
           Schritt 3: 
           <input type="text" id="step3a" maxlength="1" placeholder="D">
           <input type="text" id="step3b" maxlength="1" placeholder="E">
         </li>
-        <!-- Schritt 4: Ein Buchstabe -->
         <li>
           Schritt 4: 
           <input type="text" id="step4" maxlength="1" placeholder="B">
         </li>
-        <!-- Schritt 5: Zwei Buchstaben -->
         <li>
           Schritt 5: 
           <input type="text" id="step5a" maxlength="1" placeholder="A">
           <input type="text" id="step5b" maxlength="1" placeholder="C">
         </li>
-        <!-- Schritt 6: Ein Buchstabe -->
         <li>
           Schritt 6: 
           <input type="text" id="step6" maxlength="1" placeholder="A">
         </li>
-        <!-- Schritt 7: Zwei Buchstaben -->
         <li>
           Schritt 7: 
           <input type="text" id="step7a" maxlength="1" placeholder="A">
@@ -154,8 +146,18 @@
   </div>
   
   <script>
-    // Liste der gültigen Lösungen als Arrays – die Schreibweise ist case-insensitive.
-    // Bei Schritten mit zwei Feldern wird der String im Format "X+Y" erwartet.
+    // Falls die Datenbank-Aufgabe bereits gelöst wurde, wird "Datenbank intakt" angezeigt.
+    window.addEventListener("load", () => {
+      if (localStorage.getItem("datenbankCompleted") === "true") {
+        document.body.innerHTML = `
+          <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: #0f0; font-size: 2rem;">
+            <p>Datenbank intakt!</p>
+            <button onclick="window.location.href='dashboard.html'">Dashboard</button>
+          </div>
+        `;
+      }
+    });
+    
     const validSolutions = [
       ["A+B", "A", "D+E", "B", "A+C", "A", "A+B"],
       ["A+B", "A", "A+C", "A", "D+E", "B", "A+B"],
@@ -163,20 +165,17 @@
       ["A+B", "B", "D+E", "A", "A+C", "A", "A+B"]
     ];
     
-    // Entfernt Leerzeichen und wandelt in Großbuchstaben um
     function normalize(str) {
       return str.replace(/\s+/g, '').toUpperCase();
     }
     
-    // Kombiniert zwei Buchstaben, sortiert sie alphabetisch, und gibt einen String im Format "X+Y" zurück
     function combineTwo(val1, val2) {
       const letters = [normalize(val1), normalize(val2)];
-      letters.sort(); // Alphabetisch sortieren – so wird A+B aus B und A
+      letters.sort();
       return letters.join("+");
     }
     
     function checkSolution() {
-      // Für Schritte mit zwei Input-Feldern werden beide Buchstaben kombiniert und sortiert.
       const sol1 = combineTwo(document.getElementById("step1a").value, document.getElementById("step1b").value);
       const sol2 = normalize(document.getElementById("step2").value);
       const sol3 = combineTwo(document.getElementById("step3a").value, document.getElementById("step3b").value);
@@ -187,12 +186,12 @@
       
       const steps = [sol1, sol2, sol3, sol4, sol5, sol6, sol7];
       
-      // Vergleiche die eingegebene Lösung mit den gültigen Lösungen
       const isValid = validSolutions.some(solution =>
         solution.every((step, index) => step === steps[index])
       );
       
       if (isValid) {
+        localStorage.setItem("datenbankCompleted", "true");
         window.location.href = "success.html";
       } else {
         document.getElementById("errorDisplay").textContent = "Falsche Lösung! Bitte überprüfe deine Eingaben.";

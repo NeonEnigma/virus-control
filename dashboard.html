@@ -312,23 +312,21 @@
       transition: background-color 0.2s, transform 0.2s;
     }
     
-    /* Zusätzliche Regel für erfolgreich abgeschlossene Labyrinthe */
+    /* Regel für erfolgreich abgeschlossene Rätsel */
     .success {
       background-color: rgba(51, 172, 51, 0.318) !important;
       border-color: #0f0 !important;
       color: #0f0 !important;
     }
-    .success .server-status{
+    .success .server-status {
       color: #0f0 !important;
     }
-
     .success .status-btn {
       background-color: #0f0 !important;
     }
     .success .status-btn:hover {
       background-color: #0a0 !important;
     }
-
   </style>
 </head>
 <body>
@@ -346,7 +344,7 @@
     <div class="main-rows">
       <!-- Erste Zeile -->
       <div class="top-row">
-        <!-- Webserver-Box – erhält als erstes ein eigenes ID-Attribut -->
+        <!-- Webserver-Box -->
         <div id="webserverBox" class="box part square">
           <h2>Webserver</h2>
           <div class="connection-group">
@@ -354,10 +352,10 @@
             <p class="server-status">Firewall: down</p>
             <p class="server-status">Ports: offen</p>
           </div>
-          <!-- Beim Klick auf diesen Button wird zur webserver.html weitergeleitet -->
           <button class="status-btn" onclick="window.location.href='webserver.html'">Server-Verwaltung</button>
         </div>
-        <div class="box part square">
+        <!-- Datenbank-Box -->
+        <div id="datenbankBox" class="box part square">
           <h2>Datenbank</h2>
           <div class="connection-group">
             <p class="server-status">Status: infiziert</p>
@@ -376,7 +374,7 @@
           <button class="status-btn">App-Verwaltung</button>
         </div>
         
-        <!-- Shutdown-Box (schwarzer Hintergrund) -->
+        <!-- Shutdown-Box -->
         <div class="box shutdown flex-grow black-box">
           <div class="title">Shutdown in</div>
           <div class="timer" id="shutdownTimer">00:00</div>
@@ -405,7 +403,7 @@
     </div>
   </div>
     
-  <!-- Timer-Logik für Shutdown -->
+  <!-- Timer-Logik -->
   <script>
     const LOCAL_STORAGE_KEY = "countdownEnd";
     let shutdownTimerInterval = null;
@@ -455,13 +453,19 @@
     initShutdownTimer();
   </script>
   
-  <!-- Prüfen, ob das Labyrinth bereits abgeschlossen wurde, um die Webserver-Box anzupassen -->
+  <!-- Prüfung der localStorage-Flags für beide Boxen -->
   <script>
-    window.addEventListener("load", () => {
+    document.addEventListener("DOMContentLoaded", () => {
       if (localStorage.getItem("labyrinthCompleted") === "true") {
         const webserverBox = document.getElementById("webserverBox");
         if (webserverBox) {
           webserverBox.classList.add("success");
+        }
+      }
+      if (localStorage.getItem("datenbankCompleted") === "true") {
+        const datenbankBox = document.getElementById("datenbankBox");
+        if (datenbankBox) {
+          datenbankBox.classList.add("success");
         }
       }
     });
