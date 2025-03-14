@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Kosten</title>
+  <style>
+    /* Vollbild & Reset */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      font-family: monospace;
+      color: #fdfdfd;
+    }
+    /* Zentrale Ausrichtung */
+    .dashboard {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+      position: relative;
+      height: 100%;
+    }
+    /* Zurück-Pfeil */
+    .back-arrow {
+      position: left;
+      top: 10px;
+      right: 10px;
+      font-size: 1rem;
+      color: #0f0;
+      cursor: pointer;
+      z-index: 1000;
+      margin: 20px;
+    }
+
+    .heading h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .description {
+      max-width: 600px;
+      text-align: left;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .input-group {
+      width: 100%;
+      max-width: 600px;
+    }
+    .input-group input {
+      background-color: #222;
+      color: #fdfdfd;
+      border: 1px solid #0f0;
+      border-radius: 5px;
+      padding: 5px;
+      font-family: monospace;
+      width: 40px;
+      text-align: center;
+      margin-right: 5px;
+      height: 25px;
+      width: auto;
+    }
+    .input-group button {
+      background-color: #0f0;
+      color: #000;
+      border: none;
+      border-radius: 7px;
+      padding: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-top: 10px;
+      
+      
+    }
+    .input-group button:hover {
+      background-color: #6f6;
+    }
+    .error {
+      color: red;
+      font-size: 1rem;
+      min-height: 1.2em;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+   <!-- Zurück-Pfeil -->
+   <div class="back-arrow" onclick="window.location.href='dashboard.html'">&#8592; back</div>
+            
+  <div class="dashboard" id="dashboardContent">
+    <div class="heading">
+      <h1>Kostenplanung</h1>
+    </div>
+    <div class="description">
+      <p>IT kostet, deshalb habe ich meine Aufwendungen zweier Jahre grafisch verglichen. Jetzt habe ich aber vergessen, wie hoch meine jährliches 
+          Grenze ist. Sowohl mein Budget als auch meine Fixkosten haben sich über die Jahre nicht verändert!
+      </p>
+      <p>Wie hoch ist mein Budget?</p>
+    </div>
+    <img src="Applikation-Server.png" height="65%">
+    <div class="input-group">
+      Budget in Euro:
+      <input type="text" id="budget" maxlength="5" placeholder="€" required pattern="[0-9]+">
+      <button onclick="check()">Lösung prüfen</button>
+      <p class="error" id="errorDisplay"></p>
+  </div>
+
+  <script>
+  // Funktion zur Überprüfung des eingegebenen Wertes
+  function check() {
+    let budget = document.getElementById("budget").value; // Den Wert des Inputs holen
+    // Vergleich, ob das Budget "150k" oder "150k€" ist
+    if (budget.toLowerCase() === "150k" || budget.toLowerCase() === "150k€"){
+      document.body.innerHTML = 
+           window.location.href = "success.html";
+    } else {
+      document.getElementById("errorDisplay").textContent = "Falsche Lösung! Bitte überprüfe deine Eingabe.";
+      setTimeout(function() {
+        document.getElementById("errorDisplay").textContent = "";
+      }, 3000); // 3000 Millisekunden = 3 Sekunden
+    }
+  }
+</script>
+  </script>
+</body>
+</html>
+

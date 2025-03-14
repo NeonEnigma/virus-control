@@ -128,12 +128,56 @@
     /***********************************************************
      * 1) Simuliertes Dateisystem
      ***********************************************************/
-    const fileSystem = {
-      name: "/",
+     const fileSystem = {
+  name: "/",
+  type: "directory",
+  children: [
+    {
+      name: "bin",
       type: "directory",
       children: [
-        {
-          name: "home",
+        { name: "bash", type: "file", content: "ELF binary executable" },
+        { name: "ls", type: "file", content: "ELF binary executable" },
+        { name: "cat", type: "file", content: "ELF binary executable" }
+      ]
+    },
+    {
+      name: "etc",
+      type: "directory",
+      children: [
+        { name: "shadow", type: "file", content: "root:*:18752:0:99999:7:::\nuser:$6$saltsalt$encryptedpassword" },
+        { name: "hostname", type: "file", content: "my-linux-pc" }
+      ]
+    },
+    {
+      name: "home",
+      type: "directory",
+      children: [
+      {name: "images", 
+      type: "directory", 
+      children: [
+        {name:"johanna" ,
+        type: "file ",
+        },
+        {name: "mallorca",
+        type: "file",
+        },
+        {name: "mama&papa",
+        type: "file",
+        },
+        {name: "dresdensommer",
+        type: "file",
+        },
+        {name: "cookie",
+        type: "file",
+        },
+        {name: "dresdennacht",
+        type: "file",
+        },
+      ]
+      },  
+      {
+          name: "user",
           type: "directory",
           children: [
             {
@@ -143,18 +187,68 @@
                 {
                   name: "secret.txt",
                   type: "file",
-                  // Inhalt der Datei
                   content:
 `Zugang geheime Virtual Machine:
 ssh -p 2432 john@secretserver
 Pwd: d4Gfdee`
                 }
               ]
+            },
+            
+            {
+              name: ".bashrc",
+              type: "file",
+              content: "export PATH=$PATH:/usr/local/bin"
             }
+          ]
+        },
+      {name: "downloads",
+       type: "directory",
+       children: [
+        {name: "explore@VT_installer", type: "file"}
+       ]
+      }, 
+      ]
+    },
+    {
+      name: "usr",
+      type: "directory",
+      children: [
+        {
+          name: "local",
+          type: "directory",
+          children: [
+            { name: "bin", type: "directory", children: [] }
           ]
         }
       ]
-    };
+    },
+    {
+      name: "var",
+      type: "directory",
+      children: [
+        { name: "log", type: "directory", children: [{ name: "syslog", type: "file", content: "System logs..." }] },
+        { name: "www", type: "directory", children: [] }
+      ]
+    },
+    {
+      name: "tmp",
+      type: "directory",
+      children: []
+    },
+    {
+      name: "lib",
+      type: "directory",
+      children: [
+        {name: "libc.so.6", type:"file", content:""},
+        {name: "libssl.so.1.1", type:"file", content:""}
+      ]
+
+    }
+    
+
+  ]
+};
 
     /***********************************************************
      * 2) Terminal-Logik
