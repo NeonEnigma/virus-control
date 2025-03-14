@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Brückenrätsel – Datenbank verwalten</title>
+  <title>Datenbank – Netzwerkoptimierung</title>
   <style>
     /* Vollbild & Reset */
     html, body {
@@ -14,17 +14,22 @@
       font-family: monospace;
       color: #fdfdfd;
     }
-    /* Zentrale Ausrichtung */
-    .dashboard {
+    
+    /* Container für das gesamte Layout */
+    .container {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      box-sizing: border-box;
-      position: relative;
       height: 100%;
+      width: 100%;
     }
+    
+    /* Header-Bereich mit Titel und Zurück-Button */
+    .header {
+      padding: 20px;
+      position: relative;
+      border-bottom: 1px solid #333;
+    }
+    
     .back-arrow {
       position: absolute;
       top: 20px;
@@ -32,131 +37,317 @@
       font-size: 1rem;
       color: #0f0;
       cursor: pointer;
+      padding: 10px;
+      z-index: 100;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 5px;
+      text-decoration: none;
     }
+    
+    .back-arrow:hover {
+      background-color: rgba(0, 255, 0, 0.2);
+    }
+    
+    .heading {
+      text-align: center;
+    }
+    
     .heading h1 {
-      font-size: 2rem;
-      margin-bottom: 10px;
+      font-size: 2.2rem;
+      margin: 0;
     }
+    
+    /* Hauptinhalt mit zwei Spalten */
+    .dashboard {
+      display: flex;
+      flex: 1;
+      height: calc(100% - 80px);
+    }
+    
+    /* Spalten-Layout */
+    .column {
+      padding: 40px;
+      overflow-y: auto;
+    }
+    
+    .left-column {
+      flex: 1;
+      border-right: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    
+    .right-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding-top: 20px; /* Weniger Padding oben */
+    }
+    
+    /* Beschreibung und Erklärung */
     .description {
-      max-width: 600px;
-      text-align: left;
+      line-height: 1.6;
+    }
+    
+    .description p {
       margin-bottom: 20px;
-      line-height: 1.5;
+      font-size: 1.1rem;
     }
-    .input-group {
-      width: 100%;
-      max-width: 600px;
-    }
-    .input-group ol {
+    
+    .description ul {
+      margin-bottom: 20px;
       padding-left: 20px;
     }
-    .input-group li {
-      margin-bottom: 15px;
+    
+    .description li {
+      margin-bottom: 8px;
+      font-size: 1.1rem;
     }
+    
+    /* Eingabefelder */
+    .input-group {
+      width: 100%;
+      max-width: 90%;
+      transform: translateY(10px); /* Inhalt nach unten verschieben */
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Horizontal zentrieren */
+    }
+    
+    .input-group ol {
+      padding-left: 0; /* Entferne Standard-Padding */
+      margin-top: 0;
+      width: 100%;
+      list-style-position: inside; /* Nummern innerhalb halten */
+    }
+    
+    .input-group li {
+      margin-bottom: 16px; /* Weniger Abstand zwischen den Elementen */
+      font-size: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      align-items: center; /* Zentriert die Inhalte des Listenelements */
+    }
+    
+    .input-label {
+      margin-bottom: 6px; /* Weniger Abstand zwischen Label und Feldern */
+      width: 100%;
+      text-align: center; /* Zentrieren des Labeltexts */
+    }
+    
+    .input-fields {
+      display: flex;
+      align-items: center;
+      justify-content: center; /* Horizontale Zentrierung */
+    }
+    
     .input-group input {
       background-color: #222;
       color: #fdfdfd;
       border: 1px solid #0f0;
       border-radius: 5px;
-      padding: 5px;
+      padding: 6px; /* Kleineres Padding */
       font-family: monospace;
-      width: 40px;
+      width: 40px; /* Schmalere Eingabefelder */
+      height: 30px; /* Niedrigere Eingabefelder */
       text-align: center;
-      margin-right: 5px;
+      margin-right: 8px;
+      font-size: 1rem; /* Kleinere Schrift */
     }
+    
     .input-group button {
       background-color: #0f0;
       color: #000;
       border: none;
       border-radius: 7px;
-      padding: 10px;
-      font-size: 1rem;
+      padding: 15px;
+      font-size: 1.2rem;
       cursor: pointer;
       transition: background-color 0.2s;
-      margin-top: 10px;
+      margin-top: 20px;
+      width: 66%; /* 2/3 der Breite */
+      margin-left: auto;
+      margin-right: auto;
     }
+    
     .input-group button:hover {
       background-color: #6f6;
     }
+    
     .error {
       color: red;
-      font-size: 1rem;
+      font-size: 1.1rem;
       min-height: 1.2em;
-      margin-top: 10px;
+      margin-top: 15px;
+    }
+    
+    .btn {
+      background-color: #0f0;
+      color: #000;
+      border: none;
+      border-radius: 7px;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-top: 20px;
+    }
+    
+    .btn:hover {
+      background-color: #6f6;
+    }
+    
+    /* Erfolgsanzeige */
+    .success-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      color: #0f0;
+      font-size: 2.5rem;
+      text-align: center;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 900px) {
+      .dashboard {
+        flex-direction: column;
+      }
+      
+      .column {
+        padding: 20px;
+      }
+      
+      .left-column {
+        border-right: none;
+        border-bottom: 1px solid #333;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="back-arrow" onclick="window.location.href='dashboard.html'">&#8592; Dashboard</div>
-  <div class="dashboard" id="dashboardContent">
-    <div class="heading">
-      <h1>Brückenrätsel</h1>
+  <div class="container">
+    <div class="header">
+      <a href="dashboard.html" class="back-arrow">&#8592; Dashboard</a>
+      <div class="heading">
+        <h1>Datentransfer-Optimierung</h1>
+      </div>
     </div>
-    <div class="description">
-      <p>Fünf Personen (Anna, Berta, Charlie, Dennis und Eva) müssen über eine Brücke. Es können immer nur zwei Personen gleichzeitig überqueren, und sie haben nur eine Taschenlampe, die stets zurückgebracht werden muss.</p>
-      <p>Die Zeiten betragen:</p>
-      <ul>
-        <li>Anna: 1 Minute</li>
-        <li>Berta: 3 Minuten</li>
-        <li>Charlie: 6 Minuten</li>
-        <li>Dennis: 8 Minuten</li>
-        <li>Eva: 12 Minuten</li>
-      </ul>
-      <p>Fülle die Lücken mit den <strong>Anfangsbuchstaben</strong> (A, B, C, D, E) in der richtigen Reihenfolge ein.</p>
-      <p>Bei Schritten mit zwei Feldern: Gib in jedes Feld einen Buchstaben ein – die Lösung wird als <code>X+Y</code> zusammengefügt. Dabei ist die Reihenfolge egal (z. B. "A" und "B" oder "B" und "A" ergeben beide "A+B").</p>
-    </div>
-    <div class="input-group">
-      <ol>
-        <li>
-          Schritt 1: 
-          <input type="text" id="step1a" maxlength="1" placeholder="A">
-          <input type="text" id="step1b" maxlength="1" placeholder="B">
-        </li>
-        <li>
-          Schritt 2: 
-          <input type="text" id="step2" maxlength="1" placeholder="A">
-        </li>
-        <li>
-          Schritt 3: 
-          <input type="text" id="step3a" maxlength="1" placeholder="D">
-          <input type="text" id="step3b" maxlength="1" placeholder="E">
-        </li>
-        <li>
-          Schritt 4: 
-          <input type="text" id="step4" maxlength="1" placeholder="B">
-        </li>
-        <li>
-          Schritt 5: 
-          <input type="text" id="step5a" maxlength="1" placeholder="A">
-          <input type="text" id="step5b" maxlength="1" placeholder="C">
-        </li>
-        <li>
-          Schritt 6: 
-          <input type="text" id="step6" maxlength="1" placeholder="A">
-        </li>
-        <li>
-          Schritt 7: 
-          <input type="text" id="step7a" maxlength="1" placeholder="A">
-          <input type="text" id="step7b" maxlength="1" placeholder="B">
-        </li>
-      </ol>
-      <button onclick="checkSolution()">Lösung prüfen</button>
-      <p class="error" id="errorDisplay"></p>
+    
+    <div class="dashboard" id="dashboardContent">
+      <!-- Linke Spalte: Beschreibung -->
+      <div class="column left-column">
+        <div class="description">
+          <p>Zur Wiederherstellung der Datenbank müssen fünf verschiedene Dateitypen (API-Anfrage, Binärdatei, CSV-Tabelle, DAT-Archiv, Excel-Datei) über einen schmalbandigen Notfallkanal übertragen werden. Der Kanal kann jeweils nur zwei Datenpakete gleichzeitig übertragen, und es wird ein Authentifizierungstoken benötigt, das nach jeder Übertragung zurückgesendet werden muss.</p>
+          
+          <p>Die Datenübertragung folgt diesen Regeln:</p>
+          <ul>
+            <li>Es können nur zwei Dateien gleichzeitig übertragen werden</li>
+            <li>Das Authentifizierungstoken muss nach jedem Transfer zurückgeschickt werden</li>
+            <li>Die Übertragungszeit entspricht der langsamsten Datei im Paket</li>
+            <li>Alle fünf Dateien müssen in möglichst kurzer Zeit vollständig übertragen werden</li>
+          </ul>
+          
+          <p>Die Übertragungszeiten betragen:</p>
+          <ul>
+            <li>API-Anfrage (A): 1 Minute</li>
+            <li>Binärdatei (B): 3 Minuten</li>
+            <li>CSV-Tabelle (C): 6 Minuten</li>
+            <li>DAT-Archiv (D): 8 Minuten</li>
+            <li>Excel-Datei (E): 12 Minuten</li>
+          </ul>
+          
+          <p>Fülle die Lücken mit den <strong>Anfangsbuchstaben</strong> (A, B, C, D, E) in der optimalen Reihenfolge ein, um die Daten in minimal möglicher Zeit zu übertragen.</p>
+          
+          <p>Bei Schritten mit zwei Feldern werden jeweils zwei Dateien gleichzeitig übertragen. Bei Schritten mit einem Feld wird nur das Authentifizierungstoken zurückgeschickt.</p>
+        </div>
+      </div>
+      
+      <!-- Rechte Spalte: Eingabefelder -->
+      <div class="column right-column">
+        <div class="input-group">
+          <ol>
+            <li>
+              <div class="input-label">Transfer 1 (zwei Dateien gleichzeitig senden):</div>
+              <div class="input-fields">
+                <input type="text" id="step1a" maxlength="1" placeholder="A">
+                <input type="text" id="step1b" maxlength="1" placeholder="B">
+              </div>
+            </li>
+            <li>
+              <div class="input-label">Rückübertragung Token:</div>
+              <div class="input-fields">
+                <input type="text" id="step2" maxlength="1" placeholder="A">
+              </div>
+            </li>
+            <li>
+              <div class="input-label">Transfer 2 (zwei Dateien gleichzeitig senden):</div>
+              <div class="input-fields">
+                <input type="text" id="step3a" maxlength="1" placeholder="D">
+                <input type="text" id="step3b" maxlength="1" placeholder="E">
+              </div>
+            </li>
+            <li>
+              <div class="input-label">Rückübertragung Token:</div>
+              <div class="input-fields">
+                <input type="text" id="step4" maxlength="1" placeholder="B">
+              </div>
+            </li>
+            <li>
+              <div class="input-label">Transfer 3 (zwei Dateien gleichzeitig senden):</div>
+              <div class="input-fields">
+                <input type="text" id="step5a" maxlength="1" placeholder="A">
+                <input type="text" id="step5b" maxlength="1" placeholder="C">
+              </div>
+            </li>
+            <li>
+              <div class="input-label">Rückübertragung Token:</div>
+              <div class="input-fields">
+                <input type="text" id="step6" maxlength="1" placeholder="A">
+              </div>
+            </li>
+            <li>
+              <div class="input-label">Transfer 4 (zwei Dateien gleichzeitig senden):</div>
+              <div class="input-fields">
+                <input type="text" id="step7a" maxlength="1" placeholder="A">
+                <input type="text" id="step7b" maxlength="1" placeholder="B">
+              </div>
+            </li>
+          </ol>
+          <button onclick="checkSolution()">Lösung prüfen</button>
+          <p class="error" id="errorDisplay"></p>
+        </div>
+      </div>
     </div>
   </div>
   
   <script>
     // Falls die Datenbank-Aufgabe bereits gelöst wurde, wird "Datenbank intakt" angezeigt.
-    window.addEventListener("load", () => {
+    document.addEventListener("DOMContentLoaded", function() {
       if (localStorage.getItem("datenbankCompleted") === "true") {
         document.body.innerHTML = `
-          <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: #0f0; font-size: 2rem;">
-            <p>Datenbank intakt!</p>
-            <button onclick="window.location.href='dashboard.html'">Dashboard</button>
+          <div class="success-container">
+            <p>Datenübertragung abgeschlossen!</p>
+            <p>Datenbank wiederhergestellt.</p>
+            <button class="btn" onclick="resetDatabase()">Neustart</button>
           </div>
         `;
       }
     });
+    
+    function resetDatabase() {
+      localStorage.removeItem("datenbankCompleted");
+      window.location.reload();
+    }
+    
+    function navigateToDashboard() {
+      window.location.href = "dashboard.html";
+    }
     
     const validSolutions = [
       ["A+B", "A", "D+E", "B", "A+C", "A", "A+B"],
@@ -194,7 +385,7 @@
         localStorage.setItem("datenbankCompleted", "true");
         window.location.href = "success.html";
       } else {
-        document.getElementById("errorDisplay").textContent = "Falsche Lösung! Bitte überprüfe deine Eingaben.";
+        document.getElementById("errorDisplay").textContent = "Falsche Lösung! Der Datentransfer ist fehlgeschlagen. Bitte überprüfe deine Eingaben.";
       }
     }
   </script>

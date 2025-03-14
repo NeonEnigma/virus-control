@@ -412,7 +412,7 @@
       const storedEnd = localStorage.getItem(LOCAL_STORAGE_KEY);
       const shutdownTimerEl = document.getElementById("shutdownTimer");
       if (!storedEnd) {
-        shutdownTimerEl.textContent = "Timer inaktiv";
+        shutdownTimerEl.textContent = "00:00";
         return;
       }
       startShutdownTimer();
