@@ -14,6 +14,11 @@
       font-family: monospace;
       color: #fdfdfd;
     }
+
+    .heading {
+      margin-bottom: 20px;
+      margin-top: 20px;
+    }
     
     /* Container für das gesamte Layout */
     .container {
@@ -31,17 +36,17 @@
     }
     
     .back-arrow {
+      text-decoration: none;
       position: absolute;
       top: 20px;
       left: 20px;
-      font-size: 1rem;
+      font-size: 15px;
       color: #0f0;
       cursor: pointer;
       padding: 10px;
       z-index: 100;
       background-color: rgba(0, 0, 0, 0.5);
       border-radius: 5px;
-      text-decoration: none;
     }
     
     .back-arrow:hover {
@@ -86,6 +91,10 @@
       align-items: center;
       padding-top: 20px; /* Weniger Padding oben */
     }
+
+    #solutionButton {
+      width: 400px;
+    }
     
     /* Beschreibung und Erklärung */
     .description {
@@ -117,11 +126,15 @@
       align-items: center; /* Horizontal zentrieren */
     }
     
+    .input-wrapper {
+      width: 66%; /* Gleiche Breite wie der Button */
+      margin: 0 auto; /* Zentrieren */
+    }
+    
     .input-group ol {
-      padding-left: 0; /* Entferne Standard-Padding */
+      padding-left: 20px; /* Standardmäßiges Padding wieder einführen */
       margin-top: 0;
       width: 100%;
-      list-style-position: inside; /* Nummern innerhalb halten */
     }
     
     .input-group li {
@@ -130,19 +143,20 @@
       display: flex;
       flex-direction: column;
       width: 100%;
-      align-items: center; /* Zentriert die Inhalte des Listenelements */
+      align-items: flex-start; /* Linksbündig ausrichten */
     }
     
     .input-label {
       margin-bottom: 6px; /* Weniger Abstand zwischen Label und Feldern */
       width: 100%;
-      text-align: center; /* Zentrieren des Labeltexts */
+      text-align: left; /* Linksbündig ausrichten */
     }
     
     .input-fields {
       display: flex;
       align-items: center;
-      justify-content: center; /* Horizontale Zentrierung */
+      justify-content: flex-start; /* Linksbündig ausrichten */
+      margin-left: 0; /* Kein zusätzlicher Einzug */
     }
     
     .input-group input {
@@ -237,6 +251,7 @@
       <div class="heading">
         <h1>Datentransfer-Optimierung</h1>
       </div>
+
     </div>
     
     <div class="dashboard" id="dashboardContent">
@@ -271,55 +286,59 @@
       <!-- Rechte Spalte: Eingabefelder -->
       <div class="column right-column">
         <div class="input-group">
-          <ol>
-            <li>
-              <div class="input-label">Transfer 1 (zwei Dateien gleichzeitig senden):</div>
-              <div class="input-fields">
-                <input type="text" id="step1a" maxlength="1" placeholder="A">
-                <input type="text" id="step1b" maxlength="1" placeholder="B">
-              </div>
-            </li>
-            <li>
-              <div class="input-label">Rückübertragung Token:</div>
-              <div class="input-fields">
-                <input type="text" id="step2" maxlength="1" placeholder="A">
-              </div>
-            </li>
-            <li>
-              <div class="input-label">Transfer 2 (zwei Dateien gleichzeitig senden):</div>
-              <div class="input-fields">
-                <input type="text" id="step3a" maxlength="1" placeholder="D">
-                <input type="text" id="step3b" maxlength="1" placeholder="E">
-              </div>
-            </li>
-            <li>
-              <div class="input-label">Rückübertragung Token:</div>
-              <div class="input-fields">
-                <input type="text" id="step4" maxlength="1" placeholder="B">
-              </div>
-            </li>
-            <li>
-              <div class="input-label">Transfer 3 (zwei Dateien gleichzeitig senden):</div>
-              <div class="input-fields">
-                <input type="text" id="step5a" maxlength="1" placeholder="A">
-                <input type="text" id="step5b" maxlength="1" placeholder="C">
-              </div>
-            </li>
-            <li>
-              <div class="input-label">Rückübertragung Token:</div>
-              <div class="input-fields">
-                <input type="text" id="step6" maxlength="1" placeholder="A">
-              </div>
-            </li>
-            <li>
-              <div class="input-label">Transfer 4 (zwei Dateien gleichzeitig senden):</div>
-              <div class="input-fields">
-                <input type="text" id="step7a" maxlength="1" placeholder="A">
-                <input type="text" id="step7b" maxlength="1" placeholder="B">
-              </div>
-            </li>
-          </ol>
-          <button onclick="checkSolution()">Lösung prüfen</button>
+          <div class="input-wrapper">
+            <ol>
+              <li>
+                <div class="input-label">Transfer 1 (zwei Dateien gleichzeitig senden):</div>
+                <div class="input-fields">
+                  <input type="text" id="step1a" maxlength="1" placeholder="A">
+                  <input type="text" id="step1b" maxlength="1" placeholder="B">
+                </div>
+              </li>
+              <li>
+                <div class="input-label">Rückübertragung Token:</div>
+                <div class="input-fields">
+                  <input type="text" id="step2" maxlength="1" placeholder="A">
+                </div>
+              </li>
+              <li>
+                <div class="input-label">Transfer 2 (zwei Dateien gleichzeitig senden):</div>
+                <div class="input-fields">
+                  <input type="text" id="step3a" maxlength="1" placeholder="D">
+                  <input type="text" id="step3b" maxlength="1" placeholder="E">
+                </div>
+              </li>
+              <li>
+                <div class="input-label">Rückübertragung Token:</div>
+                <div class="input-fields">
+                  <input type="text" id="step4" maxlength="1" placeholder="B">
+                </div>
+              </li>
+              <li>
+                <div class="input-label">Transfer 3 (zwei Dateien gleichzeitig senden):</div>
+                <div class="input-fields">
+                  <input type="text" id="step5a" maxlength="1" placeholder="A">
+                  <input type="text" id="step5b" maxlength="1" placeholder="C">
+                </div>
+              </li>
+              <li>
+                <div class="input-label">Rückübertragung Token:</div>
+                <div class="input-fields">
+                  <input type="text" id="step6" maxlength="1" placeholder="A">
+                </div>
+              </li>
+              <li>
+                <div class="input-label">Transfer 4 (zwei Dateien gleichzeitig senden):</div>
+                <div class="input-fields">
+                  <input type="text" id="step7a" maxlength="1" placeholder="A">
+                  <input type="text" id="step7b" maxlength="1" placeholder="B">
+                </div>
+              </li>
+            </ol>
+            <div style="text-align: center; width: 100%;">
+              <button id="solutionButton" onclick="checkSolution()">Lösung prüfen</button>
+            </div>
+          </div>
           <p class="error" id="errorDisplay"></p>
         </div>
       </div>

@@ -27,14 +27,21 @@
     }
     /* Zurück-Pfeil */
     .back-arrow {
-      position: left;
-      top: 10px;
-      right: 10px;
-      font-size: 1rem;
+      text-decoration: none;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 15px;
       color: #0f0;
       cursor: pointer;
-      z-index: 1000;
-      margin: 20px;
+      padding: 10px;
+      z-index: 100;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 5px;
+    }
+
+    .back-arrow:hover {
+      background-color: rgba(0, 255, 0, 0.2);
     }
 
     .heading h1 {
@@ -111,21 +118,22 @@
   </div>
 
   <script>
-  // Funktion zur Überprüfung des eingegebenen Wertes
-  function check() {
-    let budget = document.getElementById("budget").value; // Den Wert des Inputs holen
-    // Vergleich, ob das Budget "150k" oder "150k€" ist
-    if (budget.toLowerCase() === "150k" || budget.toLowerCase() === "150k€"){
-      document.body.innerHTML = 
-           window.location.href = "success.html";
-    } else {
-      document.getElementById("errorDisplay").textContent = "Falsche Lösung! Bitte überprüfe deine Eingabe.";
-      setTimeout(function() {
-        document.getElementById("errorDisplay").textContent = "";
-      }, 3000); // 3000 Millisekunden = 3 Sekunden
+    function check() {
+      let budget = document.getElementById("budget").value;
+      // Vergleich, ob das Budget "150k" oder "150k€" ist
+      if (budget.toLowerCase() === "150k" || budget.toLowerCase() === "150k€") {
+        // Setze den Flag für den erfolgreich gelösten Rätsel
+        localStorage.setItem("applicationServerCompleted", "true");
+        window.location.href = "success.html";
+      } else {
+        document.getElementById("errorDisplay").textContent = "Falsche Lösung! Bitte überprüfe deine Eingabe.";
+        setTimeout(function() {
+          document.getElementById("errorDisplay").textContent = "";
+        }, 3000);
+      }
     }
-  }
-</script>
+    </script>
+    
   </script>
 </body>
 </html>

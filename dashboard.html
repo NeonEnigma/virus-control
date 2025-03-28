@@ -4,6 +4,21 @@
   <meta charset="UTF-8">
   <title>Server-Verwaltung – Labyrinth Rätsel</title>
   <style>
+    /* Bestehende CSS-Regeln ... */
+  
+    /* Stil für den 'connected'-Badge */
+    .connected {
+     
+
+      color: #fff; /* weiße Schrift */
+      border-radius: 100px; /* abgerundete Kanten */
+      padding: 2px 6px;
+      margin-left: 5px; /* Abstand zum vorhergehenden Text */
+      font-weight: normal;
+    }
+  </style>
+  
+  <style>
     /* Browser-Reset & Vollbild */
     html, body {
       margin: 0;
@@ -364,14 +379,14 @@
           </div>
           <button class="status-btn" onclick="window.location.href='datenbank.html'">Datenbank verwalten</button>
         </div>
-        <div class="box part square">
+        <div id="applicationServerBox" class="box part square">
           <h2>Applikation-Server</h2>
           <div class="connection-group">
             <p class="server-status">Status: infiziert</p>
             <p class="server-status">Firewall: down</p>
             <p class="server-status">Ports: offen</p>
           </div>
-          <button class="status-btn">App-Verwaltung</button>
+          <button class="status-btn" onclick="window.location.href='applicationServer.html'">App-Verwaltung</button>
         </div>
         
         <!-- Shutdown-Box -->
@@ -396,7 +411,7 @@
             <p class="server-status-main">Connecting to Webserver...</p>
             <p class="server-status-main">Connecting to Database...</p>
             <p class="server-status-main">Connecting to Application...</p>
-            <button class="deactivate-btn">Access main</button>
+            <button accessMainBtn class="deactivate-btn">Access main</button>
           </div>
         </div>
       </div>
@@ -470,5 +485,96 @@
       }
     });
   </script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // --- Bestehende Status-Aktualisierung und Animationen ---
+    function updateBoxStatus(boxId, storageKey) {
+      const box = document.getElementById(boxId);
+      if (localStorage.getItem(storageKey) === "true" && box) {
+        box.classList.add("success");
+        const statusParagraphs = box.querySelectorAll(".connection-group p.server-status");
+        if (statusParagraphs.length >= 3) {
+          statusParagraphs[0].textContent = "Status: healthy";
+          statusParagraphs[1].textContent = "Firewall: up";
+          statusParagraphs[2].textContent = "Ports: restricted";
+        }
+      }
+    }
+    updateBoxStatus("webserverBox", "labyrinthCompleted");
+    updateBoxStatus("datenbankBox", "datenbankCompleted");
+    updateBoxStatus("applicationServerBox", "applicationServerCompleted");
+  
+    // --- Animation für die Main-Server-Verbindungen ---
+    const connectionParagraphs = document.querySelectorAll(".connection-group-main p.server-status-main");
+    
+    function animateConnection(element, connectionName, storageKey) {
+      let tick = 0;
+      const interval = setInterval(() => {
+        if (localStorage.getItem(storageKey) === "true") {
+          element.innerHTML = connectionName + ": " + "<span class='connected'>connected</span>";
+          clearInterval(interval);
+          return;
+        }
+        const cycleTick = tick % 20;
+        if (cycleTick < 10) {
+          const dotCount = (cycleTick % 4) + 1;
+          const dots = ".".repeat(dotCount);
+          element.textContent = "Connecting to " + connectionName + dots;
+        } else {
+          element.textContent = "Connection failed";
+        }
+        tick++;
+      }, 500);
+    }
+    
+    if (connectionParagraphs.length >= 3) {
+      if (localStorage.getItem("labyrinthCompleted") === "true") {
+        connectionParagraphs[0].innerHTML = "Webserver: " + "<span class='connected'>connected</span>";
+      } else {
+        animateConnection(connectionParagraphs[0], "Webserver", "labyrinthCompleted");
+      }
+      if (localStorage.getItem("datenbankCompleted") === "true") {
+        connectionParagraphs[1].innerHTML = "Database: " + "<span class='connected'>connected</span>";
+      } else {
+        animateConnection(connectionParagraphs[1], "Database", "datenbankCompleted");
+      }
+      if (localStorage.getItem("applicationServerCompleted") === "true") {
+        connectionParagraphs[2].innerHTML = "Application: " + "<span class='connected'>connected</span>";
+      } else {
+        animateConnection(connectionParagraphs[2], "Application", "applicationServerCompleted");
+      }
+    }
+  
+    // --- Funktion: Prüfen ob alle Rätsel gelöst wurden und den "Access main"-Button aktivieren ---
+    function updateAccessMainButton() {
+      const accessMainBtn = document.getElementById("accessMainBtn");
+      if (
+        localStorage.getItem("labyrinthCompleted") === "true" &&
+        localStorage.getItem("datenbankCompleted") === "true" &&
+        localStorage.getItem("applicationServerCompleted") === "true"
+      ) {
+        // Alle Rätsel gelöst: Button aktivieren
+        accessMainBtn.disabled = false;
+        // Optional: Button optisch anders stylen
+        accessMainBtn.classList.remove("deactivate-btn");
+        accessMainBtn.classList.add("active-btn");
+      } else {
+        // Falls noch nicht alle Rätsel gelöst sind: Button deaktivieren
+        accessMainBtn.disabled = true;
+        accessMainBtn.classList.remove("active-btn");
+        accessMainBtn.classList.add("deactivate-btn");
+      }
+    }
+  
+    // Initiale Prüfung beim Laden der Seite
+    updateAccessMainButton();
+  
+    // Optional: Wenn sich im localStorage etwas ändert (z. B. durch Lösen eines Rätsels auf einer anderen Seite),
+    // kann man mit setInterval regelmäßig updateAccessMainButton() aufrufen.
+    setInterval(updateAccessMainButton, 1000);
+  });
+  </script>
+        
 </body>
 </html>
