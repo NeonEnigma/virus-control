@@ -15,7 +15,7 @@
 
     /* Timer-Bereich oben rechts */
     .timer-area {
-      position: absolute; /* oder fixed, wie du magst */
+      position: absolute;
       top: 10px;
       right: 10px;
       color: #0f0;
@@ -31,7 +31,7 @@
       border: 2px solid #0f0;
       overflow-y: auto;
       white-space: pre-wrap; /* Zeilenumbrüche */
-      position: relative; /* Damit wir z.B. absolute Kinder haben könnten */
+      position: relative;
     }
 
     /* Prompt- und Eingabezeile */
@@ -64,6 +64,31 @@
     input[type="password"]::selection {
       background: #444;
       color: #0f0;
+    }
+    
+    /* Dateitypen */
+    .file-item {
+      color: #0f0;
+      display: inline-block;
+      width: 33%;
+      padding: 2px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Dreispaltige Ansicht für ls-Output */
+    .file-list {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    
+    /* Für Mobile: Eine Spalte */
+    @media (max-width: 600px) {
+      .file-item {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -115,6 +140,8 @@
       if (diffMs <= 0) {
         displayEl.textContent = "00:00";
         clearInterval(timerInterval);
+        // Weiterleitung zur fail.html Seite, wenn der Timer abläuft
+        window.location.href = "fail.html";
         return;
       }
       const diffSec = Math.floor(diffMs / 1000);
@@ -136,9 +163,17 @@
       name: "bin",
       type: "directory",
       children: [
-        { name: "bash", type: "file", content: "ELF binary executable" },
-        { name: "ls", type: "file", content: "ELF binary executable" },
-        { name: "cat", type: "file", content: "ELF binary executable" }
+        { name: "bash", type: "executable", content: "ELF binary executable" },
+        { name: "ls", type: "executable", content: "ELF binary executable" },
+        { name: "cat", type: "executable", content: "ELF binary executable" }
+      ]
+    },
+    {
+      name: "boot",
+      type: "directory",
+      children: [
+        { name: "grub", type: "directory", children: [] },
+        { name: "vmlinuz", type: "file", content: "Linux kernel" }
       ]
     },
     {
@@ -146,37 +181,15 @@
       type: "directory",
       children: [
         { name: "shadow", type: "file", content: "root:*:18752:0:99999:7:::\nuser:$6$saltsalt$encryptedpassword" },
-        { name: "hostname", type: "file", content: "my-linux-pc" }
+        { name: "hostname", type: "file", content: "my-linux-pc" },
+        { name: "passwd", type: "file", content: "root:x:0:0:root:/root:/bin/bash\nuser:x:1000:1000:User,,,:/home/user:/bin/bash" }
       ]
     },
     {
       name: "home",
       type: "directory",
       children: [
-      {name: "images", 
-      type: "directory", 
-      children: [
-        {name:"johanna" ,
-        type: "file ",
-        },
-        {name: "mallorca",
-        type: "file",
-        },
-        {name: "mama&papa",
-        type: "file",
-        },
-        {name: "dresdensommer",
-        type: "file",
-        },
-        {name: "cookie",
-        type: "file",
-        },
-        {name: "dresdennacht",
-        type: "file",
-        },
-      ]
-      },  
-      {
+        {
           name: "user",
           type: "directory",
           children: [
@@ -191,23 +204,49 @@
 `Zugang geheime Virtual Machine:
 ssh -p 2432 john@secretserver
 Pwd: d4Gfdee`
+                },
+                {
+                  name: ".private-notes",
+                  type: "file",
+                  content: "Mein Passwort: 1234\nKontozugangsdaten: versteckt in Bildern"
                 }
               ]
             },
-            
+            {
+              name: "images", 
+              type: "directory", 
+              children: [
+                {name: "johanna.jpg", type: "file", content: "Bilddatei" },
+                {name: "mallorca.jpg", type: "file", content: "Bilddatei" },
+                {name: "mama&papa.jpg", type: "file", content: "Bilddatei" },
+                {name: "dresdensommer.jpg", type: "file", content: "Bilddatei" },
+                {name: "cookie.jpg", type: "file", content: "Bilddatei" },
+                {name: "dresdennacht.jpg", type: "file", content: "Bilddatei" },
+                {name: ".versteckt.jpg", type: "file", content: "Verstecktes Bild mit wichtigen Daten" }
+              ]
+            },
+            {
+              name: "downloads",
+              type: "directory",
+              children: [
+                {name: "explore@VT_installer", type: "executable", content: "Installationsdatei"}
+              ]
+            },
             {
               name: ".bashrc",
               type: "file",
               content: "export PATH=$PATH:/usr/local/bin"
+            },
+            {
+              name: ".ssh",
+              type: "directory",
+              children: [
+                {name: "id_rsa", type: "file", content: "-----BEGIN PRIVATE KEY-----\nVersteckter SSH-Key\n-----END PRIVATE KEY-----"},
+                {name: "id_rsa.pub", type: "file", content: "ssh-rsa AAAA..."}
+              ]
             }
           ]
-        },
-      {name: "downloads",
-       type: "directory",
-       children: [
-        {name: "explore@VT_installer", type: "file"}
-       ]
-      }, 
+        }
       ]
     },
     {
@@ -219,6 +258,13 @@ Pwd: d4Gfdee`
           type: "directory",
           children: [
             { name: "bin", type: "directory", children: [] }
+          ]
+        },
+        {
+          name: "share",
+          type: "directory",
+          children: [
+            { name: "doc", type: "directory", children: [] }
           ]
         }
       ]
@@ -240,13 +286,32 @@ Pwd: d4Gfdee`
       name: "lib",
       type: "directory",
       children: [
-        {name: "libc.so.6", type:"file", content:""},
-        {name: "libssl.so.1.1", type:"file", content:""}
+        {name: "libc.so.6", type: "file", content: "Shared library"},
+        {name: "libssl.so.1.1", type: "file", content: "Shared library"}
       ]
-
+    },
+    {
+      name: "dev",
+      type: "directory",
+      children: [
+        {name: "sda1", type: "file", content: "Device file"},
+        {name: "null", type: "file", content: "Device file"}
+      ]
+    },
+    {
+      name: "proc",
+      type: "directory",
+      children: [
+        {name: "cpuinfo", type: "file", content: "Processor information"}
+      ]
+    },
+    {
+      name: "root",
+      type: "directory",
+      children: [
+        {name: ".bash_history", type: "file", content: "Bash-Verlauf des Root-Benutzers"}
+      ]
     }
-    
-
   ]
 };
 
@@ -371,15 +436,20 @@ Pwd: d4Gfdee`
           printLine(
 `Verfügbare Befehle:
   ls              - Zeige Inhalte des aktuellen Verzeichnisses
-  cd <pfad>       - Wechsle in ein anderes Verzeichnis (.. für zurück)
+  ls -a           - Zeige alle Dateien (inkl. versteckte)
+  ls -la          - Zeige alle Dateien mit Details
+  cd <pfad>       - Wechsle in ein anderes Verzeichnis (cd /, cd .., cd ./dir)
   cat <datei>     - Zeige den Inhalt einer Datei an (ggf. Passwort)
+  pwd             - Zeige aktuellen Pfad an
   clear           - Leere das Terminal
   help            - Zeige diese Hilfe an
 `);
           break;
 
         case "ls":
-          lsCommand();
+          // Optionen für ls parsen
+          const showHidden = args.includes("-a") || args.includes("-la") || args.includes("-al");
+          lsCommand(showHidden);
           break;
 
         case "cd":
@@ -392,6 +462,10 @@ Pwd: d4Gfdee`
             newPrompt("command");
           }
           return;
+          
+        case "pwd":
+          printLine(getCurrentPathString());
+          break;
 
         case "clear":
           clearTerminal();
@@ -407,18 +481,45 @@ Pwd: d4Gfdee`
       newPrompt("command");
     }
 
-    function lsCommand() {
+    function lsCommand(showHidden = false) {
       const dir = currentPath[currentPath.length - 1];
       if (dir.type === "directory") {
         if (!dir.children || dir.children.length === 0) {
           printLine("Keine Inhalte in diesem Verzeichnis.");
         } else {
-          let list = "";
-          dir.children.forEach(child => {
-            const prefix = (child.type === "directory") ? "[DIR]  " : "       ";
-            list += prefix + child.name + "\n";
+          // Filtere versteckte Dateien heraus, wenn nicht showHidden
+          let filteredChildren = [...dir.children];
+          if (!showHidden) {
+            filteredChildren = filteredChildren.filter(child => !child.name.startsWith('.'));
+          }
+          
+          // Sortieren: zuerst Verzeichnisse, dann Dateien, alphabetisch
+          const sortedChildren = filteredChildren.sort((a, b) => {
+            // Erst nach Typ sortieren (Verzeichnisse zuerst)
+            if (a.type === "directory" && b.type !== "directory") return -1;
+            if (a.type !== "directory" && b.type === "directory") return 1;
+            
+            // Dann alphabetisch
+            return a.name.localeCompare(b.name);
           });
-          printLine(list.trimEnd());
+          
+          if (sortedChildren.length === 0) {
+            printLine("Keine sichtbaren Inhalte in diesem Verzeichnis. Verwende 'ls -a' für versteckte Dateien.");
+            return;
+          }
+          
+          // Container für die 3-spaltige Ausgabe
+          const fileListContainer = document.createElement("div");
+          fileListContainer.className = "file-list";
+          
+          sortedChildren.forEach(child => {
+            const fileItem = document.createElement("div");
+            fileItem.className = "file-item";
+            fileItem.textContent = child.name;
+            fileListContainer.appendChild(fileItem);
+          });
+          
+          terminal.appendChild(fileListContainer);
         }
       } else {
         printLine("Das ist kein Verzeichnis.");
@@ -430,16 +531,58 @@ Pwd: d4Gfdee`
         printLine("Bitte einen Pfad angeben. Beispiel: cd /home");
         return;
       }
+      
+      // Zum Root-Verzeichnis wechseln
       if (path === "/") {
         currentPath = [fileSystem];
         return;
       }
+      
+      // Eine Ebene nach oben
       if (path === "..") {
         if (currentPath.length > 1) {
           currentPath.pop();
         }
         return;
       }
+      
+      // Relativer Pfad mit ./ Präfix
+      if (path.startsWith("./")) {
+        path = path.substring(2);
+      }
+      
+      // Behandlung von absoluten Pfaden (beginnend mit /)
+      if (path.startsWith("/") && path.length > 1) {
+        const pathParts = path.substring(1).split("/").filter(Boolean);
+        let current = fileSystem;
+        
+        // Versuche, jeden Teil des Pfades zu durchlaufen
+        for (const part of pathParts) {
+          const found = current.children?.find(
+            child => child.name === part && child.type === "directory"
+          );
+          
+          if (!found) {
+            printLine(`Verzeichnis nicht gefunden: ${path}`);
+            return;
+          }
+          
+          current = found;
+        }
+        
+        // Wenn wir hier ankommen, haben wir den Pfad gefunden
+        currentPath = [fileSystem];
+        for (const part of pathParts) {
+          const nextDir = currentPath[currentPath.length - 1].children.find(
+            child => child.name === part && child.type === "directory"
+          );
+          currentPath.push(nextDir);
+        }
+        
+        return;
+      }
+      
+      // Normaler relativer Pfad
       const targetDir = findChildDirectory(path);
       if (targetDir) {
         currentPath.push(targetDir);
@@ -458,7 +601,7 @@ Pwd: d4Gfdee`
         printLine("Keine Dateien hier.");
         return false;
       }
-      const fileObj = dir.children.find(child => child.name === fileName && child.type === "file");
+      const fileObj = dir.children.find(child => child.name === fileName && (child.type === "file" || child.type === "executable"));
       if (!fileObj) {
         printLine(`Datei '${fileName}' existiert nicht oder ist kein File.`);
         return false;
@@ -471,7 +614,7 @@ Pwd: d4Gfdee`
         return true; 
       } else {
         // Normale Datei
-        printLine(fileObj.content);
+        printLine(fileObj.content || "Leere Datei.");
         return false;
       }
     }
