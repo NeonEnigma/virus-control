@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>GESCHEITERT - Virus Aktiv</title>
+  <style>
+    /* Browser-Reset & Vollbild */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      overflow: hidden;
+    }
+    
+    /* Grundlegender Stil – Monospace, dunkler Hintergrund */
+    body {
+      font-family: monospace;
+      color: #fdfdfd;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    /* Haupt-Container */
+    .failure-container {
+      width: 100%;
+      max-width: 800px;
+      background-color: #1d0101;
+      border-radius: 20px;
+      padding: 30px;
+      box-sizing: border-box;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
+      border: 2px solid rgb(255, 0, 0);
+      animation: pulse 2s infinite;
+    }
+    
+    /* Pulsierender Effekt */
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
+      }
+      50% {
+        box-shadow: 0 0 50px rgba(255, 0, 0, 0.9);
+      }
+      100% {
+        box-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
+      }
+    }
+    
+    /* Textstile */
+    h1 {
+      color: rgb(255, 0, 0);
+      font-size: 4rem;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    
+    .subtitle {
+      color: rgb(255, 0, 0);
+      font-size: 1.8rem;
+      margin-bottom: 40px;
+    }
+    
+    .message {
+      font-size: 1.4rem;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    
+    .virus-stats {
+      background-color: #000;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 30px 0;
+      border: 1px solid rgb(255, 0, 0);
+      text-align: left;
+    }
+    
+    .virus-stats p {
+      margin: 10px 0;
+      font-size: 1.1rem;
+      color: #a5a5a5;
+    }
+    
+    .virus-stats strong {
+      color: rgb(255, 0, 0);
+    }
+    
+    /* Timer und Fortschrittsanzeige */
+    .virus-progress {
+      width: 100%;
+      height: 30px;
+      background-color: #000;
+      border-radius: 15px;
+      overflow: hidden;
+      margin: 40px 0 20px 0;
+      border: 1px solid rgb(255, 0, 0);
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background-color: rgb(255, 0, 0);
+      width: 100%;
+      animation: progressAnimation 3s ease-out;
+    }
+    
+    @keyframes progressAnimation {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    
+    /* Zurück-Button */
+    .return-btn {
+      background-color: rgba(255, 0, 0, 0.7);
+      color: #fff;
+      padding: 15px 30px;
+      border-radius: 6px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+      margin-top: 20px;
+    }
+    
+    .return-btn:hover {
+      background-color: rgb(255, 0, 0);
+      transform: scale(1.05);
+    }
+    
+    /* Blinkender Cursor */
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      height: 20px;
+      background-color: rgb(255, 0, 0);
+      margin-left: 5px;
+      animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    
+    /* Virusanimation (kleine Partikel im Hintergrund) */
+    .virus-particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: -1;
+    }
+    
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background-color: rgb(255, 0, 0);
+      border-radius: 50%;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <!-- Virus-Partikel im Hintergrund -->
+  <div class="virus-particles" id="particles"></div>
+  
+  <div class="failure-container">
+    <h1>GESCHEITERT</h1>
+    <div class="subtitle">SAP-Virus aktiv<span class="cursor"></span></div>
+    
+    <p class="message">
+      Zeit abgelaufen. Der SAP-Virus wurde vollständig im System installiert und ist nun aktiv.
+      Alle Sicherheitsmaßnahmen wurden umgangen und alle Systemressourcen wurden kompromittiert.
+    </p>
+    
+    <div class="virus-progress">
+      <div class="progress-bar"></div>
+    </div>
+    
+    <div class="virus-stats">
+      <p><strong>Virus-Status:</strong> Aktiv und verbreitet sich</p>
+      <p><strong>Kompromittierte Server:</strong> 100%</p>
+      <p><strong>Datenexfiltration:</strong> In Bearbeitung</p>
+      <p><strong>Firewall:</strong> Deaktiviert</p>
+      <p><strong>System-Kontrolle:</strong> Vollständig verloren</p>
+    </div>
+
+  </div>
+  
+  <script>
+    // Prüfen, ob Timer tatsächlich abgelaufen ist
+    document.addEventListener("DOMContentLoaded", () => {
+      const LOCAL_STORAGE_KEY = "countdownEnd";
+      const endTime = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY), 10);
+      
+      // Wenn Timer noch nicht abgelaufen ist und versehentlich auf diese Seite gelangt wurde
+      if (endTime && endTime > Date.now()) {
+        window.location.href = 'index.html';
+      }
+    });
+    
+    // Virus-Partikel-Animation
+    function createParticles() {
+      const container = document.getElementById('particles');
+      const particleCount = 100;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        
+        // Zufällige Position
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+        
+        // Zufällige Größe
+        const size = Math.random() * 3 + 1;
+        
+        // Zufällige Animation
+        const duration = Math.random() * 15 + 5;
+        const delay = Math.random() * 10;
+        
+        particle.style.left = posX + '%';
+        particle.style.top = posY + '%';
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particle.style.opacity = Math.random() * 0.5 + 0.1;
+        
+        // Animation
+        particle.style.animation = `moveParticle ${duration}s linear infinite ${delay}s`;
+        container.appendChild(particle);
+      }
+    }
+    
+    // Weitere Virus-Animation hinzufügen
+    document.head.insertAdjacentHTML('beforeend', `
+      <style>
+        @keyframes moveParticle {
+          0% {
+            transform: translateY(0) translateX(0);
+          }
+          25% {
+            transform: translateY(100px) translateX(50px);
+          }
+          50% {
+            transform: translateY(200px) translateX(-50px);
+          }
+          75% {
+            transform: translateY(100px) translateX(-100px);
+          }
+          100% {
+            transform: translateY(0) translateX(0);
+          }
+        }
+      </style>
+    `);
+    
+    createParticles();
+  </script>
+</body>
+</html>

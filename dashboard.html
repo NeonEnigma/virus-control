@@ -449,6 +449,8 @@
       if (diffMs <= 0) {
         shutdownTimerEl.textContent = "00:00";
         clearInterval(shutdownTimerInterval);
+        // Hier ist die neue Funktionalität: Weiterleitung zur fail.html Seite
+        window.location.href = "fail.html";
         return;
       }
       const diffSec = Math.floor(diffMs / 1000);
@@ -570,7 +572,7 @@
     // Initiale Prüfung beim Laden der Seite
     updateAccessMainButton();
   
-    // Optional: Wenn sich im localStorage etwas ändert (z. B. durch Lösen eines Rätsels auf einer anderen Seite),
+    // Optional: Wenn sich im localStorage etwas ändert (z. B. durch Lösen eines Rätsels auf einer anderen Seite),
     // kann man mit setInterval regelmäßig updateAccessMainButton() aufrufen.
     setInterval(updateAccessMainButton, 1000);
   });
