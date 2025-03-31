@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>SAP-Virus Main Server</title>
+  <style>
+    /* Browser-Reset & Vollbild */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      overflow: hidden;
+    }
+    
+    /* Grundlegender Stil – Monospace, dunkler Hintergrund */
+    body {
+      font-family: monospace;
+      color: #fdfdfd;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Haupt-Container */
+    .main-container {
+      width: 90%;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 30px;
+      background-color: #1d0101;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
+      border: 2px solid rgb(255, 0, 0);
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      color: rgb(255, 0, 0);
+      font-size: 2.5rem;
+      margin: 0;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #a5a5a5;
+      margin: 0;
+    }
+    
+    /* Timer Bereich */
+    .timer-section {
+      border: 1px solid #333;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      background-color: #000;
+    }
+    
+    .timer-section h2 {
+      margin-top: 0;
+      color: #fdfdfd;
+      font-size: 1.5rem;
+    }
+    
+    .timer-display {
+      font-size: 3rem;
+      font-weight: bold;
+      color: rgb(255, 0, 0);
+      margin: 20px 0;
+    }
+    
+    /* Token Bereich */
+    .token-section {
+      border: 1px solid #333;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      background-color: #000;
+    }
+    
+    .token-section h2 {
+      margin-top: 0;
+      color: #fdfdfd;
+      font-size: 1.5rem;
+    }
+    
+    #flag-timer {
+      font-size: 1.5rem;
+      color: rgb(255, 0, 0);
+      margin: 10px 0;
+    }
+    
+    #flag-button {
+      margin: 20px 0;
+      min-height: 40px;
+    }
+    
+    #flag-button a {
+      display: inline-block;
+      background-color: rgb(255, 0, 0);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    #flag-button a:hover {
+      background-color: #b30000;
+    }
+    
+    /* Input-Bereich */
+    .input-section {
+      border: 1px solid #333;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      background-color: #000;
+    }
+    
+    .input-section h2 {
+      margin-top: 0;
+      color: #fdfdfd;
+      font-size: 1.5rem;
+    }
+    
+    .input-section p {
+      color: #a5a5a5;
+      margin-bottom: 20px;
+    }
+    
+    .input-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .input-container input {
+      background-color: #111;
+      border: 1px solid #333;
+      padding: 10px;
+      border-radius: 5px;
+      color: #fdfdfd;
+      font-family: monospace;
+      width: 250px;
+    }
+    
+    .input-container button {
+      background-color: rgb(255, 0, 0);
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .input-container button:hover {
+      background-color: #b30000;
+    }
+    
+    /* Status-Anzeige */
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      font-weight: bold;
+      min-height: 20px;
+    }
+    
+    .status.error {
+      background-color: rgba(255, 0, 0, 0.3);
+      color: rgb(255, 150, 150);
+    }
+    
+    .status.success {
+      background-color: rgba(0, 255, 0, 0.3);
+      color: rgb(150, 255, 150);
+    }
+    
+    /* Globaler Timer oben rechts */
+    .global-timer {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      color: rgb(255, 0, 0);
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Globaler Timer oben rechts -->
+  <div class="global-timer" id="globalTimer">--:--</div>
+  
+  <div class="main-container">
+    <div class="header">
+      <h1>SAP-Virus Main Server</h1>
+      <p>Kontrollzentrum für den Virus</p>
+    </div>
+    
+    <div class="timer-section">
+      <h2>Zeit bis zur vollständigen Aktivierung</h2>
+      <div class="timer-display" id="shutdownTimer">--:--</div>
+    </div>
+    
+    <div class="token-section">
+      <h2>Token-Generator</h2>
+      <p>Zugang erst in <span id="flag-timer">100000</span> Sekunden möglich</p>
+      <div id="flag-button">
+        <!-- Button wird hier erscheinen, wenn der Timer abläuft -->
+      </div>
+    </div>
+    
+    <div class="input-section">
+      <h2>Virus-Deaktivierung</h2>
+      <p>Gib den Token ein, um den Virus zu deaktivieren:</p>
+      <div class="input-container">
+        <input type="text" id="token-input" placeholder="Token eingeben...">
+        <button id="deactivate-button">Deaktivieren</button>
+      </div>
+      <div id="status-display" class="status"></div>
+    </div>
+  </div>
+  
+  <script>
+    // Globaler Timer (aus localStorage)
+    const LOCAL_STORAGE_KEY = "countdownEnd";
+    let timerInterval = null;
+    
+    // Token-Generator Timer
+    let countDownTime = 100000;
+    let countDownIntervalId;
+    
+    // Beim Laden der Seite initialisieren
+    document.addEventListener("DOMContentLoaded", () => {
+      // Globalen Timer initialisieren
+      initGlobalTimer();
+      
+      // Token-Generator Timer starten
+      countDownIntervalId = setInterval(countDown, 1000);
+      
+      // Deaktivierungs-Button Event Listener
+      document.getElementById("deactivate-button").addEventListener("click", checkToken);
+      
+      // Token-Input mit Enter-Taste absenden
+      document.getElementById("token-input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          checkToken();
+        }
+      });
+    });
+    
+    // Globaler Timer-Funktionen
+    function initGlobalTimer() {
+      const storedEnd = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (!storedEnd) {
+        document.getElementById("globalTimer").textContent = "--:--";
+        document.getElementById("shutdownTimer").textContent = "--:--";
+        return;
+      }
+      
+      startGlobalTimer();
+    }
+    
+    function startGlobalTimer() {
+      const endTime = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY), 10);
+      if (!endTime) return;
+      
+      timerInterval = setInterval(() => {
+        updateGlobalTimer(endTime);
+      }, 1000);
+      
+      updateGlobalTimer(endTime);
+    }
+    
+    function updateGlobalTimer(endTime) {
+      const now = Date.now();
+      const diffMs = endTime - now;
+      const globalTimerEl = document.getElementById("globalTimer");
+      const shutdownTimerEl = document.getElementById("shutdownTimer");
+      
+      if (diffMs <= 0) {
+        globalTimerEl.textContent = "00:00";
+        shutdownTimerEl.textContent = "00:00";
+        clearInterval(timerInterval);
+        // Weiterleitung zur fail.html Seite, wenn der Timer abläuft
+        window.location.href = "fail.html";
+        return;
+      }
+      
+      const diffSec = Math.floor(diffMs / 1000);
+      const mm = Math.floor(diffSec / 60);
+      const ss = diffSec % 60;
+      const mmStr = mm < 10 ? "0" + mm : mm;
+      const ssStr = ss < 10 ? "0" + ss : ss;
+      const timeStr = mmStr + ":" + ssStr;
+      
+      globalTimerEl.textContent = timeStr;
+      shutdownTimerEl.textContent = timeStr;
+      
+      if (diffSec <= 600) {
+        shutdownTimerEl.style.color = "#ff0000";
+      }
+    }
+    
+    // Token-Generator Funktionen
+    function countDown() {
+      countDownTime--;
+      if (countDownTime > 0) {
+        document.getElementById("flag-timer").innerHTML = countDownTime;
+      } else {
+        clearInterval(countDownIntervalId);
+        document.getElementById("flag-button").innerHTML = 
+          '<a href="." onClick="showFlag();return false;">Show flag!</a>';
+      }
+    }
+    
+    // Mulberry32 Generator-Funktion 
+    function mulberry32(a) {
+      return function() {
+        var t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      }
+    }
+    
+    // Funktion zur Generierung des Tokens
+    function generateToken() {
+      const randomGenerator = mulberry32(0x5eed);
+      return Math.floor(randomGenerator() * 10000000000).toString(16);
+    }
+    
+    // Flag anzeigen
+    function showFlag() {
+      const token = generateToken();
+      alert(`Here's your token: ${token}`);
+    }
+    
+    // Token-Überprüfungsfunktion
+    function checkToken() {
+      const inputEl = document.getElementById("token-input");
+      const statusEl = document.getElementById("status-display");
+      const userToken = inputEl.value.trim().toLowerCase();
+      
+      statusEl.className = "status";
+      
+      if (!userToken) {
+        statusEl.textContent = "Bitte gib einen Token ein.";
+        statusEl.classList.add("error");
+        return;
+      }
+      
+      // Generiere den korrekten Token mit der gleichen Funktion
+      const correctToken = generateToken();
+      
+      if (userToken === correctToken) {
+        statusEl.textContent = "Erfolg! Der Virus wurde deaktiviert.";
+        statusEl.classList.add("success");
+        
+        // Erfolg in localStorage speichern
+        localStorage.setItem("virusDeactivated", "true");
+        
+        // Nach 2 Sekunden zur Erfolgsseite weiterleiten
+        setTimeout(() => {
+          window.location.href = "virusdown.html";
+        }, 2000);
+        
+      } else {
+        statusEl.textContent = "Falscher Token! Zugriff verweigert.";
+        statusEl.classList.add("error");
+        
+        // Input leeren
+        inputEl.value = "";
+      }
+    }
+  </script>
+</body>
+</html>

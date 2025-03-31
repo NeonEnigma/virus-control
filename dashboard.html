@@ -35,6 +35,25 @@
       display: flex;
       flex-direction: column;
     }
+
+    .active-btn {
+      background-color: rgb(255, 0, 0);
+      color: #000;
+      cursor: pointer;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      margin-bottom: 15px;
+      margin-top: 30px;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    
+    .active-btn:hover {
+      background-color: rgb(206, 1, 1);
+      transform: scale(1.02);
+    }
     
     /* Haupt-Container: Überschrift + Hauptbereich */
     .dashboard {
@@ -411,7 +430,7 @@
             <p class="server-status-main">Connecting to Webserver...</p>
             <p class="server-status-main">Connecting to Database...</p>
             <p class="server-status-main">Connecting to Application...</p>
-            <button accessMainBtn class="deactivate-btn">Access main</button>
+            <button id="accessMainBtn" class="deactivate-btn" onclick="accessMainServer()">Access main</button>
           </div>
         </div>
       </div>
@@ -468,6 +487,19 @@
     }
     
     initShutdownTimer();
+    
+    // Funktion zum Zugriff auf den Main Server
+    function accessMainServer() {
+      // Prüfen, ob alle Server verbunden sind
+      if (
+        localStorage.getItem("labyrinthCompleted") === "true" &&
+        localStorage.getItem("datenbankCompleted") === "true" &&
+        localStorage.getItem("applicationServerCompleted") === "true"
+      ) {
+        // Wenn alle verbunden sind, zur mainserver.html weiterleiten
+        window.location.href = "mainserver.html";
+      }
+    }
   </script>
   
   <!-- Prüfung der localStorage-Flags für beide Boxen -->
@@ -483,6 +515,12 @@
         const datenbankBox = document.getElementById("datenbankBox");
         if (datenbankBox) {
           datenbankBox.classList.add("success");
+        }
+      }
+      if (localStorage.getItem("applicationServerCompleted") === "true") {
+        const appServerBox = document.getElementById("applicationServerBox");
+        if (appServerBox) {
+          appServerBox.classList.add("success");
         }
       }
     });
@@ -558,7 +596,7 @@
       ) {
         // Alle Rätsel gelöst: Button aktivieren
         accessMainBtn.disabled = false;
-        // Optional: Button optisch anders stylen
+        // Button optisch anders stylen
         accessMainBtn.classList.remove("deactivate-btn");
         accessMainBtn.classList.add("active-btn");
       } else {
@@ -572,8 +610,7 @@
     // Initiale Prüfung beim Laden der Seite
     updateAccessMainButton();
   
-    // Optional: Wenn sich im localStorage etwas ändert (z. B. durch Lösen eines Rätsels auf einer anderen Seite),
-    // kann man mit setInterval regelmäßig updateAccessMainButton() aufrufen.
+    // Regelmäßig prüfen, ob sich im localStorage etwas ändert
     setInterval(updateAccessMainButton, 1000);
   });
   </script>

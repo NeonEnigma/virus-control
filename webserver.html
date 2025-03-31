@@ -199,6 +199,67 @@
       transform: translateY(-3px);
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
     }
+    
+    /* Erfolgsseite Styling */
+    .success-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #000;
+      text-align: center;
+    }
+    
+    .success-icon {
+      font-size: 5rem;
+      color: #0f0;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .success-title {
+      color: #0f0;
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
+    
+    .success-message {
+      color: #afa;
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+    }
+    
+    .success-detail {
+      color: #8f8;
+      font-size: 1.2rem;
+      margin-bottom: 40px;
+      max-width: 600px;
+    }
+    
+    .dashboard-btn {
+      background-color: #0f0;
+      color: #000;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 5px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    
+    .dashboard-btn:hover {
+      background-color: #6f6;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -401,17 +462,15 @@ turtle.collect();"></textarea>
       });
     }
     
-    function resetLabyrinth() {
-      localStorage.removeItem("labyrinthCompleted");
-      window.location.reload();
-    }
-    
     window.addEventListener("load", () => {
       if (localStorage.getItem("labyrinthCompleted") === "true") {
         document.body.innerHTML = `
-          <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; color: #0f0; font-size: 2rem;">
-            <p>Labyrinth bereits abgeschlossen!</p>
-            <button onclick="resetLabyrinth()">Neu starten</button>
+          <div class="success-container">
+            <div class="success-icon">✓</div>
+            <h1 class="success-title">Webserver ist online</h1>
+            <p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p>
+            <p class="success-detail">Der Webserver wurde erfolgreich von schädlichem Code befreit und ist jetzt vollständig funktionsfähig. Alle Sicherheitsmaßnahmen wurden wiederhergestellt.</p>
+            <a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a>
           </div>
         `;
       } else {

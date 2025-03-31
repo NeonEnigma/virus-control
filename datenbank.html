@@ -227,8 +227,63 @@
       text-align: center;
     }
     
+    /* Erfolgsseite Styling */
+    .success-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #000;
+      text-align: center;
+    }
+    
+    .success-icon {
+      font-size: 5rem;
+      color: #0f0;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .success-title {
+      color: #0f0;
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
+    
+    .success-message {
+      color: #afa;
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+    }
+    
+    .dashboard-btn {
+      background-color: #0f0;
+      color: #000;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 5px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    
+    .dashboard-btn:hover {
+      background-color: #6f6;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    }
+    
     /* Responsive Design */
-    @media (max-width: 900px) {
+    @media (max-width:
+    900px) {
       .dashboard {
         flex-direction: column;
       }
@@ -291,8 +346,8 @@
               <li>
                 <div class="input-label">Transfer 1 (zwei Dateien gleichzeitig senden):</div>
                 <div class="input-fields">
-                  <input type="text" id="step1a" maxlength="1" placeholder="A">
-                  <input type="text" id="step1b" maxlength="1" placeholder="B">
+                  <input type="text" id="step1a" maxlength="1" placeholder="A"> 
+                  <input type="text" id="step1b" maxlength="1" placeholder="A">
                 </div>
               </li>
               <li>
@@ -304,21 +359,21 @@
               <li>
                 <div class="input-label">Transfer 2 (zwei Dateien gleichzeitig senden):</div>
                 <div class="input-fields">
-                  <input type="text" id="step3a" maxlength="1" placeholder="D">
-                  <input type="text" id="step3b" maxlength="1" placeholder="E">
+                  <input type="text" id="step3a" maxlength="1" placeholder="A">
+                  <input type="text" id="step3b" maxlength="1" placeholder="A">
                 </div>
               </li>
               <li>
                 <div class="input-label">Rückübertragung Token:</div>
                 <div class="input-fields">
-                  <input type="text" id="step4" maxlength="1" placeholder="B">
+                  <input type="text" id="step4" maxlength="1" placeholder="A">
                 </div>
               </li>
               <li>
                 <div class="input-label">Transfer 3 (zwei Dateien gleichzeitig senden):</div>
                 <div class="input-fields">
                   <input type="text" id="step5a" maxlength="1" placeholder="A">
-                  <input type="text" id="step5b" maxlength="1" placeholder="C">
+                  <input type="text" id="step5b" maxlength="1" placeholder="A">
                 </div>
               </li>
               <li>
@@ -331,7 +386,7 @@
                 <div class="input-label">Transfer 4 (zwei Dateien gleichzeitig senden):</div>
                 <div class="input-fields">
                   <input type="text" id="step7a" maxlength="1" placeholder="A">
-                  <input type="text" id="step7b" maxlength="1" placeholder="B">
+                  <input type="text" id="step7b" maxlength="1" placeholder="A">
                 </div>
               </li>
             </ol>
@@ -346,27 +401,20 @@
   </div>
   
   <script>
-    // Falls die Datenbank-Aufgabe bereits gelöst wurde, wird "Datenbank intakt" angezeigt.
+    // Falls die Datenbank-Aufgabe bereits gelöst wurde, wird "Datenbank vollständig" angezeigt.
     document.addEventListener("DOMContentLoaded", function() {
       if (localStorage.getItem("datenbankCompleted") === "true") {
         document.body.innerHTML = `
           <div class="success-container">
-            <p>Datenübertragung abgeschlossen!</p>
-            <p>Datenbank wiederhergestellt.</p>
-            <button class="btn" onclick="resetDatabase()">Neustart</button>
+            <div class="success-icon">✓</div>
+            <h1 class="success-title">Datenbank vollständig</h1>
+            <p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p>
+            <p>Alle Daten wurden erfolgreich übertragen.</p>
+            <a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a>
           </div>
         `;
       }
     });
-    
-    function resetDatabase() {
-      localStorage.removeItem("datenbankCompleted");
-      window.location.reload();
-    }
-    
-    function navigateToDashboard() {
-      window.location.href = "dashboard.html";
-    }
     
     const validSolutions = [
       ["A+B", "A", "D+E", "B", "A+C", "A", "A+B"],
