@@ -197,10 +197,7 @@
               name: "documents",
               type: "directory",
               children: [
-                {
-                  name: ".passwort-secret.txt",
-                  type: "file",
-                },
+                
                 {  
                   name: "secret.txt",
                   type: "file",
@@ -212,7 +209,7 @@ Pwd: d4Gfdee`
                 {
                   name: ".private-notes",
                   type: "file",
-                  content: "Mein Passwort: 1234\nKontozugangsdaten: 389594"
+                  content: "Mein Passwort: 32529\nKontozugangsdaten: 389594"
                 }
               ]
             },
@@ -413,7 +410,7 @@ Pwd: d4Gfdee`
     }
 
     function checkFilePassword(password) {
-      if (password === "1234") {
+      if (password === "32529") {
         if (pendingFileContent) {
           printLine(pendingFileContent);
         }
