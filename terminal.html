@@ -180,9 +180,8 @@
       name: "etc",
       type: "directory",
       children: [
-        { name: "shadow", type: "file", content: "root:*:18752:0:99999:7:::\nuser:$6$saltsalt$encryptedpassword" },
+        { name: "shadow", type: "file", content: "root:*:18752:0:99999:7:::\nuser:$6$saltsalt$encrypted" },
         { name: "hostname", type: "file", content: "my-linux-pc" },
-        { name: "passwd", type: "file", content: "root:x:0:0:root:/root:/bin/bash\nuser:x:1000:1000:User,,,:/home/user:/bin/bash" }
       ]
     },
     {
@@ -199,7 +198,7 @@
               children: [
                 
                 {  
-                  name: "secret.txt",
+                  name: "secret.dmg",
                   type: "file",
                   content:
 `Zugang geheime Virtual Machine:
@@ -207,7 +206,7 @@ ssh -p 2432 john@secretserver
 Pwd: d4Gfdee`
                 },
                 {
-                  name: ".private-notes",
+                  name: ".private-notes.txt",
                   type: "file",
                   content: "Mein Passwort: 32529\nKontozugangsdaten: 389594"
                 }
@@ -327,7 +326,7 @@ Pwd: d4Gfdee`
     initTerminal();
 
     function initTerminal() {
-      printLine("Willkommen in deinem digitalen Tresor, John.\nGib 'help' ein für Befehlsübersicht.\n");
+      printLine("Willkommen in deinem digitalen Tresor, John.\nGib 'help' für eine Befehlsübersicht ein.\n");
       newPrompt("command");
     }
 

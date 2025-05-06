@@ -106,7 +106,7 @@
 <body>
 
   <!-- Reset Timer-Button oben links -->
-  <button class="admin-reset-btn" id="resetTimerBtn">Reset Timer</button>
+  <button class="admin-reset-btn" id="resetTimerBtn">Neustart Timer</button>
 
   <!-- Timer (oben rechts) -->
   <div class="timer-area">
@@ -120,10 +120,10 @@
     <div id="error-message" class="error" style="display: none;"></div>
 
     <label for="username">Benutzername:</label>
-    <input type="text" id="username" placeholder="Nutzername" />
+    <input type="text" id="username" placeholder=""/>
 
     <label for="password">Passwort:</label>
-    <input type="password" id="password" placeholder="Password" />
+    <input type="password" id="password" placeholder="" />
 
     <input type="button" id="loginButton" value="Anmelden" />
   </div>
@@ -133,7 +133,7 @@
      * 1) Login-Logik
      **********************************************************/
     const validUser = "John";
-    const validPass = "GreenOnion2025";
+    const validPass = "abwehr/3/schwarz";
 
     const loginButton = document.getElementById("loginButton");
     const errorDiv = document.getElementById("error-message");
