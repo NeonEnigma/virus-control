@@ -166,7 +166,7 @@
     <img src="Applikation-Server.png" height="65%">
     <div class="input-group">
       Budget in Euro:
-      <input type="text" id="budget" maxlength="5" placeholder="€" required pattern="[0-9]+">
+      <input type="text" id="budget" maxlength="10" placeholder="€" required pattern="[0-9]+">
       <button onclick="check()">Lösung prüfen</button>
       <p class="error" id="errorDisplay"></p>
     </div>
@@ -189,8 +189,8 @@
     
     function check() {
       let budget = document.getElementById("budget").value;
-      // Vergleich, ob das Budget "150k" oder "150k€" ist
-      if (budget.toLowerCase() === "150k" || budget.toLowerCase() === "150k€") {
+      if (budget.toLowerCase() === "150k" || budget.toLowerCase() === "150k€" || budget.toLowerCase() === "150000"|| budget.toLowerCase() === "150000€") {
+
         // Setze den Flag für den erfolgreich gelösten Rätsel
         localStorage.setItem("applicationServerCompleted", "true");
         window.location.href = "success.html";
