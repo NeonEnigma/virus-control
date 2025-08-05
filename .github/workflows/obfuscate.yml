@@ -7,6 +7,10 @@ on:
 
 jobs:
   build-and-obfuscate:
+    # HIER IST DIE ÄNDERUNG: Wir geben dem Job explizit Schreibrechte.
+    permissions:
+      contents: write
+      
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +25,6 @@ jobs:
           node-version: '20'
 
       # 3. Ein eigenes Skript (obfuscate-html.js) erstellen, das HTML-Dateien verarbeitet
-      # Dieses Skript wird direkt hier in der Action-Datei erstellt.
       - name: Create Obfuscation Script
         run: |
           cat <<'EOF' > obfuscate-html.js
@@ -37,35 +40,26 @@ jobs:
             return JavaScriptObfuscator.obfuscate(jsCode, {
               compact: true,
               selfDefending: true,
-              // Weitere Optionen hier bei Bedarf
             }).getObfuscatedCode();
           }
 
           async function main() {
-            // Sicherstellen, dass der Zielordner 'dist' existiert
             await fs.mkdir(DIST_DIR, { recursive: true });
-
-            // Alle .html Dateien im Projekt finden
             const htmlFiles = glob.sync('**/*.html', { ignore: ['node_modules/**', `${DIST_DIR}/**`] });
             console.log(`Found ${htmlFiles.length} HTML file(s) to process.`);
 
             for (const file of htmlFiles) {
               console.log(`Processing ${file}...`);
               let content = await fs.readFile(file, 'utf-8');
-
-              // Finde alle <script>-Tags, die KEINEN src-Attribut haben (also inline sind)
               const regex = /<script(?![^>]*src=)>([\s\S]*?)<\/script>/gi;
               
               content = content.replace(regex, (match, scriptContent) => {
-                if (scriptContent.trim().length === 0) {
-                  return match; // Leeres Skript, nichts tun
-                }
+                if (scriptContent.trim().length === 0) return match;
                 console.log(`  -> Obfuscating an inline script in ${file}`);
                 const obfuscatedContent = obfuscate(scriptContent);
                 return `<script>${obfuscatedContent}</script>`;
               });
 
-              // Schreibe die veränderte HTML-Datei in den dist-Ordner
               const destPath = path.join(DIST_DIR, file);
               await fs.mkdir(path.dirname(destPath), { recursive: true });
               await fs.writeFile(destPath, content);
@@ -97,5 +91,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "Deploy obfuscated site to release branch"
-          # HIER wird der Branch-Name "release" festgelegt
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:release
