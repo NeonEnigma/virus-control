@@ -7,7 +7,6 @@ on:
 
 jobs:
   build-and-obfuscate:
-    # HIER IST DIE ÄNDERUNG: Wir geben dem Job explizit Schreibrechte.
     permissions:
       contents: write
       
@@ -24,7 +23,7 @@ jobs:
         with:
           node-version: '20'
 
-      # 3. Ein eigenes Skript (obfuscate-html.js) erstellen, das HTML-Dateien verarbeitet
+      # 3. Das angepasste Skript (obfuscate-html.js) erstellen
       - name: Create Obfuscation Script
         run: |
           cat <<'EOF' > obfuscate-html.js
@@ -34,6 +33,8 @@ jobs:
           const JavaScriptObfuscator = require('javascript-obfuscator');
 
           const DIST_DIR = './dist';
+          // NEU: Name der Datei, die NICHT verschleiert werden soll
+          const EXCLUDE_FILE = 'mainserver.html';
 
           // Funktion zum Verschleiern von JS-Code
           function obfuscate(jsCode) {
@@ -46,23 +47,30 @@ jobs:
           async function main() {
             await fs.mkdir(DIST_DIR, { recursive: true });
             const htmlFiles = glob.sync('**/*.html', { ignore: ['node_modules/**', `${DIST_DIR}/**`] });
-            console.log(`Found ${htmlFiles.length} HTML file(s) to process.`);
+            console.log(`Found ${htmlFiles.length} HTML file(s).`);
 
             for (const file of htmlFiles) {
-              console.log(`Processing ${file}...`);
-              let content = await fs.readFile(file, 'utf-8');
-              const regex = /<script(?![^>]*src=)>([\s\S]*?)<\/script>/gi;
-              
-              content = content.replace(regex, (match, scriptContent) => {
-                if (scriptContent.trim().length === 0) return match;
-                console.log(`  -> Obfuscating an inline script in ${file}`);
-                const obfuscatedContent = obfuscate(scriptContent);
-                return `<script>${obfuscatedContent}</script>`;
-              });
-
               const destPath = path.join(DIST_DIR, file);
               await fs.mkdir(path.dirname(destPath), { recursive: true });
-              await fs.writeFile(destPath, content);
+
+              // NEU: Prüfen, ob es die zu exkludierende Datei ist
+              if (file === EXCLUDE_FILE) {
+                console.log(`Copying '${file}' without obfuscation.`);
+                await fs.copyFile(file, destPath);
+              } else {
+                console.log(`Processing and obfuscating '${file}'.`);
+                let content = await fs.readFile(file, 'utf-8');
+                const regex = /<script(?![^>]*src=)>([\s\S]*?)<\/script>/gi;
+                
+                content = content.replace(regex, (match, scriptContent) => {
+                  if (scriptContent.trim().length === 0) return match;
+                  console.log(`  -> Obfuscating an inline script in ${file}`);
+                  const obfuscatedContent = obfuscate(scriptContent);
+                  return `<script>${obfuscatedContent}</script>`;
+                });
+
+                await fs.writeFile(destPath, content);
+              }
             }
             console.log('HTML processing finished.');
           }
@@ -79,6 +87,8 @@ jobs:
         run: node obfuscate-html.js
 
       # 6. Alle anderen wichtigen Dateien (CSS, Bilder, etc.) kopieren
+      # Dieser Schritt ist weiterhin korrekt, da er alle HTML-Dateien ignoriert,
+      # die ja bereits durch unser Skript verarbeitet wurden.
       - name: Copy other assets (CSS, images, etc.)
         run: rsync -av --exclude='*.html' --exclude='*.js' --exclude='node_modules' --exclude='.git' --exclude='obfuscate-html.js' --exclude='package*.json' --exclude='dist' . ./dist/
 
