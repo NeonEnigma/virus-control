@@ -1,0 +1,64 @@
+# Der Name Ihres Workflows. Er wird in der "Actions"-Ansicht auf GitHub angezeigt.
+name: Obfuscate Website
+
+# Dieser Workflow wird bei jedem Push auf den 'main'-Branch ausgeführt.
+# Wenn Ihr Haupt-Branch 'master' heißt, ändern Sie es entsprechend.
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-obfuscate:
+    # Wir verwenden einen Standard-Linux-Computer von GitHub.
+    runs-on: ubuntu-latest
+
+    steps:
+      # Schritt 1: Den Code Ihres Repositories herunterladen
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Schritt 2: Node.js einrichten, was wir für das Obfuscator-Tool brauchen
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Schritt 3: Das Obfuscator-Tool installieren
+      - name: Install JavaScript Obfuscator
+        run: npm install javascript-obfuscator
+
+      # Schritt 4: Den JavaScript-Code verschleiern
+      # - Der Befehl durchsucht das gesamte Projekt ('.') nach .js-Dateien.
+      # - Das Ergebnis wird in einen neuen Ordner namens 'dist' kopiert.
+      # - WICHTIG: Die Datei 'mainserver.html' wird übersprungen.
+      #   Ersetzen Sie 'mainserver.html' mit dem Namen Ihrer Datei!
+      # - Alle Nicht-JavaScript-Dateien (HTML, CSS, Bilder etc.) werden automatisch ignoriert.
+      - name: Obfuscate JavaScript Files
+        run: >
+          npx javascript-obfuscator . 
+          --output ./dist 
+          --exclude mainserver.html 
+          --compact true 
+          --self-defending true
+
+      # Schritt 5: Alle restlichen Dateien (HTML, CSS, Bilder etc.) in den 'dist'-Ordner kopieren
+      # Dieser Befehl kopiert alles außer den JavaScript-Dateien, da diese bereits verschleiert wurden.
+      - name: Copy non-JavaScript files to dist
+        run: rsync -av --exclude='*.js' --exclude='node_modules' --exclude='.git' --exclude='dist' . ./dist/
+
+      # Schritt 6: Den fertigen, verschleierten Code in den 'release'-Branch pushen
+      - name: Push to release branch
+        uses: peaceiris/actions-gh-page@v4
+        with:
+          # Dies ist ein spezielles Token, das GitHub automatisch bereitstellt.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Der Ordner, der in den neuen Branch gepusht werden soll.
+          publish_dir: ./dist
+          # Der Name des Ziel-Branches. Sie können ihn beliebig nennen.
+          publish_branch: release
+          # Diese Option sorgt dafür, dass der Branch sauber bleibt und bei jedem Push komplett neu erstellt wird.
+          force_orphan: true
+          # Setzt den Autor des Commits auf den GitHub Actions Bot.
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
