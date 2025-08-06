@@ -88,7 +88,7 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // NEU: Globale Variable für unseren zentralen Timer-Updater
+    // Globale Variable für unseren zentralen Timer-Updater
     let masterTimerInterval = null;
 
     // "Türsteher"-Skript zur Berechtigungsprüfung
@@ -101,10 +101,9 @@
             document.getElementById('loading-message').style.display = 'none';
             document.getElementById('admin-dashboard').style.display = 'block';
             
-            // Starte die Dashboard-Logik
             initializeDashboard();
 
-            // NEU: Starte den zentralen Timer-Updater, der jede Sekunde läuft
+            // Starte den zentralen Timer-Updater, der jede Sekunde läuft
             if (masterTimerInterval) clearInterval(masterTimerInterval);
             masterTimerInterval = setInterval(updateAllTimersOnPage, 1000);
 
@@ -117,7 +116,7 @@
       }
     });
 
-    // === ANGEPASSTE FUNKTION: Baut das Dashboard und hält es aktuell ===
+    // Baut das Dashboard und hält es aktuell
     function initializeDashboard() {
       const usersRef = ref(db, 'users');
       const userListDiv = document.getElementById('user-list');
@@ -134,8 +133,6 @@
           if (user.timer && user.timer.endTime) {
             const diffMs = user.timer.endTime - Date.now();
             if (diffMs > 0) {
-              // NEU: Wir fügen die Endzeit als "data-end-time"-Attribut direkt ins HTML ein.
-              // Das erlaubt unserem Updater, die Zeit zu finden und neu zu berechnen.
               timerStatusHTML = `<p class="timer-active" data-end-time="${user.timer.endTime}">Lädt...</p>`;
             } else {
               timerStatusHTML = '<p class="timer-inactive">Timer abgelaufen</p>';
@@ -156,6 +153,7 @@
             <div>
               <button class="start-btn" data-uid="${uid}">Start / Neustart (2h)</button>
               <button class="add-time-btn" data-uid="${uid}">+10 Min</button>
+              <button class="subtract-time-btn" data-uid="${uid}">-10 Min</button>
               <button class="stop-btn" data-uid="${uid}">Stopp</button>
             </div>
           `;
@@ -165,9 +163,8 @@
       });
     }
 
-    // === NEUE FUNKTION: Aktualisiert alle Timer-Anzeigen auf der Seite ===
+    // Aktualisiert alle Timer-Anzeigen auf der Seite
     function updateAllTimersOnPage() {
-      // Finde alle HTML-Elemente, die einen aktiven Timer darstellen
       const activeTimerElements = document.querySelectorAll('.timer-active[data-end-time]');
       
       activeTimerElements.forEach(timerEl => {
@@ -176,7 +173,6 @@
         const diffMs = endTime - now;
 
         if (diffMs <= 0) {
-          // Wenn der Timer abgelaufen ist, ändere den Status und entferne das Attribut
           timerEl.textContent = "Timer abgelaufen";
           timerEl.classList.remove('timer-active');
           timerEl.classList.add('timer-inactive');
@@ -189,22 +185,25 @@
         const mm = Math.floor((diffSec % 3600) / 60);
         const ss = diffSec % 60;
         
-        // Aktualisiere die Textanzeige
         timerEl.textContent = 
           `Läuft: ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
       });
     }
 
-    // Event-Handling für alle Buttons (unverändert)
+    // Event-Handling für alle Buttons
     document.getElementById('user-list').addEventListener('click', (e) => {
       if (e.target.tagName !== 'BUTTON') return;
+
       const uid = e.target.dataset.uid;
       if (!uid) return;
+      
       const targetUserTimerRef = ref(db, `users/${uid}/timer`);
+
       if (e.target.classList.contains('start-btn')) {
         const newEndTime = Date.now() + 7200 * 1000;
         set(targetUserTimerRef, { endTime: newEndTime, initialDuration: 7200 });
       }
+
       if (e.target.classList.contains('add-time-btn')) {
         get(targetUserTimerRef).then((snapshot) => {
           const timerData = snapshot.val();
@@ -216,6 +215,29 @@
           }
         });
       }
+      
+      // ==========================================================
+      // NEUE LOGIK FÜR DEN "-10 MIN" BUTTON
+      // ==========================================================
+      if (e.target.classList.contains('subtract-time-btn')) {
+        get(targetUserTimerRef).then((snapshot) => {
+          const timerData = snapshot.val();
+          if (timerData && timerData.endTime && timerData.endTime > Date.now()) {
+            const newEndTime = timerData.endTime - 10 * 60 * 1000; // 10 Minuten abziehen
+            
+            // Sicherheitsprüfung: Timer nicht ins Negative laufen lassen
+            if (newEndTime <= Date.now()) {
+              // Wenn die Zeit abgelaufen wäre, den Timer einfach stoppen
+              set(targetUserTimerRef, null);
+            } else {
+              set(targetUserTimerRef, { ...timerData, endTime: newEndTime });
+            }
+          } else {
+            alert("Timer ist nicht aktiv. Zeit kann nicht abgezogen werden.");
+          }
+        });
+      }
+
       if (e.target.classList.contains('stop-btn')) {
         set(targetUserTimerRef, null);
       }
