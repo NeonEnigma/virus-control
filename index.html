@@ -166,6 +166,29 @@
         globalTimerEl.classList.add("invisible");
       }
     });
+
+    // In Ihrer signInWithEmailAndPassword .then() Logik:
+.then((userCredential) => {
+  const user = userCredential.user;
+  const userRef = ref(db, 'users/' + user.uid);
+
+  // Lese die Daten des Benutzers aus der Datenbank
+  onValue(userRef, (snapshot) => {
+    const userData = snapshot.val();
+    
+    // Prüfe, ob der isAdmin-Flag gesetzt ist
+    if (userData && userData.isAdmin === true) {
+      console.log("Admin-Login erkannt. Leite zu admin.html weiter.");
+      window.location.href = "admin.html";
+    } else {
+      console.log("Standard-Benutzer-Login. Leite zu terminal.html weiter.");
+      window.location.href = "terminal.html";
+    }
+  }, {
+    // Wichtig: nur einmal lesen, da wir nur für die Weiterleitung prüfen
+    onlyOnce: true 
+  });
+})
   </script>
 </body>
 </html>
