@@ -108,17 +108,18 @@
         const correctAnswers = ["150k", "150k€", "150000", "150000€"];
 
         if (correctAnswers.includes(budget.toLowerCase().trim())) {
-          // ===============================================
-          // HIER IST DIE ANGEPASSTE STELLE
           const userPuzzlesRef = ref(db, 'users/' + user.uid + '/puzzles');
-          update(userPzzlesRef, {
+          
+          // ===============================================
+          // KORREKTUR: Tippfehler 'userPzzlesRef' zu 'userPuzzlesRef' behoben
+          update(userPuzzlesRef, {
             applicationServerCompleted: true
           }).then(() => {
             console.log("Application-Server-Rätsel-Status in Firebase gespeichert!");
-            // Leite zur generischen Erfolgsseite weiter
             window.location.href = "success3920193484.html";
           });
           // ===============================================
+
         } else {
           const errorDisplay = document.getElementById("errorDisplay");
           errorDisplay.textContent = "Falsche Lösung! Bitte überprüfe deine Eingabe.";
