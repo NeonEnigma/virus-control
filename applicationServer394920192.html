@@ -4,202 +4,132 @@
   <meta charset="UTF-8">
   <title>Kosten</title>
   <style>
-    /* Vollbild & Reset */
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #000;
-      font-family: monospace;
-      color: #fdfdfd;
-    }
-    /* Zentrale Ausrichtung */
-    .dashboard {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      box-sizing: border-box;
-      position: relative;
-      height: 100%;
-    }
-    /* Zurück-Pfeil */
-    .back-arrow {
-      text-decoration: none;
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      font-size: 15px;
-      color: #0f0;
-      cursor: pointer;
-      padding: 10px;
-      z-index: 100;
-      background-color: rgba(0, 0, 0, 0.5);
-      border-radius: 5px;
-    }
-    
-    .back-arrow:hover {
-      background-color: rgba(0, 255, 0, 0.2);
-    }
-    
-    .heading h1 {
-      font-size: 2rem;
-      margin-bottom: 10px;
-    }
-    .description {
-      max-width: 600px;
-      text-align: left;
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
-    .input-group {
-      width: 100%;
-      max-width: 600px;
-    }
-    .input-group input {
-      background-color: #222;
-      color: #fdfdfd;
-      border: 1px solid #0f0;
-      border-radius: 5px;
-      padding: 5px;
-      font-family: monospace;
-      width: 40px;
-      text-align: center;
-      margin-right: 5px;
-      height: 25px;
-      width: auto;
-    }
-    .input-group button {
-      background-color: #0f0;
-      color: #000;
-      border: none;
-      border-radius: 7px;
-      padding: 10px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      margin-top: 10px;
-              
-    }
-    .input-group button:hover {
-      background-color: #6f6;
-    }
-    .error {
-      color: red;
-      font-size: 1rem;
-      min-height: 1.2em;
-      margin-top: 10px;
-    }
-    
-    /* Erfolgsseite Styling */
-    .success-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #000;
-      text-align: center;
-    }
-    
-    .success-icon {
-      font-size: 5rem;
-      color: #0f0;
-      margin-bottom: 20px;
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-    
-    .success-title {
-      color: #0f0;
-      font-size: 2.5rem;
-      margin-bottom: 15px;
-    }
-    
-    .success-message {
-      color: #afa;
-      font-size: 1.5rem;
-      margin-bottom: 30px;
-    }
-    
-    .dashboard-btn {
-      background-color: #0f0;
-      color: #000;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 5px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.3s ease;
-    }
-    
-    .dashboard-btn:hover {
-      background-color: #6f6;
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
-    }
+    /* Ihr komplettes CSS bleibt hier unverändert. */
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; font-family: monospace; color: #fdfdfd; }
+    .dashboard { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; position: relative; height: 100%; }
+    .back-arrow { text-decoration: none; position: absolute; top: 20px; left: 20px; font-size: 15px; color: #0f0; cursor: pointer; padding: 10px; z-index: 100; background-color: rgba(0, 0, 0, 0.5); border-radius: 5px; }
+    .back-arrow:hover { background-color: rgba(0, 255, 0, 0.2); }
+    .heading h1 { font-size: 2rem; margin-bottom: 10px; }
+    .description { max-width: 600px; text-align: left; margin-bottom: 20px; line-height: 1.5; }
+    .input-group { width: 100%; max-width: 600px; text-align: center; }
+    .input-group input { background-color: #222; color: #fdfdfd; border: 1px solid #0f0; border-radius: 5px; padding: 5px; font-family: monospace; width: auto; text-align: center; margin-right: 5px; height: 25px; }
+    .input-group button { background-color: #0f0; color: #000; border: none; border-radius: 7px; padding: 10px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; margin-top: 10px; }
+    .input-group button:hover { background-color: #6f6; }
+    .error { color: red; font-size: 1rem; min-height: 1.2em; margin-top: 10px; }
+    .success-container { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #000; text-align: center; }
+    .success-icon { font-size: 5rem; color: #0f0; margin-bottom: 20px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    .success-title { color: #0f0; font-size: 2.5rem; margin-bottom: 15px; }
+    .success-message { color: #afa; font-size: 1.5rem; margin-bottom: 30px; }
+    .dashboard-btn { background-color: #0f0; color: #000; border: none; padding: 12px 25px; border-radius: 5px; font-size: 1.2rem; cursor: pointer; text-decoration: none; transition: all 0.3s ease; }
+    .dashboard-btn:hover { background-color: #6f6; transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
   </style>
 </head>
 <body>
 
-  <!-- Zurück-Pfeil -->
-  <div class="back-arrow" onclick="window.location.href='dashboard397297297924.html'">&#8592; Dashboard</div>
-          
-  <div class="dashboard" id="dashboardContent">
-    <div class="heading">
-      <h1>Kostenplanung</h1>
-    </div>
-    <div class="description">
-      <p>IT kostet, deshalb habe ich meine Aufwendungen zweier Jahre grafisch verglichen. Jetzt habe ich aber vergessen, wie hoch meine jährliche Grenze ist. 
-        Sowohl mein Budget als auch meine Fixkosten haben sich über die Jahre nicht verändert.
-      </p>
-      <p>Wie hoch ist mein Budget?</p>
-    </div>
-    <img src="Applikation-Server.png" height="65%">
-    <div class="input-group">
-      Budget in Euro:
-      <input type="text" id="budget" maxlength="10" placeholder="€" required pattern="[0-9]+">
-      <button onclick="check()">Lösung prüfen</button>
-      <p class="error" id="errorDisplay"></p>
-    </div>
-  </div>
+  <script type="module">
+    // Firebase initialisieren
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-  <script>
-    // Falls die Applikation-Server-Aufgabe bereits gelöst wurde
-    document.addEventListener("DOMContentLoaded", function() {
-      if (localStorage.getItem("applicationServerCompleted") === "true") {
-        document.body.innerHTML = `
-          <div class="success-container">
-            <div class="success-icon">✓</div>
-            <h1 class="success-title">Application Server ist online</h1>
-            <p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p>
-            <a href="dashboard397297297924.html" class="dashboard-btn">Zurück zum Dashboard</a>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
+      authDomain: "escape-star.firebaseapp.com",
+      projectId: "escape-star",
+      storageBucket: "escape-star.firebasestorage.app",
+      messagingSenderId: "764344736028",
+      appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
+      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // Diese Funktion rendert die Erfolgsseite
+    function showSuccessPage() {
+      document.body.innerHTML = `
+        <div class="success-container">
+          <div class="success-icon">✓</div>
+          <h1 class="success-title">Application Server ist online</h1>
+          <p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p>
+          <a href="dashboard397297297924.html" class="dashboard-btn">Zurück zum Dashboard</a>
+        </div>
+      `;
+    }
+
+    // Diese Funktion rendert die Rätsel-Seite
+    function showPuzzlePage() {
+      document.body.innerHTML = `
+        <div class="back-arrow" onclick="window.location.href='dashboard397297297924.html'">&#8592; Dashboard</div>
+        <div class="dashboard" id="dashboardContent">
+          <div class="heading"><h1>Kostenplanung</h1></div>
+          <div class="description">
+            <p>IT kostet, deshalb habe ich meine Aufwendungen zweier Jahre grafisch verglichen. Jetzt habe ich aber vergessen, wie hoch meine jährliche Grenze ist. Sowohl mein Budget als auch meine Fixkosten haben sich über die Jahre nicht verändert.</p>
+            <p>Wie hoch ist mein Budget?</p>
           </div>
-        `;
-      }
-    });
-    
-    function check() {
-      let budget = document.getElementById("budget").value;
-      if (budget.toLowerCase() === "150k" || budget.toLowerCase() === "150k€" || budget.toLowerCase() === "150000"|| budget.toLowerCase() === "150000€") {
+          <img src="Applikation-Server.png" height="65%">
+          <div class="input-group">
+            Budget in Euro:
+            <input type="text" id="budget" maxlength="10" placeholder="€" required pattern="[0-9]+">
+            <button id="solutionButton">Lösung prüfen</button>
+            <p class="error" id="errorDisplay"></p>
+          </div>
+        </div>
+      `;
+    }
 
-        // Setze den Flag für den erfolgreich gelösten Rätsel
-        localStorage.setItem("applicationServerCompleted", "true");
-        window.location.href = "success3920193484.html";
-      } else {
-        document.getElementById("errorDisplay").textContent = "Falsche Lösung! Bitte überprüfe deine Eingabe.";
-        setTimeout(function() {
-          document.getElementById("errorDisplay").textContent = "";
-        }, 3000);
+    // "Türsteher": Führe den Code nur aus, wenn ein Benutzer angemeldet ist.
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
       }
+
+      // Prüfe, ob das Rätsel schon gelöst wurde.
+      const userPuzzlesRef = ref(db, 'users/' + user.uid + '/puzzles');
+      get(userPuzzlesRef).then((snapshot) => {
+        const puzzles = snapshot.val();
+        if (puzzles && puzzles.applicationServerCompleted === true) {
+          showSuccessPage();
+        } else {
+          showPuzzlePage();
+          // Initialisiere die Rätsel-Logik
+          initializePuzzle(user);
+        }
+      });
+    });
+
+    // Die gesamte Rätsel-Logik in einer Funktion
+    function initializePuzzle(user) {
+      function check() {
+        let budget = document.getElementById("budget").value;
+        const correctAnswers = ["150k", "150k€", "150000", "150000€"];
+
+        if (correctAnswers.includes(budget.toLowerCase().trim())) {
+          // ===============================================
+          // HIER IST DIE ANGEPASSTE STELLE
+          const userPuzzlesRef = ref(db, 'users/' + user.uid + '/puzzles');
+          update(userPzzlesRef, {
+            applicationServerCompleted: true
+          }).then(() => {
+            console.log("Application-Server-Rätsel-Status in Firebase gespeichert!");
+            // Leite zur generischen Erfolgsseite weiter
+            window.location.href = "success3920193484.html";
+          });
+          // ===============================================
+        } else {
+          const errorDisplay = document.getElementById("errorDisplay");
+          errorDisplay.textContent = "Falsche Lösung! Bitte überprüfe deine Eingabe.";
+          setTimeout(() => {
+            errorDisplay.textContent = "";
+          }, 3000);
+        }
+      }
+
+      // Event listener für den Button
+      document.getElementById('solutionButton').addEventListener('click', check);
     }
   </script>
 </body>

@@ -4,480 +4,203 @@
   <meta charset="UTF-8">
   <title>Server-Verwaltung – Labyrinth Rätsel</title>
   <style>
-    /* Browser-Reset & Vollbild */
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #000;
-    }
-    
-    /* Grundlegender Stil */
-    body {
-      font-family: monospace;
-      color: #fdfdfd;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    /* Zurück-Pfeil */
-    .back-arrow {
-      text-decoration: none;
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      font-size: 15px;
-      color: #0f0;
-      cursor: pointer;
-      padding: 10px;
-      z-index: 100;
-      background-color: rgba(0, 0, 0, 0.5);
-      border-radius: 5px;
-    }
-
-    .back-arrow:hover {
-      background-color: rgba(0, 255, 0, 0.2);
-    }
-    
-    
-    /* Haupt-Container */
-    .dashboard {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      box-sizing: border-box;
-      position: relative;
-    }
-    
-    /* Überschrift */
-    .heading {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .heading h1 {
-      font-size: 2rem;
-      margin-bottom: 10px;
-      margin-top: 50px;
-    }
-    .heading p {
-      margin: 5px 0;
-    }
-    /* Münzzähler */
-    #coinCounter {
-      font-size: 1.2rem;
-      color: #FFD700;
-      margin-top: 70px;
-      text-align: center;
-    }
-    
-    /* Wrapper für Labyrinth und Script-Eingabe */
-    .labyrinth-wrapper {
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      margin-top: 70px;
-    }
-    
-    /* Labyrinth-Container */
-    #labyrinth {
-      position: relative;
-      width: fit-content;
-      height: 428px;
-      background-color: #333;
-      border: 1px solid #0f0;
-      border-radius: 10px;
-      padding: 5px;
-      box-sizing: border-box;
-    }
-    #cellsContainer {
-      display: grid;
-      grid-template-columns: repeat(10, 40px);
-      grid-template-rows: repeat(10, 40px);
-      gap: 2px;
-    }
-    .cell {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 5px;
-      font-size: 1rem;
-    }
-    .wall {
-      background: #555;
-    }
-    .empty {
-      background: #222;
-    }
-    /* Münzen */
-    .coin {
-      background-color: #222;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-      color: #000;
-      font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    /* Turtle */
-    #turtleElement {
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      transition: top 0.5s, left 0.5s;
-      pointer-events: none;
-    }
-    
-    /* Script-Eingabebereich */
-    #scriptContainer {
-      width: 300px;
-      height: 457px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-    }
-    #scriptContainer textarea {
-      width: 100%;
-      height: 100%;
-      background: #222;
-      color: #fdfdfd;
-      border: 1px solid #0f0;
-      border-radius: 5px;
-      padding: 10px;
-      font-family: monospace;
-      resize: none;
-      box-sizing: border-box;
-    }
-    #scriptContainer button {
-      background-color: #0f0;
-      color: #000;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 7px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      margin-top: 10px;
-    }
-    #scriptContainer button:hover {
-      background-color: #6f6;
-    }
-    
-    /* Fehleranzeige */
-    #errorDisplay {
-      color: red;
-      font-size: 1rem;
-      margin-top: 10px;
-      min-height: 1.2em;
-    }
-    
-    /* Gemeinsamer Box-Stil */
-    .box {
-      background-color: #011d09;
-      border-radius: 20px;
-      padding: 20px;
-      box-sizing: border-box;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(18, 1, 65, 0.3);
-      transition: transform 0.2s, box-shadow 0.2s;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .box:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
-    }
-    
-    /* Erfolgsseite Styling */
-    .success-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #000;
-      text-align: center;
-    }
-    
-    .success-icon {
-      font-size: 5rem;
-      color: #0f0;
-      margin-bottom: 20px;
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-    
-    .success-title {
-      color: #0f0;
-      font-size: 2.5rem;
-      margin-bottom: 15px;
-    }
-    
-    .success-message {
-      color: #afa;
-      font-size: 1.5rem;
-      margin-bottom: 30px;
-    }
-    
-    .success-detail {
-      color: #8f8;
-      font-size: 1.2rem;
-      margin-bottom: 40px;
-      max-width: 600px;
-    }
-    
-    .dashboard-btn {
-      background-color: #0f0;
-      color: #000;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 5px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.3s ease;
-    }
-    
-    .dashboard-btn:hover {
-      background-color: #6f6;
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
-    }
+    /* Ihr komplettes CSS bleibt hier unverändert. */
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; }
+    body { font-family: monospace; color: #fdfdfd; display: flex; flex-direction: column; }
+    .back-arrow { text-decoration: none; position: absolute; top: 20px; left: 20px; font-size: 15px; color: #0f0; cursor: pointer; padding: 10px; z-index: 100; background-color: rgba(0, 0, 0, 0.5); border-radius: 5px; }
+    .back-arrow:hover { background-color: rgba(0, 255, 0, 0.2); }
+    .dashboard { flex: 1; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; position: relative; }
+    .heading { text-align: center; margin-bottom: 20px; }
+    .heading h1 { font-size: 2rem; margin-bottom: 10px; margin-top: 50px; }
+    .heading p { margin: 5px 0; }
+    #coinCounter { font-size: 1.2rem; color: #FFD700; margin-top: 70px; text-align: center; }
+    .labyrinth-wrapper { display: flex; gap: 20px; justify-content: center; align-items: flex-start; flex-wrap: wrap; margin-top: 70px; }
+    #labyrinth { position: relative; width: fit-content; height: 428px; background-color: #333; border: 1px solid #0f0; border-radius: 10px; padding: 5px; box-sizing: border-box; }
+    #cellsContainer { display: grid; grid-template-columns: repeat(10, 40px); grid-template-rows: repeat(10, 40px); gap: 2px; }
+    .cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 1rem; }
+    .wall { background: #555; }
+    .empty { background: #222; }
+    .coin { background-color: #222; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); color: #000; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
+    #turtleElement { position: absolute; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: top 0.5s, left 0.5s; pointer-events: none; }
+    #scriptContainer { width: 300px; height: 457px; text-align: center; display: flex; flex-direction: column; }
+    #scriptContainer textarea { width: 100%; height: 100%; background: #222; color: #fdfdfd; border: 1px solid #0f0; border-radius: 5px; padding: 10px; font-family: monospace; resize: none; box-sizing: border-box; }
+    #scriptContainer button { background-color: #0f0; color: #000; padding: 10px 20px; border: none; border-radius: 7px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; margin-top: 10px; }
+    #scriptContainer button:hover { background-color: #6f6; }
+    #errorDisplay { color: red; font-size: 1rem; margin-top: 10px; min-height: 1.2em; }
+    .box { background-color: #011d09; border-radius: 20px; padding: 20px; box-sizing: border-box; text-align: center; box-shadow: 0 4px 12px rgba(18, 1, 65, 0.3); transition: transform 0.2s, box-shadow 0.2s; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .box:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5); }
+    .success-container { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #000; text-align: center; }
+    .success-icon { font-size: 5rem; color: #0f0; margin-bottom: 20px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    .success-title { color: #0f0; font-size: 2.5rem; margin-bottom: 15px; }
+    .success-message { color: #afa; font-size: 1.5rem; margin-bottom: 30px; }
+    .success-detail { color: #8f8; font-size: 1.2rem; margin-bottom: 40px; max-width: 600px; }
+    .dashboard-btn { background-color: #0f0; color: #000; border: none; padding: 12px 25px; border-radius: 5px; font-size: 1.2rem; cursor: pointer; text-decoration: none; transition: all 0.3s ease; }
+    .dashboard-btn:hover { background-color: #6f6; transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
   </style>
 </head>
 <body>
-  <!-- Zurück-Pfeil -->
-  <div class="container">
-    <div class="header">
-      <a href="dashboard397297297924.html" class="back-arrow">&#8592; Dashboard</a>
-    </div>
   
-  <div class="dashboard">
-    <div class="heading">
-      <h1>Server-Verwaltung – Labyrinth Rätsel</h1>
-      <p>Die Schildkröte muss alle Münzen sammeln!</p>
-      <p>Verwende: <code>turtle.up(3)</code>, <code>turtle.down(2)</code>, <code>turtle.left()</code>, <code>turtle.right()</code> und <code>turtle.collect()</code></p>
-    </div>
-    
-    <div class="labyrinth-wrapper">
-      <!-- Labyrinth-Container -->
-      <div id="labyrinth">
-        <div id="cellsContainer"></div>
-        <div id="turtleElement">🐢</div>
-      </div>
-      <!-- Eingabe- und Steuerbereich -->
-      <div id="scriptContainer">
-        <textarea id="scriptInput" placeholder="Gib hier dein Script ein, z. B.:
-turtle.right(2);
-turtle.down(3);
-turtle.collect();"></textarea>
-        <button class="button" onclick="runScript()">Script ausführen</button>
-        <div id="errorDisplay"></div>
-      </div>
-    </div>
-    <div id="coinCounter">Gesammelte Münzen: 0</div>
-  </div>
-  
-  <script>
-    // Labyrinth-Definition
-    const labyrinth = [
-      [" ", " ", "W", "W", "W", " ", "C", " ", " ", " "],
-      ["W", " ", " ", " ", "W", " ", "W", " ", "W", " "],
-      [" ", " ", "W", " ", " ", " ", " ", " ", "W", " "],
-      [" ", "W", "W", "W", " ", "W", "W", " ", " ", " "],
-      [" ", " ", " ", " ", " ", " ", "W", "W", "W", " "],
-      [" ", "W", "W", "W", "W", " ", " ", " ", " ", " "],
-      [" ", " ", "C", " ", "W", " ", "W", "W", " ", " "],
-      ["W", " ", "W", " ", " ", " ", " ", "W", " ", " "],
-      [" ", " ", "W", " ", "W", "W", " ", " ", " ", " "],
-      [" ", " ", " ", " ", " ", " ", " ", "W", "C", " "],
-    ];
-    const rows = labyrinth.length;
-    const cols = labyrinth[0].length;
-    
-    let coinCount = 0;
-    let movementChain = Promise.resolve();
-    
-    const turtle = {
-      row: 0,
-      col: 0,
-      move: function(dr, dc) {
-        const newRow = this.row + dr;
-        const newCol = this.col + dc;
-        if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
-          showError("Ungültige Bewegung: außerhalb des Labyrinths!");
-          return false;
-        }
-        if (labyrinth[newRow][newCol] === "W") {
-          showError("Bewegung blockiert durch Wand!");
-          return false;
-        }
-        clearError();
-        this.row = newRow;
-        this.col = newCol;
-        updateTurtlePosition();
-        return true;
-      },
-      up: function(steps = 1) {
-        for (let i = 0; i < steps; i++) {
-          movementChain = movementChain.then(() => new Promise((resolve) => {
-            if (!this.move(-1, 0)) {
-              resolve();
-            } else {
-              setTimeout(resolve, 500);
-            }
-          }));
-        }
-      },
-      down: function(steps = 1) {
-        for (let i = 0; i < steps; i++) {
-          movementChain = movementChain.then(() => new Promise((resolve) => {
-            if (!this.move(1, 0)) {
-              resolve();
-            } else {
-              setTimeout(resolve, 500);
-            }
-          }));
-        }
-      },
-      left: function(steps = 1) {
-        for (let i = 0; i < steps; i++) {
-          movementChain = movementChain.then(() => new Promise((resolve) => {
-            if (!this.move(0, -1)) {
-              resolve();
-            } else {
-              setTimeout(resolve, 500);
-            }
-          }));
-        }
-      },
-      right: function(steps = 1) {
-        for (let i = 0; i < steps; i++) {
-          movementChain = movementChain.then(() => new Promise((resolve) => {
-            if (!this.move(0, 1)) {
-              resolve();
-            } else {
-              setTimeout(resolve, 500);
-            }
-          }));
-        }
-      },
-      collect: function() {
-        movementChain = movementChain.then(() => new Promise((resolve) => {
-          if (labyrinth[this.row][this.col] === "C") {
-            labyrinth[this.row][this.col] = " ";
-            coinCount++;
-            document.getElementById("coinCounter").textContent = "Gesammelte Münzen: " + coinCount;
-            renderCells();
-            clearError();
-            updateTurtlePosition();
-            if (coinCount === 3) {
-              localStorage.setItem("labyrinthCompleted", "true");
-              window.location.href = "success3920193484.html";
-            }
-          } else {
-            showError("Keine Münze hier!");
-          }
-          setTimeout(resolve, 500);
-        }));
-      }
+  <script type="module">
+    // Firebase initialisieren
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
+      authDomain: "escape-star.firebaseapp.com",
+      projectId: "escape-star",
+      storageBucket: "escape-star.firebasestorage.app",
+      messagingSenderId: "764344736028",
+      appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
+      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
     };
-    
-    function showError(msg) {
-      document.getElementById("errorDisplay").textContent = msg;
-    }
-    function clearError() {
-      document.getElementById("errorDisplay").textContent = "";
-    }
-    
-    function renderCells() {
-      const container = document.getElementById("cellsContainer");
-      container.innerHTML = "";
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const cellDiv = document.createElement("div");
-          cellDiv.classList.add("cell");
-          if (labyrinth[r][c] === "W") {
-            cellDiv.classList.add("wall");
-          } else if (labyrinth[r][c] === "C") {
-            cellDiv.classList.add("coin");
-            cellDiv.textContent = "🪙";
-          } else {
-            cellDiv.classList.add("empty");
-          }
-          container.appendChild(cellDiv);
-        }
-      }
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // Diese Funktion rendert die Erfolgsseite
+    function showSuccessPage() {
+      document.body.innerHTML = `
+        <div class="success-container">
+          <div class="success-icon">✓</div>
+          <h1 class="success-title">Webserver ist online</h1>
+          <p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p>
+          <p class="success-detail">Der Webserver wurde erfolgreich von schädlichem Code befreit und ist jetzt vollständig funktionsfähig. Alle Sicherheitsmaßnahmen wurden wiederhergestellt.</p>
+          <a href="dashboard397297297924.html" class="dashboard-btn">Zurück zum Dashboard</a>
+        </div>
+      `;
     }
     
-    function updateTurtlePosition() {
-      const cellSize = 40;
-      const gap = 2;
-      const padding = 5;
-      const left = padding + turtle.col * (cellSize + gap);
-      const top = padding + turtle.row * (cellSize + gap);
-      const turtleEl = document.getElementById("turtleElement");
-      turtleEl.style.left = left + "px";
-      turtleEl.style.top = top + "px";
+    // Diese Funktion rendert das Labyrinth-Spiel
+    function showGamePage() {
+      document.body.innerHTML = `
+        <div class="container">
+          <div class="header">
+            <a href="dashboard397297297924.html" class="back-arrow">&#8592; Dashboard</a>
+          </div>
+          <div class="dashboard">
+            <div class="heading">
+              <h1>Server-Verwaltung – Labyrinth Rätsel</h1>
+              <p>Die Schildkröte muss alle Münzen sammeln!</p>
+              <p>Verwende: <code>turtle.up(3)</code>, <code>turtle.down(2)</code>, <code>turtle.left()</code>, <code>turtle.right()</code> und <code>turtle.collect()</code></p>
+            </div>
+            <div class="labyrinth-wrapper">
+              <div id="labyrinth">
+                <div id="cellsContainer"></div>
+                <div id="turtleElement">🐢</div>
+              </div>
+              <div id="scriptContainer">
+                <textarea id="scriptInput" placeholder="Gib hier dein Script ein, z. B.:\nturtle.right(2);\nturtle.down(3);\nturtle.collect();"></textarea>
+                <button class="button" id="runScriptBtn">Script ausführen</button>
+                <div id="errorDisplay"></div>
+              </div>
+            </div>
+            <div id="coinCounter">Gesammelte Münzen: 0</div>
+          </div>
+        </div>
+      `;
     }
-    
-    function runScript() {
-      clearError();
-      movementChain = Promise.resolve();
-      const code = document.getElementById("scriptInput").value;
-      let commands = code.split(";").map(cmd => cmd.trim()).filter(cmd => cmd.length > 0);
-      executeCommands(commands, 0);
-    }
-    
-    function executeCommands(commands, index) {
-      if (index >= commands.length) return;
-      try {
-        eval(commands[index] + ";");
-        clearError();
-      } catch (e) {
-        showError("Fehler im Script: " + e.message);
+
+    // "Türsteher": Führe den Code nur aus, wenn ein Benutzer angemeldet ist.
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // Niemand angemeldet, zurück zur Login-Seite
+        window.location.href = 'index.html';
         return;
       }
-      movementChain.then(() => {
-        setTimeout(() => {
-          executeCommands(commands, index + 1);
-        }, 500);
+
+      // Benutzer ist angemeldet. Prüfe, ob das Rätsel schon gelöst wurde.
+      const userPuzzlesRef = ref(db, 'users/' + user.uid + '/puzzles');
+      get(userPuzzlesRef).then((snapshot) => {
+        const puzzles = snapshot.val();
+        if (puzzles && puzzles.labyrinthCompleted === true) {
+          // Rätsel ist bereits gelöst, zeige direkt die Erfolgsseite.
+          showSuccessPage();
+        } else {
+          // Rätsel ist noch nicht gelöst, zeige das Spiel.
+          showGamePage();
+          // Initialisiere die Labyrinth-Logik erst, nachdem die Seite aufgebaut wurde.
+          initializeLabyrinth(user);
+        }
       });
-    }
-    
-    window.addEventListener("load", () => {
-      if (localStorage.getItem("labyrinthCompleted") === "true") {
-        document.body.innerHTML = `
-          <div class="success-container">
-            <div class="success-icon">✓</div>
-            <h1 class="success-title">Webserver ist online</h1>
-            <p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p>
-            <p class="success-detail">Der Webserver wurde erfolgreich von schädlichem Code befreit und ist jetzt vollständig funktionsfähig. Alle Sicherheitsmaßnahmen wurden wiederhergestellt.</p>
-            <a href="dashboard397297297924.html" class="dashboard-btn">Zurück zum Dashboard</a>
-          </div>
-        `;
-      } else {
-        renderCells();
-        updateTurtlePosition();
-      }
     });
+
+    // Die gesamte Labyrinth-Logik in einer Funktion, die den 'user' übergeben bekommt.
+    function initializeLabyrinth(user) {
+      const labyrinth = [
+        [" ", " ", "W", "W", "W", " ", "C", " ", " ", " "], ["W", " ", " ", " ", "W", " ", "W", " ", "W", " "], [" ", " ", "W", " ", " ", " ", " ", " ", "W", " "], [" ", "W", "W", "W", " ", "W", "W", " ", " ", " "], [" ", " ", " ", " ", " ", " ", "W", "W", "W", " "], [" ", "W", "W", "W", "W", " ", " ", " ", " ", " "], [" ", " ", "C", " ", "W", " ", "W", "W", " ", " "], ["W", " ", "W", " ", " ", " ", " ", "W", " ", " "], [" ", " ", "W", " ", "W", "W", " ", " ", " ", " "], [" ", " ", " ", " ", " ", " ", " ", "W", "C", " "],
+      ];
+      const rows = labyrinth.length;
+      const cols = labyrinth[0].length;
+      let coinCount = 0;
+      let movementChain = Promise.resolve();
+
+      const turtle = {
+        row: 0, col: 0,
+        move: function(dr, dc) { /* ... (unverändert) ... */ const newRow = this.row + dr; const newCol = this.col + dc; if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) { showError("Ungültige Bewegung: außerhalb des Labyrinths!"); return false; } if (labyrinth[newRow][newCol] === "W") { showError("Bewegung blockiert durch Wand!"); return false; } clearError(); this.row = newRow; this.col = newCol; updateTurtlePosition(); return true; },
+        up: function(steps = 1) { /* ... (unverändert) ... */ for (let i = 0; i < steps; i++) { movementChain = movementChain.then(() => new Promise((resolve) => { if (!this.move(-1, 0)) { resolve(); } else { setTimeout(resolve, 500); } })); } },
+        down: function(steps = 1) { /* ... (unverändert) ... */ for (let i = 0; i < steps; i++) { movementChain = movementChain.then(() => new Promise((resolve) => { if (!this.move(1, 0)) { resolve(); } else { setTimeout(resolve, 500); } })); } },
+        left: function(steps = 1) { /* ... (unverändert) ... */ for (let i = 0; i < steps; i++) { movementChain = movementChain.then(() => new Promise((resolve) => { if (!this.move(0, -1)) { resolve(); } else { setTimeout(resolve, 500); } })); } },
+        right: function(steps = 1) { /* ... (unverändert) ... */ for (let i = 0; i < steps; i++) { movementChain = movementChain.then(() => new Promise((resolve) => { if (!this.move(0, 1)) { resolve(); } else { setTimeout(resolve, 500); } })); } },
+        collect: function() {
+          movementChain = movementChain.then(() => new Promise((resolve) => {
+            if (labyrinth[this.row][this.col] === "C") {
+              labyrinth[this.row][this.col] = " ";
+              coinCount++;
+              document.getElementById("coinCounter").textContent = "Gesammelte Münzen: " + coinCount;
+              renderCells();
+              clearError();
+              updateTurtlePosition();
+              if (coinCount === 3) {
+                // ===============================================
+                // HIER IST DIE ANGEPASSTE STELLE
+                // Schreibe den Erfolg in die Firebase Datenbank statt in den localStorage
+                const userPuzzlesRef = ref(db, 'users/' + user.uid + '/puzzles');
+                update(userPuzzlesRef, {
+                  labyrinthCompleted: true
+                }).then(() => {
+                  console.log("Webserver-Rätsel-Status in Firebase gespeichert!");
+                  // Leite zur (nicht existierenden) generischen Erfolgsseite weiter
+                  window.location.href = "success3920193484.html";
+                });
+                // ===============================================
+              }
+            } else {
+              showError("Keine Münze hier!");
+            }
+            setTimeout(resolve, 500);
+          }));
+        }
+      };
+
+      function showError(msg) { document.getElementById("errorDisplay").textContent = msg; }
+      function clearError() { document.getElementById("errorDisplay").textContent = ""; }
+      function renderCells() { const container = document.getElementById("cellsContainer"); container.innerHTML = ""; for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) { const cellDiv = document.createElement("div"); cellDiv.classList.add("cell"); if (labyrinth[r][c] === "W") { cellDiv.classList.add("wall"); } else if (labyrinth[r][c] === "C") { cellDiv.classList.add("coin"); cellDiv.textContent = "🪙"; } else { cellDiv.classList.add("empty"); } container.appendChild(cellDiv); } } }
+      function updateTurtlePosition() { const cellSize = 40; const gap = 2; const padding = 5; const left = padding + turtle.col * (cellSize + gap); const top = padding + turtle.row * (cellSize + gap); const turtleEl = document.getElementById("turtleElement"); turtleEl.style.left = left + "px"; turtleEl.style.top = top + "px"; }
+      
+      function runScript() {
+        clearError();
+        movementChain = Promise.resolve();
+        const code = document.getElementById("scriptInput").value;
+        try {
+          // Direkte Ausführung ohne eval, um turtle im Scope zu haben
+          const commands = new Function('turtle', code);
+          commands(turtle);
+        } catch (e) {
+          showError("Fehler im Script: " + e.message);
+        }
+      }
+      
+      // Event listener für den Button
+      document.getElementById('runScriptBtn').addEventListener('click', runScript);
+      
+      // Initiales Rendern
+      renderCells();
+      updateTurtlePosition();
+    }
   </script>
 </body>
 </html>

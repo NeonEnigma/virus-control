@@ -4,458 +4,186 @@
   <meta charset="UTF-8">
   <title>Datenbank – Netzwerkoptimierung</title>
   <style>
-    /* Vollbild & Reset */
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #000;
-      font-family: monospace;
-      color: #fdfdfd;
-    }
-
-    .heading {
-      margin-bottom: 20px;
-      margin-top: 20px;
-    }
-    
-    /* Container für das gesamte Layout */
-    .container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      width: 100%;
-    }
-    
-    /* Header-Bereich mit Titel und Zurück-Button */
-    .header {
-      padding: 20px;
-      position: relative;
-      border-bottom: 1px solid #333;
-    }
-    
-    .back-arrow {
-      text-decoration: none;
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      font-size: 15px;
-      color: #0f0;
-      cursor: pointer;
-      padding: 10px;
-      z-index: 100;
-      background-color: rgba(0, 0, 0, 0.5);
-      border-radius: 5px;
-    }
-    
-    .back-arrow:hover {
-      background-color: rgba(0, 255, 0, 0.2);
-    }
-    
-    .heading {
-      text-align: center;
-    }
-    
-    .heading h1 {
-      font-size: 2.2rem;
-      margin: 0;
-    }
-    
-    /* Hauptinhalt mit zwei Spalten */
-    .dashboard {
-      display: flex;
-      flex: 1;
-      height: calc(100% - 80px);
-    }
-    
-    /* Spalten-Layout */
-    .column {
-      padding: 40px;
-      overflow-y: auto;
-    }
-    
-    .left-column {
-      flex: 1;
-      border-right: 1px solid #333;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-    }
-    
-    .right-column {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding-top: 20px; /* Weniger Padding oben */
-    }
-
-    #solutionButton {
-      width: 400px;
-    }
-    
-    /* Beschreibung und Erklärung */
-    .description {
-      line-height: 1.6;
-    }
-    
-    .description p {
-      margin-bottom: 20px;
-      font-size: 1.1rem;
-    }
-    
-    .description ul {
-      margin-bottom: 20px;
-      padding-left: 20px;
-    }
-    
-    .description li {
-      margin-bottom: 8px;
-      font-size: 1.1rem;
-    }
-    
-    /* Eingabefelder */
-    .input-group {
-      width: 100%;
-      max-width: 90%;
-      transform: translateY(10px); /* Inhalt nach unten verschieben */
-      display: flex;
-      flex-direction: column;
-      align-items: center; /* Horizontal zentrieren */
-    }
-    
-    .input-wrapper {
-      width: 66%; /* Gleiche Breite wie der Button */
-      margin: 0 auto; /* Zentrieren */
-    }
-    
-    .input-group ol {
-      padding-left: 20px; /* Standardmäßiges Padding wieder einführen */
-      margin-top: 0;
-      width: 100%;
-    }
-    
-    .input-group li {
-      margin-bottom: 16px; /* Weniger Abstand zwischen den Elementen */
-      font-size: 1.1rem;
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      align-items: flex-start; /* Linksbündig ausrichten */
-    }
-    
-    .input-label {
-      margin-bottom: 6px; /* Weniger Abstand zwischen Label und Feldern */
-      width: 100%;
-      text-align: left; /* Linksbündig ausrichten */
-    }
-    
-    .input-fields {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start; /* Linksbündig ausrichten */
-      margin-left: 0; /* Kein zusätzlicher Einzug */
-    }
-    
-    .input-group input {
-      background-color: #222;
-      color: #fdfdfd;
-      border: 1px solid #0f0;
-      border-radius: 5px;
-      padding: 6px; /* Kleineres Padding */
-      font-family: monospace;
-      width: 40px; /* Schmalere Eingabefelder */
-      height: 30px; /* Niedrigere Eingabefelder */
-      text-align: center;
-      margin-right: 8px;
-      font-size: 1rem; /* Kleinere Schrift */
-    }
-    
-    .input-group button {
-      background-color: #0f0;
-      color: #000;
-      border: none;
-      border-radius: 7px;
-      padding: 15px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      margin-top: 20px;
-      width: 66%; /* 2/3 der Breite */
-      margin-left: auto;
-      margin-right: auto;
-    }
-    
-    .input-group button:hover {
-      background-color: #6f6;
-    }
-    
-    .error {
-      color: red;
-      font-size: 1.1rem;
-      min-height: 1.2em;
-      margin-top: 15px;
-    }
-    
-    .btn {
-      background-color: #0f0;
-      color: #000;
-      border: none;
-      border-radius: 7px;
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      margin-top: 20px;
-    }
-    
-    .btn:hover {
-      background-color: #6f6;
-    }
-    
-    /* Erfolgsanzeige */
-    .success-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100%;
-      color: #0f0;
-      font-size: 2.5rem;
-      text-align: center;
-    }
-    
-    /* Erfolgsseite Styling */
-    .success-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #000;
-      text-align: center;
-    }
-    
-    .success-icon {
-      font-size: 5rem;
-      color: #0f0;
-      margin-bottom: 20px;
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-    
-    .success-title {
-      color: #0f0;
-      font-size: 2.5rem;
-      margin-bottom: 15px;
-    }
-    
-    .success-message {
-      color: #afa;
-      font-size: 1.5rem;
-      margin-bottom: 30px;
-    }
-    
-    .dashboard-btn {
-      background-color: #0f0;
-      color: #000;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 5px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.3s ease;
-    }
-    
-    .dashboard-btn:hover {
-      background-color: #6f6;
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
-    }
-    
-    /* Responsive Design */
-    @media (max-width:
-    900px) {
-      .dashboard {
-        flex-direction: column;
-      }
-      
-      .column {
-        padding: 20px;
-      }
-      
-      .left-column {
-        border-right: none;
-        border-bottom: 1px solid #333;
-      }
-    }
+    /* Ihr komplettes CSS bleibt hier unverändert. */
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; font-family: monospace; color: #fdfdfd; }
+    .container { display: flex; flex-direction: column; height: 100%; width: 100%; }
+    .header { padding: 20px; position: relative; border-bottom: 1px solid #333; }
+    .back-arrow { text-decoration: none; position: absolute; top: 20px; left: 20px; font-size: 15px; color: #0f0; cursor: pointer; padding: 10px; z-index: 100; background-color: rgba(0, 0, 0, 0.5); border-radius: 5px; }
+    .back-arrow:hover { background-color: rgba(0, 255, 0, 0.2); }
+    .heading { text-align: center; margin-bottom: 20px; margin-top: 20px; }
+    .heading h1 { font-size: 2.2rem; margin: 0; }
+    .dashboard { display: flex; flex: 1; height: calc(100% - 80px); }
+    .column { padding: 40px; overflow-y: auto; }
+    .left-column { flex: 1; border-right: 1px solid #333; display: flex; flex-direction: column; justify-content: flex-start; }
+    .right-column { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding-top: 20px; }
+    #solutionButton { width: 400px; }
+    .description { line-height: 1.6; }
+    .description p, .description li { margin-bottom: 20px; font-size: 1.1rem; }
+    .description ul { margin-bottom: 20px; padding-left: 20px; }
+    .input-group { width: 100%; max-width: 90%; transform: translateY(10px); display: flex; flex-direction: column; align-items: center; }
+    .input-wrapper { width: 66%; margin: 0 auto; }
+    .input-group ol { padding-left: 20px; margin-top: 0; width: 100%; }
+    .input-group li { margin-bottom: 16px; font-size: 1.1rem; display: flex; flex-direction: column; width: 100%; align-items: flex-start; }
+    .input-label { margin-bottom: 6px; width: 100%; text-align: left; }
+    .input-fields { display: flex; align-items: center; justify-content: flex-start; margin-left: 0; }
+    .input-group input { background-color: #222; color: #fdfdfd; border: 1px solid #0f0; border-radius: 5px; padding: 6px; font-family: monospace; width: 40px; height: 30px; text-align: center; margin-right: 8px; font-size: 1rem; }
+    .input-group button { background-color: #0f0; color: #000; border: none; border-radius: 7px; padding: 15px; font-size: 1.2rem; cursor: pointer; transition: background-color 0.2s; margin-top: 20px; width: 66%; margin-left: auto; margin-right: auto; }
+    .input-group button:hover { background-color: #6f6; }
+    .error { color: red; font-size: 1.1rem; min-height: 1.2em; margin-top: 15px; }
+    .btn { background-color: #0f0; color: #000; border: none; border-radius: 7px; padding: 15px 30px; font-size: 1.2rem; cursor: pointer; transition: background-color 0.2s; margin-top: 20px; }
+    .btn:hover { background-color: #6f6; }
+    .success-container { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #000; text-align: center; }
+    .success-icon { font-size: 5rem; color: #0f0; margin-bottom: 20px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    .success-title { color: #0f0; font-size: 2.5rem; margin-bottom: 15px; }
+    .success-message { color: #afa; font-size: 1.5rem; margin-bottom: 30px; }
+    .dashboard-btn { background-color: #0f0; color: #000; border: none; padding: 12px 25px; border-radius: 5px; font-size: 1.2rem; cursor: pointer; text-decoration: none; transition: all 0.3s ease; }
+    .dashboard-btn:hover { background-color: #6f6; transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
+    @media (max-width: 900px) { .dashboard { flex-direction: column; } .column { padding: 20px; } .left-column { border-right: none; border-bottom: 1px solid #333; } }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <a href="dashboard397297297924.html" class="back-arrow">&#8592; Dashboard</a>
-      <div class="heading">
-        <h1>Datentransfer-Optimierung</h1>
-      </div>
+  
+  <script type="module">
+    // Firebase initialisieren
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-    </div>
-    
-    <div class="dashboard" id="dashboardContent">
-      <!-- Linke Spalte: Beschreibung -->
-      <div class="column left-column">
-        <div class="description">
-          <p>Mein verrückter Professor hat, damit wir das Arbeiten mit Datenbanken lernen, ein sehr seltsames Programm programmiert, wo fünf verschiedene Dateitypen (API-Anfrage, Binärdatei, CSV-Tabelle, DAT-Archiv, Excel-Datei) über einen schmalbandigen Notfallkanal übertragen werden mussten. Die Aufgabe war es, alle Dateien möglichst schnell zu übertragen. Dabei gab es aber eine Besonderheit: Datenpakete mussten immer aus entweder einer oder zwei Dateien bestehen und einen bestimmten Token mit dabei haben. Dieser kann weder kopiert noch alleine gesendet werden, sondern nur als „Anhang“ an eine Datei. Er hat es damals immer mit einer Brücke veranschaulicht, die man nur mit einem Schlüssel überqueren kann. Fünf Menschen wollen rüber, aber die Brücke hält nur das Gewicht von maximal 2 Menschen gleichzeitig aus und wenn zwei auf die andere Seite gegangen sind, muss immer einer, der bereits auf der anderen Seite steht oder gerade angekommen ist, den Schlüssel zurück bringen. Zwei Menschen, bzw. bei uns zwei Datenpakete brauchen als Paket immer so lange, wie der langsamere Mensch bzw. die größere (und dadurch langsamere) Datei.</p>
-          
-          <p>Die Datenübertragung folgt diesen Regeln:</p>
-          <ul>
-            <li>Es können nur zwei Dateien gleichzeitig übertragen werden</li>
-            <li>Das Authentifizierungstoken muss nach jedem Transfer zurückgeschickt werden</li>
-            <li>Die Übertragungszeit entspricht der langsamsten Datei im Paket</li>
-            <li>Alle fünf Dateien müssen in möglichst kurzer Zeit vollständig übertragen werden</li>
-          </ul>
-          
-          <p>Die Übertragungszeiten betragen:</p>
-          <ul>
-            <li>API-Anfrage (A): 1 Minute</li>
-            <li>Binärdatei (B): 3 Minuten</li>
-            <li>CSV-Tabelle (C): 6 Minuten</li>
-            <li>DAT-Archiv (D): 8 Minuten</li>
-            <li>Excel-Datei (E): 12 Minuten</li>
-          </ul>
-          
-          <p>Fülle die Lücken mit den <strong>Anfangsbuchstaben</strong> (A, B, C, D, E) in der optimalen Reihenfolge ein, um die Daten in minimal möglicher Zeit zu übertragen.</p>
-          
-          <p>Bei Schritten mit zwei Feldern werden jeweils zwei Dateien gleichzeitig übertragen. Bei Schritten mit einem Feld wird nur das Authentifizierungstoken zurückgeschickt.</p>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
+      authDomain: "escape-star.firebaseapp.com",
+      projectId: "escape-star",
+      storageBucket: "escape-star.firebasestorage.app",
+      messagingSenderId: "764344736028",
+      appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
+      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // Diese Funktion rendert die Erfolgsseite
+    function showSuccessPage() {
+      document.body.innerHTML = `
+        <div class="success-container">
+          <div class="success-icon">✓</div>
+          <h1 class="success-title">Datenbank vollständig</h1>
+          <p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p>
+          <p>Alle Daten wurden erfolgreich übertragen.</p>
+          <a href="dashboard397297297924.html" class="dashboard-btn">Zurück zum Dashboard</a>
         </div>
-      </div>
-      
-      <!-- Rechte Spalte: Eingabefelder -->
-      <div class="column right-column">
-        <div class="input-group">
-          <div class="input-wrapper">
-            <ol>
-              <li>
-                <div class="input-label">Transfer 1 (zwei Dateien gleichzeitig senden):</div>
-                <div class="input-fields">
-                  <input type="text" id="step1a" maxlength="1" placeholder="A"> 
-                  <input type="text" id="step1b" maxlength="1" placeholder="A">
+      `;
+    }
+
+    // Diese Funktion rendert die Rätsel-Seite
+    function showPuzzlePage() {
+      document.body.innerHTML = `
+        <div class="container">
+          <div class="header">
+            <a href="dashboard397297297924.html" class="back-arrow">&#8592; Dashboard</a>
+            <div class="heading"><h1>Datentransfer-Optimierung</h1></div>
+          </div>
+          <div class="dashboard" id="dashboardContent">
+            <div class="column left-column">
+              <div class="description">
+                <p>Mein verrückter Professor hat, damit wir das Arbeiten mit Datenbanken lernen, ein sehr seltsames Programm programmiert, wo fünf verschiedene Dateitypen (API-Anfrage, Binärdatei, CSV-Tabelle, DAT-Archiv, Excel-Datei) über einen schmalbandigen Notfallkanal übertragen werden mussten. Die Aufgabe war es, alle Dateien möglichst schnell zu übertragen. Dabei gab es aber eine Besonderheit: Datenpakete mussten immer aus entweder einer oder zwei Dateien bestehen und einen bestimmten Token mit dabei haben. Dieser kann weder kopiert noch alleine gesendet werden, sondern nur als „Anhang“ an eine Datei. Er hat es damals immer mit einer Brücke veranschaulicht, die man nur mit einem Schlüssel überqueren kann. Fünf Menschen wollen rüber, aber die Brücke hält nur das Gewicht von maximal 2 Menschen gleichzeitig aus und wenn zwei auf die andere Seite gegangen sind, muss immer einer, der bereits auf der anderen Seite steht oder gerade angekommen ist, den Schlüssel zurück bringen. Zwei Menschen, bzw. bei uns zwei Datenpakete brauchen als Paket immer so lange, wie der langsamere Mensch bzw. die größere (und dadurch langsamere) Datei.</p>
+                <p>Die Datenübertragung folgt diesen Regeln:</p>
+                <ul>
+                  <li>Es können nur zwei Dateien gleichzeitig übertragen werden</li>
+                  <li>Das Authentifizierungstoken muss nach jedem Transfer zurückgeschickt werden</li>
+                  <li>Die Übertragungszeit entspricht der langsamsten Datei im Paket</li>
+                  <li>Alle fünf Dateien müssen in möglichst kurzer Zeit vollständig übertragen werden</li>
+                </ul>
+                <p>Die Übertragungszeiten betragen:</p>
+                <ul><li>API-Anfrage (A): 1 Minute</li><li>Binärdatei (B): 3 Minuten</li><li>CSV-Tabelle (C): 6 Minuten</li><li>DAT-Archiv (D): 8 Minuten</li><li>Excel-Datei (E): 12 Minuten</li></ul>
+                <p>Fülle die Lücken mit den <strong>Anfangsbuchstaben</strong> (A, B, C, D, E) in der optimalen Reihenfolge ein, um die Daten in minimal möglicher Zeit zu übertragen.</p>
+                <p>Bei Schritten mit zwei Feldern werden jeweils zwei Dateien gleichzeitig übertragen. Bei Schritten mit einem Feld wird nur das Authentifizierungstoken zurückgeschickt.</p>
+              </div>
+            </div>
+            <div class="column right-column">
+              <div class="input-group">
+                <div class="input-wrapper">
+                  <ol>
+                    <li><div class="input-label">Transfer 1 (zwei Dateien gleichzeitig senden):</div><div class="input-fields"><input type="text" id="step1a" maxlength="1" placeholder="A"><input type="text" id="step1b" maxlength="1" placeholder="A"></div></li>
+                    <li><div class="input-label">Rückübertragung Token:</div><div class="input-fields"><input type="text" id="step2" maxlength="1" placeholder="A"></div></li>
+                    <li><div class="input-label">Transfer 2 (zwei Dateien gleichzeitig senden):</div><div class="input-fields"><input type="text" id="step3a" maxlength="1" placeholder="A"><input type="text" id="step3b" maxlength="1" placeholder="A"></div></li>
+                    <li><div class="input-label">Rückübertragung Token:</div><div class="input-fields"><input type="text" id="step4" maxlength="1" placeholder="A"></div></li>
+                    <li><div class="input-label">Transfer 3 (zwei Dateien gleichzeitig senden):</div><div class="input-fields"><input type="text" id="step5a" maxlength="1" placeholder="A"><input type="text" id="step5b" maxlength="1" placeholder="A"></div></li>
+                    <li><div class="input-label">Rückübertragung Token:</div><div class="input-fields"><input type="text" id="step6" maxlength="1" placeholder="A"></div></li>
+                    <li><div class="input-label">Transfer 4 (zwei Dateien gleichzeitig senden):</div><div class="input-fields"><input type="text" id="step7a" maxlength="1" placeholder="A"><input type="text" id="step7b" maxlength="1" placeholder="A"></div></li>
+                  </ol>
+                  <div style="text-align: center; width: 100%;"><button id="solutionButton">Lösung prüfen</button></div>
                 </div>
-              </li>
-              <li>
-                <div class="input-label">Rückübertragung Token:</div>
-                <div class="input-fields">
-                  <input type="text" id="step2" maxlength="1" placeholder="A">
-                </div>
-              </li>
-              <li>
-                <div class="input-label">Transfer 2 (zwei Dateien gleichzeitig senden):</div>
-                <div class="input-fields">
-                  <input type="text" id="step3a" maxlength="1" placeholder="A">
-                  <input type="text" id="step3b" maxlength="1" placeholder="A">
-                </div>
-              </li>
-              <li>
-                <div class="input-label">Rückübertragung Token:</div>
-                <div class="input-fields">
-                  <input type="text" id="step4" maxlength="1" placeholder="A">
-                </div>
-              </li>
-              <li>
-                <div class="input-label">Transfer 3 (zwei Dateien gleichzeitig senden):</div>
-                <div class="input-fields">
-                  <input type="text" id="step5a" maxlength="1" placeholder="A">
-                  <input type="text" id="step5b" maxlength="1" placeholder="A">
-                </div>
-              </li>
-              <li>
-                <div class="input-label">Rückübertragung Token:</div>
-                <div class="input-fields">
-                  <input type="text" id="step6" maxlength="1" placeholder="A">
-                </div>
-              </li>
-              <li>
-                <div class="input-label">Transfer 4 (zwei Dateien gleichzeitig senden):</div>
-                <div class="input-fields">
-                  <input type="text" id="step7a" maxlength="1" placeholder="A">
-                  <input type="text" id="step7b" maxlength="1" placeholder="A">
-                </div>
-              </li>
-            </ol>
-            <div style="text-align: center; width: 100%;">
-              <button id="solutionButton" onclick="checkSolution()">Lösung prüfen</button>
+                <p class="error" id="errorDisplay"></p>
+              </div>
             </div>
           </div>
-          <p class="error" id="errorDisplay"></p>
         </div>
-      </div>
-    </div>
-  </div>
-  
-  <script>
-    // Falls die Datenbank-Aufgabe bereits gelöst wurde, wird "Datenbank vollständig" angezeigt.
-    document.addEventListener("DOMContentLoaded", function() {
-      if (localStorage.getItem("datenbankCompleted") === "true") {
-        document.body.innerHTML = `
-          <div class="success-container">
-            <div class="success-icon">✓</div>
-            <h1 class="success-title">Datenbank vollständig</h1>
-            <p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p>
-            <p>Alle Daten wurden erfolgreich übertragen.</p>
-            <a href="dashboard397297297924.html" class="dashboard-btn">Zurück zum Dashboard</a>
-          </div>
-        `;
+      `;
+    }
+
+    // "Türsteher": Führe den Code nur aus, wenn ein Benutzer angemeldet ist.
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
       }
+
+      // Prüfe, ob das Rätsel schon gelöst wurde.
+      const userPuzzlesRef = ref(db, 'users/' + user.uid + '/puzzles');
+      get(userPuzzlesRef).then((snapshot) => {
+        const puzzles = snapshot.val();
+        if (puzzles && puzzles.datenbankCompleted === true) {
+          showSuccessPage();
+        } else {
+          showPuzzlePage();
+          // Initialisiere die Rätsel-Logik
+          initializePuzzle(user);
+        }
+      });
     });
-    
-    const validSolutions = [
-      ["A+B", "A", "D+E", "B", "A+C", "A", "A+B"],
-      ["A+B", "A", "A+C", "A", "D+E", "B", "A+B"],
-      ["A+C", "A", "A+B", "A", "D+E", "B", "A+B"],
-      ["A+B", "B", "D+E", "A", "A+C", "A", "A+B"],
-      ["A+B", "A", "D+E", "B", "A+B", "A", "A+C"],
-      ["A+B", "B", "D+E", "A", "A+B", "A", "A+C"]
-    ];
-    
-    function normalize(str) {
-      return str.replace(/\s+/g, '').toUpperCase();
-    }
-    
-    function combineTwo(val1, val2) {
-      const letters = [normalize(val1), normalize(val2)];
-      letters.sort();
-      return letters.join("+");
-    }
-    
-    function checkSolution() {
-      const sol1 = combineTwo(document.getElementById("step1a").value, document.getElementById("step1b").value);
-      const sol2 = normalize(document.getElementById("step2").value);
-      const sol3 = combineTwo(document.getElementById("step3a").value, document.getElementById("step3b").value);
-      const sol4 = normalize(document.getElementById("step4").value);
-      const sol5 = combineTwo(document.getElementById("step5a").value, document.getElementById("step5b").value);
-      const sol6 = normalize(document.getElementById("step6").value);
-      const sol7 = combineTwo(document.getElementById("step7a").value, document.getElementById("step7b").value);
-      
-      const steps = [sol1, sol2, sol3, sol4, sol5, sol6, sol7];
-      
-      const isValid = validSolutions.some(solution =>
-        solution.every((step, index) => step === steps[index])
-      );
-      
-      if (isValid) {
-        localStorage.setItem("datenbankCompleted", "true");
-        window.location.href = "success3920193484.html";
-      } else {
-        document.getElementById("errorDisplay").textContent = "Falsche Lösung! Der Datentransfer ist fehlgeschlagen. Bitte überprüfe deine Eingaben.";
+
+    // Die gesamte Rätsel-Logik in einer Funktion
+    function initializePuzzle(user) {
+      const validSolutions = [
+        ["A+B", "A", "D+E", "B", "A+C", "A", "A+B"], ["A+B", "A", "A+C", "A", "D+E", "B", "A+B"], ["A+C", "A", "A+B", "A", "D+E", "B", "A+B"], ["A+B", "B", "D+E", "A", "A+C", "A", "A+B"], ["A+B", "A", "D+E", "B", "A+B", "A", "A+C"], ["A+B", "B", "D+E", "A", "A+B", "A", "A+C"]
+      ];
+
+      function normalize(str) { return str.replace(/\s+/g, '').toUpperCase(); }
+      function combineTwo(val1, val2) { const letters = [normalize(val1), normalize(val2)]; letters.sort(); return letters.join("+"); }
+
+      function checkSolution() {
+        const sol1 = combineTwo(document.getElementById("step1a").value, document.getElementById("step1b").value);
+        const sol2 = normalize(document.getElementById("step2").value);
+        const sol3 = combineTwo(document.getElementById("step3a").value, document.getElementById("step3b").value);
+        const sol4 = normalize(document.getElementById("step4").value);
+        const sol5 = combineTwo(document.getElementById("step5a").value, document.getElementById("step5b").value);
+        const sol6 = normalize(document.getElementById("step6").value);
+        const sol7 = combineTwo(document.getElementById("step7a").value, document.getElementById("step7b").value);
+        const steps = [sol1, sol2, sol3, sol4, sol5, sol6, sol7];
+        const isValid = validSolutions.some(solution => solution.every((step, index) => step === steps[index]));
+
+        if (isValid) {
+          // ===============================================
+          // HIER IST DIE ANGEPASSTE STELLE
+          const userPuzzlesRef = ref(db, 'users/' + user.uid + '/puzzles');
+          update(userPuzzlesRef, {
+            datenbankCompleted: true
+          }).then(() => {
+            console.log("Datenbank-Rätsel-Status in Firebase gespeichert!");
+            // Leite zur generischen Erfolgsseite weiter
+            window.location.href = "success3920193484.html";
+          });
+          // ===============================================
+        } else {
+          document.getElementById("errorDisplay").textContent = "Falsche Lösung! Der Datentransfer ist fehlgeschlagen. Bitte überprüfe deine Eingaben.";
+        }
       }
+
+      // Event listener für den Button
+      document.getElementById('solutionButton').addEventListener('click', checkSolution);
     }
   </script>
 </body>
