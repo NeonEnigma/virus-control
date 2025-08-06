@@ -304,6 +304,32 @@
         setTimeout(createFirework, i * 300);
       }
     }
+
+    // In gelöst.html
+// Firebase Imports, Initialisierung und Auth-Check...
+
+// Angenommen, 'currentUser' ist das User-Objekt von Firebase Auth
+const user = auth.currentUser;
+if (user) {
+    const timerRef = ref(db, `users/${user.uid}/timer`);
+    
+    onValue(timerRef, (snapshot) => {
+        const timerData = snapshot.val();
+        if (timerData && timerData.endTime) {
+            const remainingSeconds = Math.floor((timerData.endTime - Date.now()) / 1000);
+
+            // Statistik speichern
+            const statsRef = ref(db, `users/${user.uid}/solvedStats`);
+            set(statsRef, {
+                remainingTimeOnSolve: remainingSeconds > 0 ? remainingSeconds : 0,
+                solvedAt: new Date().toISOString()
+            });
+
+            // Timer für diesen Benutzer stoppen/löschen
+            set(timerRef, null);
+        }
+    }, { onlyOnce: true });
+}
   </script>
 </body>
 </html>
