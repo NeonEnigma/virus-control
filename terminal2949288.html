@@ -21,6 +21,7 @@
       color: #0f0;
       font-family: monospace;
       text-align: right;
+      font-size: 20px;
     }
 
     #terminal {
@@ -94,226 +95,104 @@
 </head>
 <body>
 
-  <!-- Timer oben rechts -->
-  <div class="timer-area" id="globalTimer">Kein Timer</div>
+  <div class="timer-area" id="globalTimer">Initialisiere...</div>
 
   <div id="terminal"></div>
 
-  <script>
-    /***********************************************************
-     * TIMER-LOGIK OBEN RECHTS
-     ***********************************************************/
-    const LOCAL_STORAGE_KEY = "countdownEnd"; // Endzeit-Speicher
+  <script type="module">
+    // Firebase initialisieren
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
+      authDomain: "escape-star.firebaseapp.com",
+      projectId: "escape-star",
+      storageBucket: "escape-star.firebasestorage.app",
+      messagingSenderId: "764344736028",
+      appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
+      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    
+    // Globale Variable für den Timer-Interval
     let timerInterval = null;
 
-    initTimerDisplay();
-
-    function initTimerDisplay() {
-      const storedEnd = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (!storedEnd) {
-        // Kein Timer gespeichert
-        document.getElementById("globalTimer").textContent = "Kein Timer";
-        return;
+    // "Türsteher": Führe den Code nur aus, wenn ein Benutzer angemeldet ist.
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Benutzer ist angemeldet, starte die App-Logik
+        initializeTimer(user.uid);
+        initTerminal(); // Initialisiere deine bestehende Terminal-Logik
+      } else {
+        // Niemand angemeldet, zurück zur Login-Seite
+        window.location.href = 'index.html';
       }
-      // Timer existiert => Start
-      startTimer();
-    }
-
-    function startTimer() {
-      const endTime = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY), 10);
-      if (!endTime) return;
-
-      // Jede Sekunde aktualisieren
-      timerInterval = setInterval(() => {
-        updateGlobalTimer(endTime);
-      }, 1000);
-
-      // Initialer Aufruf
-      updateGlobalTimer(endTime);
-    }
-
-    function updateGlobalTimer(endTime) {
-      const now = Date.now();
-      const diffMs = endTime - now;
+    });
+    
+    /***********************************************************
+     * NEUE FIREBASE TIMER-LOGIK
+     ***********************************************************/
+    function initializeTimer(uid) {
+      const userTimerRef = ref(db, 'users/' + uid + '/timer');
       const displayEl = document.getElementById("globalTimer");
 
-      if (diffMs <= 0) {
-        displayEl.textContent = "00:00";
+      // onValue stellt eine LIVE-Verbindung zur Datenbank her.
+      onValue(userTimerRef, (snapshot) => {
+        const timerData = snapshot.val();
+        
+        // Stoppe immer einen eventuell laufenden, alten Timer
         clearInterval(timerInterval);
-        // Weiterleitung zur fail394950230583.html Seite, wenn der Timer abläuft
-        window.location.href = "fail394950230583.html";
-        return;
-      }
-      const diffSec = Math.floor(diffMs / 1000);
-      const mm = Math.floor(diffSec / 60);
-      const ss = diffSec % 60;
-      const mmStr = mm < 10 ? "0" + mm : mm;
-      const ssStr = ss < 10 ? "0" + ss : ss;
-      displayEl.textContent = mmStr + ":" + ssStr;
+
+        if (timerData && timerData.endTime) {
+          const endTime = timerData.endTime;
+
+          // Diese Funktion wird jede Sekunde aufgerufen
+          const updateTimerDisplay = () => {
+            const now = Date.now();
+            const diffMs = endTime - now;
+
+            if (diffMs <= 0) {
+              displayEl.textContent = "00:00:00";
+              clearInterval(timerInterval);
+              // WICHTIG: Die Weiterleitung zur "fail"-Seite bleibt erhalten!
+              window.location.href = "fail394950230583.html";
+              return;
+            }
+
+            const diffSec = Math.floor(diffMs / 1000);
+            const hh = Math.floor(diffSec / 3600);
+            const mm = Math.floor((diffSec % 3600) / 60);
+            const ss = diffSec % 60;
+            
+            displayEl.textContent = 
+              `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+          };
+          
+          updateTimerDisplay(); // Einmal sofort ausführen
+          timerInterval = setInterval(updateTimerDisplay, 1000);
+
+        } else {
+          // Es gibt keinen Timer-Eintrag in der Datenbank
+          displayEl.textContent = "Kein Timer";
+        }
+      });
     }
+
+    // ==========================================================
+    // AB HIER BEGINNT IHR UNVERÄNDERTER TERMINAL-CODE
+    // ==========================================================
 
     /***********************************************************
      * 1) Simuliertes Dateisystem
      ***********************************************************/
-     const fileSystem = {
-  name: "/",
-  type: "directory",
-  children: [
-    {
-      name: "bin",
-      type: "directory",
-      children: [
-        { name: "bash", type: "executable", content: "ELF binary executable" },
-        { name: "ls", type: "executable", content: "ELF binary executable" },
-        { name: "cat", type: "executable", content: "ELF binary executable" }
-      ]
-    },
-    {
-      name: "boot",
-      type: "directory",
-      children: [
-        { name: "grub", type: "directory", children: [] },
-        { name: "vmlinuz", type: "file", content: "Linux kernel" }
-      ]
-    },
-    {
-      name: "etc",
-      type: "directory",
-      children: [
-        { name: "shadow", type: "file", content: "root:*:18752:0:99999:7:::\nuser:$6$saltsalt$encrypted" },
-        { name: "hostname", type: "file", content: "my-linux-pc" },
-      ]
-    },
-    {
-      name: "home",
-      type: "directory",
-      children: [
-        {
-          name: "john",
-          type: "directory",
-          children: [
-            {
-              name: "documents",
-              type: "directory",
-              children: [
-                
-                {  
-                  name: "secret.txt",
-                  type: "file",
-                  content:
-`Terminal-Befehl geheime Virtual Machine:
-ssh -p 2432 john@secretserver
-Pwd: d4Gfdee`
-                },
-                {
-                  name: ".private-notes.txt",
-                  type: "file",
-                  content: "Mein Passwort: 32529"
-                }
-              ]
-            },
-            {
-              name: "images", 
-              type: "directory", 
-              children: [
-                {name: "johanna.jpg", type: "file", content: "Bilddatei" },
-                {name: "mallorca.jpg", type: "file", content: "Bilddatei" },
-                {name: "mama&papa.jpg", type: "file", content: "Bilddatei" },
-                {name: "dresdensommer.jpg", type: "file", content: "Bilddatei" },
-                {name: "cookie.jpg", type: "file", content: "Bilddatei" },
-                {name: "dresdennacht.jpg", type: "file", content: "Bilddatei" },
-                {name: ".versteckt.jpg", type: "file", content: "Verstecktes Bild mit wichtigen Daten" }
-              ]
-            },
-            {
-              name: "downloads",
-              type: "directory",
-              children: [
-                {name: "explore@VT_installer.dmg", type: "executable", content: "Installationsdatei"}
-              ]
-            },
-            {
-              name: ".bashrc",
-              type: "file",
-              content: "export PATH=$PATH:/usr/local/bin"
-            },
-            {
-              name: ".ssh",
-              type: "directory",
-              children: [
-                {name: "id_rsa", type: "file", content: "-----BEGIN PRIVATE KEY-----\nVersteckter SSH-Key\n-----END PRIVATE KEY-----"},
-                {name: "id_rsa.pub", type: "file", content: "ssh-rsa AAAA..."}
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      name: "usr",
-      type: "directory",
-      children: [
-        {
-          name: "local",
-          type: "directory",
-          children: [
-            { name: "bin", type: "directory", children: [] }
-          ]
-        },
-        {
-          name: "share",
-          type: "directory",
-          children: [
-            { name: "doc", type: "directory", children: [] }
-          ]
-        }
-      ]
-    },
-    {
-      name: "var",
-      type: "directory",
-      children: [
-        { name: "log", type: "directory", children: [{ name: "syslog", type: "file", content: "System logs..." }] },
-        { name: "www", type: "directory", children: [] }
-      ]
-    },
-    {
-      name: "tmp",
-      type: "directory",
-      children: []
-    },
-    {
-      name: "lib",
-      type: "directory",
-      children: [
-        {name: "libc.so.6", type: "file", content: "Shared library"},
-        {name: "libssl.so.1.1", type: "file", content: "Shared library"}
-      ]
-    },
-    {
-      name: "dev",
-      type: "directory",
-      children: [
-        {name: "sda1", type: "file", content: "Device file"},
-        {name: "null", type: "file", content: "Device file"}
-      ]
-    },
-    {
-      name: "proc",
-      type: "directory",
-      children: [
-        {name: "cpuinfo", type: "file", content: "Processor information"}
-      ]
-    },
-    {
-      name: "root",
-      type: "directory",
-      children: [
-        {name: ".bash_history", type: "file", content: "Bash-Verlauf des Root-Benutzers"}
-      ]
-    }
-  ]
-};
+    const fileSystem = {
+      name: "/", type: "directory", children: [ { name: "bin", type: "directory", children: [ { name: "bash", type: "executable", content: "ELF binary executable" }, { name: "ls", type: "executable", content: "ELF binary executable" }, { name: "cat", type: "executable", content: "ELF binary executable" } ] }, { name: "boot", type: "directory", children: [ { name: "grub", type: "directory", children: [] }, { name: "vmlinuz", type: "file", content: "Linux kernel" } ] }, { name: "etc", type: "directory", children: [ { name: "shadow", type: "file", content: "root:*:18752:0:99999:7:::\nuser:$6$saltsalt$encrypted" }, { name: "hostname", type: "file", content: "my-linux-pc" }, ] }, { name: "home", type: "directory", children: [ { name: "john", type: "directory", children: [ { name: "documents", type: "directory", children: [ { name: "secret.txt", type: "file", content: "Terminal-Befehl geheime Virtual Machine:\nssh -p 2432 john@secretserver\nPwd: d4Gfdee" }, { name: ".private-notes.txt", type: "file", content: "Mein Passwort: 32529" } ] }, { name: "images", type: "directory", children: [ {name: "johanna.jpg", type: "file", content: "Bilddatei" }, {name: "mallorca.jpg", type: "file", content: "Bilddatei" }, {name: "mama&papa.jpg", type: "file", content: "Bilddatei" }, {name: "dresdensommer.jpg", type: "file", content: "Bilddatei" }, {name: "cookie.jpg", type: "file", content: "Bilddatei" }, {name: "dresdennacht.jpg", type: "file", content: "Bilddatei" }, {name: ".versteckt.jpg", type: "file", content: "Verstecktes Bild mit wichtigen Daten" } ] }, { name: "downloads", type: "directory", children: [ {name: "explore@VT_installer.dmg", type: "executable", content: "Installationsdatei"} ] }, { name: ".bashrc", type: "file", content: "export PATH=$PATH:/usr/local/bin" }, { name: ".ssh", type: "directory", children: [ {name: "id_rsa", type: "file", content: "-----BEGIN PRIVATE KEY-----\nVersteckter SSH-Key\n-----END PRIVATE KEY-----"}, {name: "id_rsa.pub", type: "file", content: "ssh-rsa AAAA..."} ] } ] } ] }, { name: "usr", type: "directory", children: [ { name: "local", type: "directory", children: [ { name: "bin", type: "directory", children: [] } ] }, { name: "share", type: "directory", children: [ { name: "doc", type: "directory", children: [] } ] } ] }, { name: "var", type: "directory", children: [ { name: "log", type: "directory", children: [{ name: "syslog", type: "file", content: "System logs..." }] }, { name: "www", type: "directory", children: [] } ] }, { name: "tmp", type: "directory", children: [] }, { name: "lib", type: "directory", children: [ {name: "libc.so.6", type: "file", content: "Shared library"}, {name: "libssl.so.1.1", type: "file", content: "Shared library"} ] }, { name: "dev", type: "directory", children: [ {name: "sda1", type: "file", content: "Device file"}, {name: "null", type: "file", content: "Device file"} ] }, { name: "proc", type: "directory", children: [ {name: "cpuinfo", type: "file", content: "Processor information"} ] }, { name: "root", type: "directory", children: [ {name: ".bash_history", type: "file", content: "Bash-Verlauf des Root-Benutzers"} ] } ]
+    };
 
     /***********************************************************
      * 2) Terminal-Logik
@@ -323,8 +202,6 @@ Pwd: d4Gfdee`
     let currentPath = [fileSystem];
     const terminal = document.getElementById("terminal");
 
-    initTerminal();
-
     function initTerminal() {
       printLine("Willkommen in deinem digitalen Tresor, John.\nGib 'help' für eine Befehlsübersicht ein.\n");
       newPrompt("command");
@@ -332,39 +209,30 @@ Pwd: d4Gfdee`
 
     function newPrompt(mode = "command") {
       terminalMode = mode;
-
       const promptLine = document.createElement("div");
       promptLine.classList.add("prompt-line");
-
       const promptSpan = document.createElement("span");
       promptSpan.classList.add("prompt");
-
       if (mode === "sshPassword") {
         promptSpan.textContent = "password:";
       } else if (mode === "filePassword") {
         promptSpan.textContent = "password:";
       } else {
-        // Normaler Modus: user@web:/pfad$
         const pathString = getCurrentPathString();
         promptSpan.textContent = `user@web:${pathString}$`;
       }
-
       const inputContainer = document.createElement("div");
       inputContainer.classList.add("input");
-
       const inputField = document.createElement("input");
       if (mode === "sshPassword" || mode === "filePassword") {
-        inputField.type = "password"; // Passwort => Sternchen
+        inputField.type = "password";
       } else {
         inputField.type = "text";
       }
-
       inputField.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           const userInput = inputField.value.trim();
           inputContainer.remove();
-
-          // Im Terminal nur " ********" bei Password
           const commandSpan = document.createElement("span");
           if (mode === "command") {
             commandSpan.textContent = " " + userInput;
@@ -372,16 +240,13 @@ Pwd: d4Gfdee`
             commandSpan.textContent = " ********";
           }
           promptLine.appendChild(commandSpan);
-
           handleInput(userInput, mode);
         }
       });
-
       inputContainer.appendChild(inputField);
       promptLine.appendChild(promptSpan);
       promptLine.appendChild(inputContainer);
       terminal.appendChild(promptLine);
-
       inputField.focus();
       terminal.scrollTop = terminal.scrollHeight;
     }
@@ -424,56 +289,35 @@ Pwd: d4Gfdee`
     function executeCommand(command) {
       const args = command.split(" ").filter(Boolean);
       const mainCmd = args[0] ? args[0].toLowerCase() : "";
-
-      // SSH-Befehl
       if (command.toLowerCase() === "ssh -p 2432 john@secretserver") {
         newPrompt("sshPassword");
         return;
       }
-
       switch (mainCmd) {
         case "help":
-          printLine(
-`Verfügbare Befehle:
-  ls              - Zeige Inhalte des aktuellen Verzeichnisses
-  ls -a           - Zeige alle Dateien (inkl. versteckte)
-  cd <pfad>       - Wechsle in ein anderes Verzeichnis (cd /, cd .., cd ./dir)
-  cat <datei>     - Zeige den Inhalt einer Datei an (ggf. Passwort)
-  pwd             - Zeige aktuellen Pfad an
-  clear           - Leere das Terminal
-  help            - Zeige diese Hilfe an
-`);
+          printLine("Verfügbare Befehle:\n  ls              - Zeige Inhalte des aktuellen Verzeichnisses\n  ls -a           - Zeige alle Dateien (inkl. versteckte)\n  cd <pfad>       - Wechsle in ein anderes Verzeichnis (cd /, cd .., cd ./dir)\n  cat <datei>     - Zeige den Inhalt einer Datei an (ggf. Passwort)\n  pwd             - Zeige aktuellen Pfad an\n  clear           - Leere das Terminal\n  help            - Zeige diese Hilfe an\n");
           break;
-
         case "ls":
-          // Optionen für ls parsen
           const showHidden = args.includes("-a") || args.includes("-la") || args.includes("-al");
           lsCommand(showHidden);
           break;
-
         case "cd":
           cdCommand(args[1]);
           break;
-
         case "cat":
           const promptTriggered = catCommand(args[1]);
           if (!promptTriggered) {
             newPrompt("command");
           }
           return;
-          
         case "pwd":
           printLine(getCurrentPathString());
           break;
-
         case "clear":
           clearTerminal();
           break;
-
         case "":
-          // nichts tun
           break;
-
         default:
           printLine(`Unbekanntes Kommando: ${mainCmd}. Tipp 'help' für Hilfe.`);
       }
@@ -486,38 +330,27 @@ Pwd: d4Gfdee`
         if (!dir.children || dir.children.length === 0) {
           printLine("Keine Inhalte in diesem Verzeichnis.");
         } else {
-          // Filtere versteckte Dateien heraus, wenn nicht showHidden
           let filteredChildren = [...dir.children];
           if (!showHidden) {
             filteredChildren = filteredChildren.filter(child => !child.name.startsWith('.'));
           }
-          
-          // Sortieren: zuerst Verzeichnisse, dann Dateien, alphabetisch
           const sortedChildren = filteredChildren.sort((a, b) => {
-            // Erst nach Typ sortieren (Verzeichnisse zuerst)
             if (a.type === "directory" && b.type !== "directory") return -1;
             if (a.type !== "directory" && b.type === "directory") return 1;
-            
-            // Dann alphabetisch
             return a.name.localeCompare(b.name);
           });
-          
           if (sortedChildren.length === 0) {
             printLine("Keine sichtbaren Inhalte in diesem Verzeichnis. Verwende 'ls -a' für versteckte Dateien.");
             return;
           }
-          
-          // Container für die 3-spaltige Ausgabe
           const fileListContainer = document.createElement("div");
           fileListContainer.className = "file-list";
-          
           sortedChildren.forEach(child => {
             const fileItem = document.createElement("div");
             fileItem.className = "file-item";
             fileItem.textContent = child.name;
             fileListContainer.appendChild(fileItem);
           });
-          
           terminal.appendChild(fileListContainer);
         }
       } else {
@@ -530,58 +363,37 @@ Pwd: d4Gfdee`
         printLine("Bitte einen Pfad angeben. Beispiel: cd /home");
         return;
       }
-      
-      // Zum Root-Verzeichnis wechseln
       if (path === "/") {
         currentPath = [fileSystem];
         return;
       }
-      
-      // Eine Ebene nach oben
       if (path === "..") {
         if (currentPath.length > 1) {
           currentPath.pop();
         }
         return;
       }
-      
-      // Relativer Pfad mit ./ Präfix
       if (path.startsWith("./")) {
         path = path.substring(2);
       }
-      
-      // Behandlung von absoluten Pfaden (beginnend mit /)
       if (path.startsWith("/") && path.length > 1) {
         const pathParts = path.substring(1).split("/").filter(Boolean);
         let current = fileSystem;
-        
-        // Versuche, jeden Teil des Pfades zu durchlaufen
         for (const part of pathParts) {
-          const found = current.children?.find(
-            child => child.name === part && child.type === "directory"
-          );
-          
+          const found = current.children?.find(child => child.name === part && child.type === "directory");
           if (!found) {
             printLine(`Verzeichnis nicht gefunden: ${path}`);
             return;
           }
-          
           current = found;
         }
-        
-        // Wenn wir hier ankommen, haben wir den Pfad gefunden
         currentPath = [fileSystem];
         for (const part of pathParts) {
-          const nextDir = currentPath[currentPath.length - 1].children.find(
-            child => child.name === part && child.type === "directory"
-          );
+          const nextDir = currentPath[currentPath.length - 1].children.find(child => child.name === part && child.type === "directory");
           currentPath.push(nextDir);
         }
-        
         return;
       }
-      
-      // Normaler relativer Pfad
       const targetDir = findChildDirectory(path);
       if (targetDir) {
         currentPath.push(targetDir);
@@ -605,14 +417,11 @@ Pwd: d4Gfdee`
         printLine(`Datei '${fileName}' existiert nicht oder ist kein File.`);
         return false;
       }
-
-      // Wenn es secret.txt ist => Passwort
       if (fileObj.name === "secret.txt") {
         pendingFileContent = fileObj.content;
         newPrompt("filePassword");
         return true; 
       } else {
-        // Normale Datei
         printLine(fileObj.content || "Leere Datei.");
         return false;
       }
