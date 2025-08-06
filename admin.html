@@ -1,86 +1,74 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <title>Admin Dashboard</title>
-    </head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <style>
+    /* Fügen Sie hier Ihr Admin-spezifisches CSS ein */
+    body { background-color: #000000; color: #0f0; font-family: monospace; }
+    #admin-dashboard { display: none; /* Standardmäßig ausgeblendet */ }
+  </style>
+</head>
 <body>
-    <h1>Admin Dashboard</h1>
+
+  <h1>Admin Dashboard</h1>
+  <div id="loading-message">Prüfe Berechtigung...</div>
+
+  <div id="admin-dashboard">
+    <h2>Benutzerübersicht</h2>
     <div id="user-list">
-        </div>
-    <script type="module">
-        // Firebase Imports und Initialisierung wie gehabt...
+      </div>
+  </div>
 
-        // Referenz auf ALLE Benutzer
-        const usersRef = ref(db, 'users');
 
-        // Lausche auf Änderungen in der Benutzerliste
-        onValue(usersRef, (snapshot) => {
-            const users = snapshot.val();
-            const userListDiv = document.getElementById('user-list');
-            userListDiv.innerHTML = ''; // Liste vor dem Neuaufbau leeren
+  <script type="module">
+    // Firebase initialisieren (genau wie auf der Login-Seite)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-            for (const uid in users) {
-                const user = users[uid];
-                
-                // Erstelle ein Div für jeden Benutzer
-                const userDiv = document.createElement('div');
-                userDiv.style.border = '1px solid #0f0';
-                userDiv.style.padding = '10px';
-                userDiv.style.marginBottom = '10px';
+    const firebaseConfig = {
+      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
+      authDomain: "escape-star.firebaseapp.com",
+      projectId: "escape-star",
+      storageBucket: "escape-star.firebasestorage.app",
+      messagingSenderId: "764344736028",
+      appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
+      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
+    };
 
-                let remainingTimeStr = "Timer inaktiv";
-                if (user.timer && user.timer.endTime) {
-                    const diffMs = user.timer.endTime - Date.now();
-                    if (diffMs > 0) {
-                        const diffSec = Math.floor(diffMs / 1000);
-                        const mm = Math.floor(diffSec / 60);
-                        const ss = diffSec % 60;
-                        remainingTimeStr = `Läuft: ${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-                    } else {
-                        remainingTimeStr = "Abgelaufen";
-                    }
-                }
-                
-                let solvedStatStr = "Noch nicht gelöst.";
-                if(user.solvedStats && user.solvedStats.remainingTimeOnSolve) {
-                    solvedStatStr = `Gelöst mit ${user.solvedStats.remainingTimeOnSolve}s Restzeit.`;
-                }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
-                userDiv.innerHTML = `
-                    <h3>${user.email}</h3>
-                    <p>Status: ${remainingTimeStr}</p>
-                    <p>${solvedStatStr}</p>
-                    <button class="restart-btn" data-uid="${uid}">Timer neu starten</button>
-                    <button class="add-time-btn" data-uid="${uid}">+10 Minuten</button>
-                `;
-                
-                userListDiv.appendChild(userDiv);
-            }
-        });
+    // onAuthStateChanged ist der "Live-Checker" für den Login-Status
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Jemand ist angemeldet. Jetzt prüfen wir, ob er ein Admin ist.
+        const userRef = ref(db, 'users/' + user.uid);
+        onValue(userRef, (snapshot) => {
+          const userData = snapshot.val();
+          if (userData && userData.isAdmin === true) {
+            // ALLES OK! Der Benutzer ist ein Admin.
+            console.log("Admin-Zugriff bestätigt.");
+            // Blende die Lade-Nachricht aus und zeige das Dashboard an.
+            document.getElementById('loading-message').style.display = 'none';
+            document.getElementById('admin-dashboard').style.display = 'block';
+            // HIER würden Sie die Funktion aufrufen, die das Dashboard mit Leben füllt.
+          } else {
+            // Der Benutzer ist angemeldet, aber kein Admin. RAUS!
+            console.log("Zugriff verweigert: Benutzer ist kein Admin.");
+            window.location.href = 'index.html';
+          }
+        }, { onlyOnce: true });
 
-        // Event-Listener für die dynamisch erstellten Buttons
-        document.getElementById('user-list').addEventListener('click', (e) => {
-            const target = e.target;
-            const uid = target.getAttribute('data-uid');
-            if (!uid) return;
+      } else {
+        // Niemand ist angemeldet. RAUS!
+        console.log("Zugriff verweigert: Kein Benutzer angemeldet.");
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
 
-            const userTimerRef = ref(db, `users/${uid}/timer`);
-
-            if (target.classList.contains('restart-btn')) {
-                const newEndTime = Date.now() + 7200 * 1000;
-                set(userTimerRef, { endTime: newEndTime, initialDuration: 7200 });
-            }
-
-            if (target.classList.contains('add-time-btn')) {
-                // Lese den aktuellen Wert, um Zeit hinzuzufügen
-                onValue(ref(db, `users/${uid}/timer/endTime`), (snapshot) => {
-                    const currentEndTime = snapshot.val() || Date.now();
-                    const newEndTime = currentEndTime + 10 * 60 * 1000;
-                    set(ref(db, `users/${uid}/timer/endTime`), newEndTime);
-                }, { onlyOnce: true });
-            }
-        });
-
-    </script>
 </body>
 </html>
