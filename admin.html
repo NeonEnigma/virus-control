@@ -4,75 +4,28 @@
   <meta charset="UTF-8" />
   <title>Admin Dashboard</title>
   <style>
-    body { 
-      background-color: #000000; 
-      color: #0f0; 
-      font-family: monospace; 
-      padding: 20px;
-    }
-    h1, h2 {
-      color: #0f0;
-      text-shadow: 0 0 5px #0f0;
-    }
-    #admin-dashboard { 
-      display: none; /* Wird per Skript eingeblendet */
-    }
-    .user-card {
-      border: 2px solid #0f0;
-      padding: 15px;
-      margin-bottom: 20px;
-      background-color: #050505;
-    }
-    .user-card h3 {
-      margin-top: 0;
-      color: #fff;
-    }
-    .user-card p {
-      margin: 5px 0;
-    }
-    .user-card button {
-      background: #000;
-      border: 2px solid #0f0;
-      color: #0f0;
-      padding: 6px 12px;
-      font-family: monospace;
-      cursor: pointer;
-      margin-right: 10px;
-      margin-top: 10px;
-    }
-    .user-card button:hover {
-      background: #0f0;
-      color: #000;
-    }
-    .timer-active {
-        color: #ff0; /* Gelb für laufende Timer */
-        font-weight: bold;
-    }
-    .timer-inactive {
-        color: #888; /* Grau für inaktive Timer */
-    }
-    .solved-info {
-        color: #0ff; /* Cyan für gelöste Rätsel */
-    }
+    body { background-color: #000000; color: #0f0; font-family: monospace; padding: 20px; }
+    h1, h2 { color: #0f0; text-shadow: 0 0 5px #0f0; }
+    #admin-dashboard { display: none; }
+    .user-card { border: 2px solid #0f0; padding: 15px; margin-bottom: 20px; background-color: #050505; }
+    .user-card h3 { margin-top: 0; color: #fff; }
+    .user-card p { margin: 5px 0; }
+    .user-card button { background: #000; border: 2px solid #0f0; color: #0f0; padding: 6px 12px; font-family: monospace; cursor: pointer; margin-right: 10px; margin-top: 10px; }
+    .user-card button:hover { background: #0f0; color: #000; }
   </style>
 </head>
 <body>
 
   <h1>Admin Dashboard</h1>
   <div id="loading-message">Prüfe Berechtigung...</div>
-
   <div id="admin-dashboard">
     <h2>Benutzerübersicht</h2>
-    <div id="user-list">
-      </div>
+    <div id="user-list"></div>
   </div>
 
-
   <script type="module">
-    // Firebase initialisieren (genau wie auf der Login-Seite)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    // NEU: 'set' und 'get' werden für die Timer-Steuerung benötigt
     import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
     const firebaseConfig = {
@@ -89,126 +42,82 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // "Türsteher"-Skript (wie bisher)
     onAuthStateChanged(auth, (user) => {
       if (user) {
         const userRef = ref(db, 'users/' + user.uid);
         onValue(userRef, (snapshot) => {
           const userData = snapshot.val();
           if (userData && userData.isAdmin === true) {
-            console.log("Admin-Zugriff bestätigt.");
             document.getElementById('loading-message').style.display = 'none';
             document.getElementById('admin-dashboard').style.display = 'block';
-            
-            // ==========================================================
-            // JETZT WIRD DAS DASHBOARD MIT LEBEN GEFÜLLT
             initializeDashboard();
-            // ==========================================================
-
           } else {
-            console.log("Zugriff verweigert: Benutzer ist kein Admin.");
             window.location.href = 'index.html';
           }
         }, { onlyOnce: true });
-
       } else {
-        console.log("Zugriff verweigert: Kein Benutzer angemeldet.");
         window.location.href = 'index.html';
       }
     });
 
-    // === NEUE FUNKTION: Baut das Dashboard und hält es aktuell ===
+    // ==========================================================
+    // DIAGNOSE-VERSION DIESER FUNKTION
+    // ==========================================================
     function initializeDashboard() {
+      console.log("1. initializeDashboard() wird ausgeführt.");
       const usersRef = ref(db, 'users');
       const userListDiv = document.getElementById('user-list');
 
       // Lausche auf ALLE Änderungen im 'users'-Ast der Datenbank
-      onValue(usersRef, (snapshot) => {
-        const users = snapshot.val();
-        userListDiv.innerHTML = ''; // Leere die Liste vor jedem Neuaufbau
+      onValue(usersRef, 
+        // Erfolgs-Callback
+        (snapshot) => {
+          console.log("2. Daten für Dashboard erhalten. Snapshot existiert:", snapshot.exists());
+          const users = snapshot.val();
+          console.log("3. Komplette Benutzerdaten:", users);
+          userListDiv.innerHTML = 'Verarbeite Daten...'; 
 
-        // Gehe jeden Benutzer in der Datenbank durch
-        for (const uid in users) {
-          const user = users[uid];
-          
-          // Wir wollen den Admin nicht in der Liste anzeigen
-          if (user.isAdmin) continue;
-
-          // Timer-Status berechnen
-          let timerStatusHTML = '<p class="timer-inactive">Timer inaktiv</p>';
-          if (user.timer && user.timer.endTime) {
-            const diffMs = user.timer.endTime - Date.now();
-            if (diffMs > 0) {
-              const diffSec = Math.floor(diffMs / 1000);
-              const hh = Math.floor(diffSec / 3600);
-              const mm = Math.floor((diffSec % 3600) / 60);
-              const ss = diffSec % 60;
-              timerStatusHTML = `<p class="timer-active">Läuft: ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}</p>`;
-            } else {
-              timerStatusHTML = '<p class="timer-inactive">Timer abgelaufen</p>';
-            }
+          let userCount = 0;
+          for (const uid in users) {
+            const user = users[uid];
+            if (user.isAdmin) continue;
+            userCount++;
           }
-          
-          // Statistik-Status
-          let solvedStatusHTML = '';
-          if (user.solvedStats && user.solvedStats.remainingTimeOnSolve) {
-            solvedStatusHTML = `<p class="solved-info">Gelöst mit ${Math.floor(user.solvedStats.remainingTimeOnSolve / 60)} min Restzeit.</p>`;
-          }
-
-          // HTML-Karte für den Benutzer erstellen
-          const userCard = document.createElement('div');
-          userCard.className = 'user-card';
-          userCard.innerHTML = `
-            <h3>${user.email}</h3>
-            ${timerStatusHTML}
-            ${solvedStatusHTML}
-            <div>
-              <button class="start-btn" data-uid="${uid}">Start / Neustart (2h)</button>
-              <button class="add-time-btn" data-uid="${uid}">+10 Min</button>
-              <button class="stop-btn" data-uid="${uid}">Stopp</button>
-            </div>
-          `;
-          
-          userListDiv.appendChild(userCard);
+          userListDiv.innerHTML = `${userCount} Benutzer gefunden. (Anzeige-Logik ist für den Test deaktiviert)`;
+        },
+        // Fehler-Callback
+        (error) => {
+          console.error("FEHLER BEIM LESEN DER BENUTZERLISTE:", error);
+          userListDiv.innerHTML = `<p style="color: red;">Fehler beim Laden der Benutzer: ${error.message}</p>`;
         }
-      });
+      );
     }
-
-    // === NEUE LOGIK: Event-Handling für alle Buttons ===
+    
+    // Die Event-Handling Logik für die Buttons lassen wir für den Test unverändert.
     document.getElementById('user-list').addEventListener('click', (e) => {
-      // Prüfen, ob ein Button geklickt wurde
       if (e.target.tagName !== 'BUTTON') return;
-
       const uid = e.target.dataset.uid;
       if (!uid) return;
-      
       const targetUserTimerRef = ref(db, `users/${uid}/timer`);
-
-      // Welcher Button wurde geklickt?
       if (e.target.classList.contains('start-btn')) {
-        const newEndTime = Date.now() + 7200 * 1000; // 2 Stunden
+        const newEndTime = Date.now() + 7200 * 1000;
         set(targetUserTimerRef, { endTime: newEndTime, initialDuration: 7200 });
       }
-
       if (e.target.classList.contains('add-time-btn')) {
-        // Lese zuerst den aktuellen Wert, um Zeit sicher hinzuzufügen
         get(targetUserTimerRef).then((snapshot) => {
           const timerData = snapshot.val();
-          // Zeit nur hinzufügen, wenn der Timer bereits läuft
           if (timerData && timerData.endTime && timerData.endTime > Date.now()) {
-            const newEndTime = timerData.endTime + 10 * 60 * 1000; // +10 Minuten
+            const newEndTime = timerData.endTime + 10 * 60 * 1000;
             set(targetUserTimerRef, { ...timerData, endTime: newEndTime });
           } else {
             alert("Timer ist nicht aktiv. Bitte zuerst starten.");
           }
         });
       }
-
       if (e.target.classList.contains('stop-btn')) {
-        set(targetUserTimerRef, null); // Löscht den Timer-Eintrag für diesen User
+        set(targetUserTimerRef, null);
       }
     });
-
   </script>
 
 </body>
