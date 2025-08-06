@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>Admin Dashboard</title>
+    </head>
+<body>
+    <h1>Admin Dashboard</h1>
+    <div id="user-list">
+        </div>
+    <script type="module">
+        // Firebase Imports und Initialisierung wie gehabt...
+
+        // Referenz auf ALLE Benutzer
+        const usersRef = ref(db, 'users');
+
+        // Lausche auf Änderungen in der Benutzerliste
+        onValue(usersRef, (snapshot) => {
+            const users = snapshot.val();
+            const userListDiv = document.getElementById('user-list');
+            userListDiv.innerHTML = ''; // Liste vor dem Neuaufbau leeren
+
+            for (const uid in users) {
+                const user = users[uid];
+                
+                // Erstelle ein Div für jeden Benutzer
+                const userDiv = document.createElement('div');
+                userDiv.style.border = '1px solid #0f0';
+                userDiv.style.padding = '10px';
+                userDiv.style.marginBottom = '10px';
+
+                let remainingTimeStr = "Timer inaktiv";
+                if (user.timer && user.timer.endTime) {
+                    const diffMs = user.timer.endTime - Date.now();
+                    if (diffMs > 0) {
+                        const diffSec = Math.floor(diffMs / 1000);
+                        const mm = Math.floor(diffSec / 60);
+                        const ss = diffSec % 60;
+                        remainingTimeStr = `Läuft: ${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+                    } else {
+                        remainingTimeStr = "Abgelaufen";
+                    }
+                }
+                
+                let solvedStatStr = "Noch nicht gelöst.";
+                if(user.solvedStats && user.solvedStats.remainingTimeOnSolve) {
+                    solvedStatStr = `Gelöst mit ${user.solvedStats.remainingTimeOnSolve}s Restzeit.`;
+                }
+
+                userDiv.innerHTML = `
+                    <h3>${user.email}</h3>
+                    <p>Status: ${remainingTimeStr}</p>
+                    <p>${solvedStatStr}</p>
+                    <button class="restart-btn" data-uid="${uid}">Timer neu starten</button>
+                    <button class="add-time-btn" data-uid="${uid}">+10 Minuten</button>
+                `;
+                
+                userListDiv.appendChild(userDiv);
+            }
+        });
+
+        // Event-Listener für die dynamisch erstellten Buttons
+        document.getElementById('user-list').addEventListener('click', (e) => {
+            const target = e.target;
+            const uid = target.getAttribute('data-uid');
+            if (!uid) return;
+
+            const userTimerRef = ref(db, `users/${uid}/timer`);
+
+            if (target.classList.contains('restart-btn')) {
+                const newEndTime = Date.now() + 7200 * 1000;
+                set(userTimerRef, { endTime: newEndTime, initialDuration: 7200 });
+            }
+
+            if (target.classList.contains('add-time-btn')) {
+                // Lese den aktuellen Wert, um Zeit hinzuzufügen
+                onValue(ref(db, `users/${uid}/timer/endTime`), (snapshot) => {
+                    const currentEndTime = snapshot.val() || Date.now();
+                    const newEndTime = currentEndTime + 10 * 60 * 1000;
+                    set(ref(db, `users/${uid}/timer/endTime`), newEndTime);
+                }, { onlyOnce: true });
+            }
+        });
+
+    </script>
+</body>
+</html>
