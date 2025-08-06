@@ -88,6 +88,9 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
+    // NEU: Globale Variable für unseren zentralen Timer-Updater
+    let masterTimerInterval = null;
+
     // "Türsteher"-Skript zur Berechtigungsprüfung
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -97,7 +100,14 @@
           if (userData && userData.isAdmin === true) {
             document.getElementById('loading-message').style.display = 'none';
             document.getElementById('admin-dashboard').style.display = 'block';
+            
+            // Starte die Dashboard-Logik
             initializeDashboard();
+
+            // NEU: Starte den zentralen Timer-Updater, der jede Sekunde läuft
+            if (masterTimerInterval) clearInterval(masterTimerInterval);
+            masterTimerInterval = setInterval(updateAllTimersOnPage, 1000);
+
           } else {
             window.location.href = 'index.html';
           }
@@ -107,45 +117,36 @@
       }
     });
 
-    // === FINALE FUNKTION: Baut das Dashboard und hält es aktuell ===
+    // === ANGEPASSTE FUNKTION: Baut das Dashboard und hält es aktuell ===
     function initializeDashboard() {
       const usersRef = ref(db, 'users');
       const userListDiv = document.getElementById('user-list');
 
-      // Lausche auf ALLE Änderungen im 'users'-Ast der Datenbank für Echtzeit-Updates
       onValue(usersRef, (snapshot) => {
         const users = snapshot.val();
-        userListDiv.innerHTML = ''; // Leere die Liste vor jedem Neuaufbau
+        userListDiv.innerHTML = ''; 
 
-        // Gehe jeden Benutzer in der Datenbank durch
         for (const uid in users) {
           const user = users[uid];
-          
-          // Wir wollen den Admin nicht in der Liste anzeigen
           if (user.isAdmin) continue;
 
-          // Timer-Status berechnen und HTML dafür vorbereiten
           let timerStatusHTML = '<p class="timer-inactive">Timer inaktiv</p>';
           if (user.timer && user.timer.endTime) {
             const diffMs = user.timer.endTime - Date.now();
             if (diffMs > 0) {
-              const diffSec = Math.floor(diffMs / 1000);
-              const hh = Math.floor(diffSec / 3600);
-              const mm = Math.floor((diffSec % 3600) / 60);
-              const ss = diffSec % 60;
-              timerStatusHTML = `<p class="timer-active">Läuft: ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}</p>`;
+              // NEU: Wir fügen die Endzeit als "data-end-time"-Attribut direkt ins HTML ein.
+              // Das erlaubt unserem Updater, die Zeit zu finden und neu zu berechnen.
+              timerStatusHTML = `<p class="timer-active" data-end-time="${user.timer.endTime}">Lädt...</p>`;
             } else {
               timerStatusHTML = '<p class="timer-inactive">Timer abgelaufen</p>';
             }
           }
           
-          // Statistik-Status vorbereiten
           let solvedStatusHTML = '';
           if (user.solvedStats && user.solvedStats.remainingTimeOnSolve) {
             solvedStatusHTML = `<p class="solved-info">Gelöst mit ${Math.floor(user.solvedStats.remainingTimeOnSolve / 60)} min Restzeit.</p>`;
           }
 
-          // HTML-Karte für den Benutzer erstellen
           const userCard = document.createElement('div');
           userCard.className = 'user-card';
           userCard.innerHTML = `
@@ -164,38 +165,59 @@
       });
     }
 
-    // === FINALE LOGIK: Event-Handling für alle Buttons ===
-    document.getElementById('user-list').addEventListener('click', (e) => {
-      // Prüfen, ob ein Button geklickt wurde
-      if (e.target.tagName !== 'BUTTON') return;
+    // === NEUE FUNKTION: Aktualisiert alle Timer-Anzeigen auf der Seite ===
+    function updateAllTimersOnPage() {
+      // Finde alle HTML-Elemente, die einen aktiven Timer darstellen
+      const activeTimerElements = document.querySelectorAll('.timer-active[data-end-time]');
+      
+      activeTimerElements.forEach(timerEl => {
+        const endTime = parseInt(timerEl.dataset.endTime, 10);
+        const now = Date.now();
+        const diffMs = endTime - now;
 
+        if (diffMs <= 0) {
+          // Wenn der Timer abgelaufen ist, ändere den Status und entferne das Attribut
+          timerEl.textContent = "Timer abgelaufen";
+          timerEl.classList.remove('timer-active');
+          timerEl.classList.add('timer-inactive');
+          timerEl.removeAttribute('data-end-time');
+          return;
+        }
+
+        const diffSec = Math.floor(diffMs / 1000);
+        const hh = Math.floor(diffSec / 3600);
+        const mm = Math.floor((diffSec % 3600) / 60);
+        const ss = diffSec % 60;
+        
+        // Aktualisiere die Textanzeige
+        timerEl.textContent = 
+          `Läuft: ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+      });
+    }
+
+    // Event-Handling für alle Buttons (unverändert)
+    document.getElementById('user-list').addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') return;
       const uid = e.target.dataset.uid;
       if (!uid) return;
-      
       const targetUserTimerRef = ref(db, `users/${uid}/timer`);
-
-      // Entscheiden, welche Aktion ausgeführt wird
       if (e.target.classList.contains('start-btn')) {
-        const newEndTime = Date.now() + 7200 * 1000; // 2 Stunden von jetzt an
+        const newEndTime = Date.now() + 7200 * 1000;
         set(targetUserTimerRef, { endTime: newEndTime, initialDuration: 7200 });
       }
-
       if (e.target.classList.contains('add-time-btn')) {
-        // Lese zuerst den aktuellen Wert, um Zeit sicher hinzuzufügen
         get(targetUserTimerRef).then((snapshot) => {
           const timerData = snapshot.val();
-          // Zeit nur hinzufügen, wenn der Timer bereits läuft
           if (timerData && timerData.endTime && timerData.endTime > Date.now()) {
-            const newEndTime = timerData.endTime + 10 * 60 * 1000; // +10 Minuten
+            const newEndTime = timerData.endTime + 10 * 60 * 1000;
             set(targetUserTimerRef, { ...timerData, endTime: newEndTime });
           } else {
             alert("Timer ist nicht aktiv. Bitte zuerst starten.");
           }
         });
       }
-
       if (e.target.classList.contains('stop-btn')) {
-        set(targetUserTimerRef, null); // Löscht den Timer-Eintrag für diesen User
+        set(targetUserTimerRef, null);
       }
     });
   </script>
