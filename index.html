@@ -91,12 +91,8 @@
           // Login erfolgreich
           const user = userCredential.user;
           //===============================================
-          // ==========================================================
-          // HIER IST DIE RICHTIGE STELLE FÜR DEN BEFEHL!
-          console.log("Login erfolgreich! Das Benutzer-Objekt ist:", user);
-          console.log("Die benötigte UID lautet:", user.uid); // <-- Gibt die UID direkt aus!
-          // ==========================================================
-          //window.location.href = "terminal.html"; // Weiterleiten
+
+          window.location.href = "terminal.html"; // Weiterleiten
         })
         .catch((error) => {
           // Fehler beim Login
