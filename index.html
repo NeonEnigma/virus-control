@@ -37,7 +37,8 @@
     // 1. Firebase initialisieren
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    // NEU: 'get' wird importiert, 'onValue' wird nicht mehr benötigt
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
     // Ihre Web-App-Konfiguration von Firebase
     const firebaseConfig = {
@@ -47,7 +48,7 @@
       storageBucket: "escape-star.firebasestorage.app",
       messagingSenderId: "764344736028",
       appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
-      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app" // Schrägstrich am Ende entfernt
+      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
     };
 
     // Firebase App initialisieren und Dienste abrufen
@@ -66,29 +67,39 @@
 
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-          // Login erfolgreich, jetzt prüfen wir, ob der User Admin ist.
           const user = userCredential.user;
           const userRef = ref(db, 'users/' + user.uid);
 
-          // Lese die Daten des Benutzers einmalig aus der Datenbank, um zu entscheiden, wohin weitergeleitet wird.
-          onValue(userRef, (snapshot) => {
-            const userData = snapshot.val();
-            
-            // Prüfe, ob der isAdmin-Flag gesetzt ist und leite entsprechend weiter
-            if (userData && userData.isAdmin === true) {
-              window.location.href = "admin.html";
+          // ==========================================================
+          // VERBESSERTE LOGIK mit get() statt onValue()
+          // get() ist für einmaliges Lesen gedacht und hat eine klarere Fehlerbehandlung.
+          // ==========================================================
+          get(userRef).then((snapshot) => {
+            if (snapshot.exists()) {
+              // Daten für den Benutzer wurden gefunden
+              const userData = snapshot.val();
+              if (userData && userData.isAdmin === true) {
+                window.location.href = "admin.html";
+              } else {
+                window.location.href = "terminal.html";
+              }
             } else {
+              // Dieser Fall ist wichtig: Der Benutzer existiert in 'Authentication',
+              // aber es gibt keinen Datensatz für ihn in der 'Realtime Database'.
+              console.log("Kein Datenbankeintrag für diesen Benutzer gefunden. Behandle als normalen Benutzer.");
               window.location.href = "terminal.html";
             }
-          }, {
-            onlyOnce: true 
+          }).catch((error) => {
+            // HIER werden jetzt Fehler wie "Permission Denied" von den Security Rules abgefangen!
+            console.error("Fehler beim Lesen der Benutzerdaten aus der Datenbank:", error);
+            alert("Ein Fehler ist aufgetreten. Sie konnten nicht weitergeleitet werden.");
           });
         })
         .catch((error) => {
-          // Fehler beim Login
+          // Fehler beim Login selbst (falsches Passwort etc.)
           errorDiv.style.display = "block";
           errorDiv.textContent = "Falsche E-Mail oder Passwort!";
-          console.error("Login-Fehler:", error); // Dieses eine console.error lassen wir für unsere eigene Fehlersuche drin.
+          console.error("Login-Fehler:", error);
         });
     });
   </script>
