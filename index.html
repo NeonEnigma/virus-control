@@ -4,14 +4,7 @@
   <meta charset="UTF-8" />
   <title>Login</title>
   <style>
-    /* Ihr gesamtes CSS bleibt unverändert hier oben */
     body { background-color: #000000; color: #0f0; font-family: monospace; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
-    .invisible { display: none !important; }
-    .admin-reset-btn { position: absolute; top: 10px; left: 10px; background-color: #000; color: #0f0; border: 2px solid #0f0; padding: 4px 8px; cursor: pointer; font-family: monospace; }
-    .admin-reset-btn:hover { background-color: #0f0; color: #000; }
-    .timer-area { position: absolute; top: 10px; right: 10px; font-family: monospace; color: #0f0; text-align: right; }
-    .timer-area button { background: #000; border: 2px solid #0f0; color: #0f0; padding: 4px 8px; font-family: monospace; cursor: pointer; }
-    .timer-area button:hover { background: #0f0; color: #000; }
     #login-container { border: 2px solid #0f0; padding: 20px; width: 300px; box-sizing: border-box; }
     h2 { margin-top: 0; margin-bottom: 20px; font-weight: normal; }
     label { display: block; margin-bottom: 8px; }
@@ -34,13 +27,10 @@
   </div>
 
   <script type="module">
-    // 1. Firebase initialisieren
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    // NEU: 'get' wird importiert, 'onValue' wird nicht mehr benötigt
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-    // Ihre Web-App-Konfiguration von Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
       authDomain: "escape-star.firebaseapp.com",
@@ -51,12 +41,10 @@
       databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
     };
 
-    // Firebase App initialisieren und Dienste abrufen
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // 2. Anwendungslogik
     const loginButton = document.getElementById("loginButton");
     const errorDiv = document.getElementById("error-message");
     
@@ -70,33 +58,23 @@
           const user = userCredential.user;
           const userRef = ref(db, 'users/' + user.uid);
 
-          // ==========================================================
-          // VERBESSERTE LOGIK mit get() statt onValue()
-          // get() ist für einmaliges Lesen gedacht und hat eine klarere Fehlerbehandlung.
-          // ==========================================================
           get(userRef).then((snapshot) => {
             if (snapshot.exists()) {
-              // Daten für den Benutzer wurden gefunden
               const userData = snapshot.val();
               if (userData && userData.isAdmin === true) {
                 window.location.href = "admin.html";
               } else {
-                window.location.href = "terminal2949288.html";
+                window.location.href = "terminal.html";
               }
             } else {
-              // Dieser Fall ist wichtig: Der Benutzer existiert in 'Authentication',
-              // aber es gibt keinen Datensatz für ihn in der 'Realtime Database'.
-              console.log("Kein Datenbankeintrag für diesen Benutzer gefunden. Behandle als normalen Benutzer.");
-              window.location.href = "terminal2949288.html";
+              window.location.href = "terminal.html";
             }
           }).catch((error) => {
-            // HIER werden jetzt Fehler wie "Permission Denied" von den Security Rules abgefangen!
-            console.error("Fehler beim Lesen der Benutzerdaten aus der Datenbank:", error);
-            alert("Ein Fehler ist aufgetreten. Sie konnten nicht weitergeleitet werden.");
+            console.error("Fehler beim Lesen der Benutzerdaten:", error);
+            alert("Ein Berechtigungs-Fehler ist aufgetreten.");
           });
         })
         .catch((error) => {
-          // Fehler beim Login selbst (falsches Passwort etc.)
           errorDiv.style.display = "block";
           errorDiv.textContent = "Falsche E-Mail oder Passwort!";
           console.error("Login-Fehler:", error);
