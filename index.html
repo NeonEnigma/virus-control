@@ -34,9 +34,7 @@
   </div>
 
   <script type="module">
-    // ==========================================================
     // 1. Firebase initialisieren
-    // ==========================================================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
@@ -49,7 +47,7 @@
       storageBucket: "escape-star.firebasestorage.app",
       messagingSenderId: "764344736028",
       appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
-      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app/" 
+      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app" // Schrägstrich am Ende entfernt
     };
 
     // Firebase App initialisieren und Dienste abrufen
@@ -57,16 +55,10 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-
-    // ==========================================================
     // 2. Anwendungslogik
-    // ==========================================================
-
-    // DOM-Elemente für das Login holen
     const loginButton = document.getElementById("loginButton");
     const errorDiv = document.getElementById("error-message");
     
-    // --- KORREKTE UND EINZIGE LOGIN-LOGIK ---
     loginButton.addEventListener("click", () => {
       const email = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
@@ -76,37 +68,19 @@
         .then((userCredential) => {
           // Login erfolgreich, jetzt prüfen wir, ob der User Admin ist.
           const user = userCredential.user;
-
-          // ==========================================================
-          // NEU: Eindeutige Ausgabe der ECHTEN UID zum Kopieren
-          console.log("--------------------------------------------------");
-          console.log("Die ECHTE UID des eingeloggten Benutzers ist:", user.uid);
-          console.log("--------------------------------------------------");
-          // ==========================================================
-
           const userRef = ref(db, 'users/' + user.uid);
 
-          // Lese die Daten des Benutzers aus der Datenbank
+          // Lese die Daten des Benutzers einmalig aus der Datenbank, um zu entscheiden, wohin weitergeleitet wird.
           onValue(userRef, (snapshot) => {
-            // --- START DER DIAGNOSE ---
-            console.log("1. Prüfe Datenbank-Pfad:", userRef.toString());
             const userData = snapshot.val();
-            console.log("2. Vom Server erhaltene Benutzerdaten:", userData);
-            // --- ENDE DER DIAGNOSE ---
             
+            // Prüfe, ob der isAdmin-Flag gesetzt ist und leite entsprechend weiter
             if (userData && userData.isAdmin === true) {
-              console.log("3. Entscheidung: Bedingung ERFÜLLT. userData.isAdmin ist:", userData.isAdmin);
-              // window.location.href = "admin.html"; // Vorübergehend deaktiviert
+              window.location.href = "admin.html";
             } else {
-              if (!userData) {
-                console.log("3. Entscheidung: Bedingung NICHT ERFÜLLT, weil die Benutzerdaten 'null' sind.");
-              } else {
-                console.log("3. Entscheidung: Bedingung NICHT ERFÜLLT. Der Wert von userData.isAdmin ist:", userData.isAdmin, "(Datentyp:", typeof userData.isAdmin, ")");
-              }
-              // window.location.href = "terminal.html"; // Vorübergehend deaktiviert
+              window.location.href = "terminal.html";
             }
           }, {
-            // Wichtig: nur einmal lesen, da wir nur für die Weiterleitung prüfen
             onlyOnce: true 
           });
         })
@@ -114,10 +88,9 @@
           // Fehler beim Login
           errorDiv.style.display = "block";
           errorDiv.textContent = "Falsche E-Mail oder Passwort!";
-          console.error("Login-Fehler:", error);
+          console.error("Login-Fehler:", error); // Dieses eine console.error lassen wir für unsere eigene Fehlersuche drin.
         });
     });
-
   </script>
 </body>
 </html>
