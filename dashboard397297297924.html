@@ -386,7 +386,7 @@
             <p class="server-status">Firewall: down</p>
             <p class="server-status">Ports: offen</p>
           </div>
-          <button class="status-btn" onclick="window.location.href='webserver.html'">Server-Verwaltung</button>
+          <button class="status-btn" onclick="window.location.href='webserver39482840133.html'">Server-Verwaltung</button>
         </div>
         <!-- Datenbank-Box -->
         <div id="datenbankBox" class="box part square">
@@ -396,7 +396,7 @@
             <p class="server-status">Firewall: down</p>
             <p class="server-status">Ports: offen</p>
           </div>
-          <button class="status-btn" onclick="window.location.href='datenbank.html'">Datenbank verwalten</button>
+          <button class="status-btn" onclick="window.location.href='datenbank94820820.html'">Datenbank verwalten</button>
         </div>
         <div id="applicationServerBox" class="box part square">
           <h2>Applikation-Server</h2>
@@ -405,7 +405,7 @@
             <p class="server-status">Firewall: down</p>
             <p class="server-status">Ports: offen</p>
           </div>
-          <button class="status-btn" onclick="window.location.href='applicationServer.html'">App-Verwaltung</button>
+          <button class="status-btn" onclick="window.location.href='applicationServer394920192.html'">App-Verwaltung</button>
         </div>
         
         <!-- Shutdown-Box -->
@@ -468,8 +468,8 @@
       if (diffMs <= 0) {
         shutdownTimerEl.textContent = "00:00";
         clearInterval(shutdownTimerInterval);
-        // Hier ist die neue Funktionalität: Weiterleitung zur fail.html Seite
-        window.location.href = "fail.html";
+        // Hier ist die neue Funktionalität: Weiterleitung zur fail394950230583.html Seite
+        window.location.href = "fail394950230583.html";
         return;
       }
       const diffSec = Math.floor(diffMs / 1000);
@@ -496,8 +496,8 @@
         localStorage.getItem("datenbankCompleted") === "true" &&
         localStorage.getItem("applicationServerCompleted") === "true"
       ) {
-        // Wenn alle verbunden sind, zur mainserver.html weiterleiten
-        window.location.href = "mainserver.html";
+        // Wenn alle verbunden sind, zur mainserver394859320.html weiterleiten
+        window.location.href = "mainserver394859320.html";
       }
     }
   </script>

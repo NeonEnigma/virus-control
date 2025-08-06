@@ -81,13 +81,13 @@
               if (userData && userData.isAdmin === true) {
                 window.location.href = "admin.html";
               } else {
-                window.location.href = "terminal.html";
+                window.location.href = "terminal2949288.html";
               }
             } else {
               // Dieser Fall ist wichtig: Der Benutzer existiert in 'Authentication',
               // aber es gibt keinen Datensatz für ihn in der 'Realtime Database'.
               console.log("Kein Datenbankeintrag für diesen Benutzer gefunden. Behandle als normalen Benutzer.");
-              window.location.href = "terminal.html";
+              window.location.href = "terminal2949288.html";
             }
           }).catch((error) => {
             // HIER werden jetzt Fehler wie "Permission Denied" von den Security Rules abgefangen!

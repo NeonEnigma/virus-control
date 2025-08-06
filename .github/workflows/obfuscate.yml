@@ -34,7 +34,7 @@ jobs:
 
           const DIST_DIR = './dist';
           // NEU: Name der Datei, die NICHT verschleiert werden soll
-          const EXCLUDE_FILE = 'mainserver.html';
+          const EXCLUDE_FILE = 'mainserver394859320.html';
 
           // Funktion zum Verschleiern von JS-Code
           function obfuscate(jsCode) {
