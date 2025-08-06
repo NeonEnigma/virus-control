@@ -76,14 +76,18 @@
         .then((userCredential) => {
           // Login erfolgreich, jetzt prüfen wir, ob der User Admin ist.
           const user = userCredential.user;
+
+          // ==========================================================
+          // NEU: Eindeutige Ausgabe der ECHTEN UID zum Kopieren
+          console.log("--------------------------------------------------");
+          console.log("Die ECHTE UID des eingeloggten Benutzers ist:", user.uid);
+          console.log("--------------------------------------------------");
+          // ==========================================================
+
           const userRef = ref(db, 'users/' + user.uid);
 
           // Lese die Daten des Benutzers aus der Datenbank
           onValue(userRef, (snapshot) => {
-            // ==========================================================
-            // HIER IST DIE ANGEPASSTE STELLE MIT DEN DIAGNOSE-LOGS
-            // ==========================================================
-
             // --- START DER DIAGNOSE ---
             console.log("1. Prüfe Datenbank-Pfad:", userRef.toString());
             const userData = snapshot.val();
