@@ -80,15 +80,26 @@
 
           // Lese die Daten des Benutzers aus der Datenbank
           onValue(userRef, (snapshot) => {
+            // ==========================================================
+            // HIER IST DIE ANGEPASSTE STELLE MIT DEN DIAGNOSE-LOGS
+            // ==========================================================
+
+            // --- START DER DIAGNOSE ---
+            console.log("1. Prüfe Datenbank-Pfad:", userRef.toString());
             const userData = snapshot.val();
+            console.log("2. Vom Server erhaltene Benutzerdaten:", userData);
+            // --- ENDE DER DIAGNOSE ---
             
-            // Prüfe, ob der isAdmin-Flag gesetzt ist und leite entsprechend weiter
             if (userData && userData.isAdmin === true) {
-              console.log("Admin-Login erkannt. Leite zu admin.html weiter.");
-              window.location.href = "admin.html";
+              console.log("3. Entscheidung: Bedingung ERFÜLLT. userData.isAdmin ist:", userData.isAdmin);
+              // window.location.href = "admin.html"; // Vorübergehend deaktiviert
             } else {
-              console.log("Standard-Benutzer-Login. Leite zu terminal.html weiter.");
-              window.location.href = "terminal.html";
+              if (!userData) {
+                console.log("3. Entscheidung: Bedingung NICHT ERFÜLLT, weil die Benutzerdaten 'null' sind.");
+              } else {
+                console.log("3. Entscheidung: Bedingung NICHT ERFÜLLT. Der Wert von userData.isAdmin ist:", userData.isAdmin, "(Datentyp:", typeof userData.isAdmin, ")");
+              }
+              // window.location.href = "terminal.html"; // Vorübergehend deaktiviert
             }
           }, {
             // Wichtig: nur einmal lesen, da wir nur für die Weiterleitung prüfen
