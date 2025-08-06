@@ -4,228 +4,167 @@
   <meta charset="UTF-8" />
   <title>Login</title>
   <style>
-    body {
-      background-color: #000000; /* Hacker-Style */
-      color: #0f0;
-      font-family: monospace;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    .invisible {
-      display: none !important;
-    }
-
-    /* Button zum Reset des Timers oben links */
-    .admin-reset-btn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background-color: #000;
-      color: #0f0;
-      border: 2px solid #0f0;
-      padding: 4px 8px;
-      cursor: pointer;
-      font-family: monospace;
-    }
-    .admin-reset-btn:hover {
-      background-color: #0f0;
-      color: #000;
-    }
-
-    /* Timer-Bereich oben rechts */
-    .timer-area {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-family: monospace;
-      color: #0f0;
-      text-align: right;
-    }
-    .timer-area button {
-      background: #000;
-      border: 2px solid #0f0;
-      color: #0f0;
-      padding: 4px 8px;
-      font-family: monospace;
-      cursor: pointer;
-    }
-    .timer-area button:hover {
-      background: #0f0;
-      color: #000;
-    }
-
-    /* Container für das Login-Formular */
-    #login-container {
-      border: 2px solid #0f0;
-      padding: 20px;
-      width: 300px;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin-top: 0;
-      margin-bottom: 20px;
-      font-weight: normal;
-    }
-    label {
-      display: block;
-      margin-bottom: 8px;
-    }
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 6px;
-      margin-bottom: 15px;
-      box-sizing: border-box;
-      border: 2px solid #0f0;
-      background: #000;
-      color: #0f0;
-      font-family: monospace;
-    }
-    input[type="button"] {
-      background-color: #000;
-      color: #0f0;
-      border: 2px solid #0f0;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-family: monospace;
-    }
-    input[type="button"]:hover {
-      background-color: #0f0;
-      color: #000;
-    }
-    .error {
-      color: #f00;
-      margin-bottom: 10px;
-    }
+    /* Ihr gesamtes CSS bleibt unverändert hier oben */
+    body { background-color: #000000; color: #0f0; font-family: monospace; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+    .invisible { display: none !important; }
+    .admin-reset-btn { position: absolute; top: 10px; left: 10px; background-color: #000; color: #0f0; border: 2px solid #0f0; padding: 4px 8px; cursor: pointer; font-family: monospace; }
+    .admin-reset-btn:hover { background-color: #0f0; color: #000; }
+    .timer-area { position: absolute; top: 10px; right: 10px; font-family: monospace; color: #0f0; text-align: right; }
+    .timer-area button { background: #000; border: 2px solid #0f0; color: #0f0; padding: 4px 8px; font-family: monospace; cursor: pointer; }
+    .timer-area button:hover { background: #0f0; color: #000; }
+    #login-container { border: 2px solid #0f0; padding: 20px; width: 300px; box-sizing: border-box; }
+    h2 { margin-top: 0; margin-bottom: 20px; font-weight: normal; }
+    label { display: block; margin-bottom: 8px; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 6px; margin-bottom: 15px; box-sizing: border-box; border: 2px solid #0f0; background: #000; color: #0f0; font-family: monospace; }
+    input[type="button"] { background-color: #000; color: #0f0; border: 2px solid #0f0; padding: 6px 12px; cursor: pointer; font-family: monospace; }
+    input[type="button"]:hover { background-color: #0f0; color: #000; }
+    .error { color: #f00; margin-bottom: 10px; }
   </style>
 </head>
 <body>
 
-  <!-- Reset Timer-Button oben links -->
   <button class="admin-reset-btn" id="resetTimerBtn">Neustart Timer</button>
-
-  <!-- Timer (oben rechts) -->
   <div class="timer-area">
     <div id="globalTimer" class="invisible">Timer inaktiv</div>
     <button id="startTimerBtn">Timer starten</button>
   </div>
-
-  <!-- Login-Formular -->
   <div id="login-container">
     <h2>Anmeldung</h2>
     <div id="error-message" class="error" style="display: none;"></div>
-
-    <label for="username">Benutzername:</label>
+    <label for="username">Benutzername (E-Mail):</label>
     <input type="text" id="username" placeholder=""/>
-
     <label for="password">Passwort:</label>
     <input type="password" id="password" placeholder="" />
-
     <input type="button" id="loginButton" value="Anmelden" />
   </div>
 
-  <script>
-    /**********************************************************
-     * 1) Login-Logik
-     **********************************************************/
-    const validUser = "John";
-    const validPass = "abwehr/3/schwarz";
+  <script type="module">
+    // ==========================================================
+    // 2. Firebase initialisieren (IMMER ZUERST)
+    // ==========================================================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    // NEU: Importiere die nötigen Firebase-Funktionen für Auth und Realtime Database
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
+    // Ihre Web-App-Konfiguration von Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q", // <-- Ersetzen Sie dies mit Ihren echten Daten
+      authDomain: "escape-star.firebaseapp.com",
+      projectId: "escape-star",
+      storageBucket: "escape-star.firebasestorage.app",
+      messagingSenderId: "764344736028",
+      appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
+      // WICHTIG: Fügen Sie Ihre Datenbank-URL hinzu
+      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app/" 
+    };
+
+    // Firebase App initialisieren
+    const app = initializeApp(firebaseConfig);
+    // NEU: Firebase-Dienste abrufen, die wir verwenden wollen
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+
+    // ==========================================================
+    // 3. Ihre Anwendungslogik (NACH der Initialisierung)
+    // ==========================================================
+
+    // DOM-Elemente holen (wie zuvor)
     const loginButton = document.getElementById("loginButton");
     const errorDiv = document.getElementById("error-message");
-
-    loginButton.addEventListener("click", () => {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
-
-      if (username === validUser && password === validPass) {
-        window.location.href = "terminal.html";
-      } else {
-        errorDiv.style.display = "block";
-        errorDiv.textContent = "Falscher Benutzer oder Passwort!";
-      }
-    });
-
-    /**********************************************************
-     * 2) Countdown-Timer-Logik
-     **********************************************************/
-    const COUNTDOWN_SECONDS = 7200; // 60 Minuten
-    const LOCAL_STORAGE_KEY = "countdownEnd";
-    let timerInterval = null;
-
     const globalTimerEl = document.getElementById("globalTimer");
     const startTimerBtn = document.getElementById("startTimerBtn");
     const resetTimerBtn = document.getElementById("resetTimerBtn");
+    
+    let timerInterval = null;
+    const COUNTDOWN_SECONDS = 7200; // 120 Minuten
 
-    initTimerDisplay();
+    // --- ANGEPASST: Login-Logik mit Firebase Auth ---
+    loginButton.addEventListener("click", () => {
+      const email = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      errorDiv.style.display = "none";
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          // Login erfolgreich
+          const user = userCredential.user;
+          console.log("Erfolgreich angemeldet:", user.email);
+          window.location.href = "terminal.html"; // Weiterleiten
+        })
+        .catch((error) => {
+          // Fehler beim Login
+          errorDiv.style.display = "block";
+          errorDiv.textContent = "Falsche E-Mail oder Passwort!";
+          console.error("Login-Fehler:", error);
+        });
+    });
+
+
+    // --- ANGEPASST: Timer-Logik mit Firebase Realtime Database ---
+    const timerRef = ref(db, 'timer/countdownEnd'); // Ein Pfad in Ihrer Datenbank
 
     // Button "Timer starten" klick
     startTimerBtn.addEventListener("click", () => {
-      if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
-        alert("Timer läuft bereits!");
-        return;
-      }
       const endTime = Date.now() + COUNTDOWN_SECONDS * 1000;
-      localStorage.setItem(LOCAL_STORAGE_KEY, endTime.toString());
-      initTimerDisplay();
+      // Den Endzeitpunkt in die Datenbank schreiben
+      set(timerRef, endTime)
+        .then(() => console.log("Timer in DB gestartet!"))
+        .catch(err => console.error("Fehler beim Starten des Timers:", err));
     });
 
     // Button "Timer Reset" klick
     resetTimerBtn.addEventListener("click", () => {
       const adminPass = prompt("Admin Passwort eingeben:");
-      if (adminPass === "GrünesZebra") {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-        alert("Timer wurde zurückgesetzt!");
-        clearInterval(timerInterval);
-        globalTimerEl.textContent = "Timer inaktiv";
-        startTimerBtn.style.display = "inline-block";
-        globalTimerEl.classList.add("invisible");
+      if (adminPass === "GrünesZebra") { // Das können Sie so lassen oder auch in die DB legen
+        // Den Wert in der Datenbank löschen
+        set(timerRef, null)
+          .then(() => alert("Timer wurde zurückgesetzt!"));
       } else {
         alert("Falsches Admin-Passwort!");
       }
     });
 
-    function initTimerDisplay() {
-      const storedEnd = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (!storedEnd) {
+    // Diese Funktion lauscht auf Änderungen in der Datenbank
+    onValue(timerRef, (snapshot) => {
+      const endTime = snapshot.val();
+      clearInterval(timerInterval); // Bestehenden Intervall immer löschen
+
+      if (endTime) {
+        // Es gibt einen Endzeitpunkt -> Timer anzeigen und starten
+        globalTimerEl.classList.remove("invisible");
+        startTimerBtn.style.display = "none";
+        
+        const updateTimerDisplay = () => {
+          const now = Date.now();
+          const diffMs = endTime - now;
+
+          if (diffMs <= 0) {
+            clearInterval(timerInterval);
+            globalTimerEl.textContent = "00:00:00";
+            return;
+          }
+
+          const diffSec = Math.floor(diffMs / 1000);
+          const hh = Math.floor(diffSec / 3600);
+          const mm = Math.floor((diffSec % 3600) / 60);
+          const ss = diffSec % 60;
+          
+          globalTimerEl.textContent = 
+            `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+        };
+        
+        updateTimerDisplay(); // Sofort einmal aufrufen
+        timerInterval = setInterval(updateTimerDisplay, 1000); // Dann jede Sekunde
+
+      } else {
+        // Es gibt keinen Endzeitpunkt -> Timer als inaktiv anzeigen
         globalTimerEl.textContent = "Timer inaktiv";
         startTimerBtn.style.display = "inline-block";
-        return;
+        globalTimerEl.classList.add("invisible");
       }
-      // Timer-Ende ist vorhanden -> Timer starten
-      globalTimerEl.classList.remove("invisible"); // Timer sichtbar machen
-      startTimerEl();
-      startTimerBtn.style.display = "none";
-    }
-
-    function startTimerEl() {
-      const endTime = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY), 10);
-      if (!endTime) return;
-      updateGlobalTimer(endTime);
-      timerInterval = setInterval(() => {
-        updateGlobalTimer(endTime);
-      }, 1000);
-    }
-
-    function updateGlobalTimer(endTime) {
-      const now = Date.now();
-      const diffMs = endTime - now;
-      if (diffMs <= 0) {
-        clearInterval(timerInterval);
-        globalTimerEl.textContent = "00:00";
-        return;
-      }
-      const diffSec = Math.floor(diffMs / 1000);
-      const mm = Math.floor(diffSec / 60);
-      const ss = diffSec % 60;
-      const mmStr = mm < 10 ? "0" + mm : mm;
-      const ssStr = ss < 10 ? "0" + ss : ss;
-      globalTimerEl.textContent = mmStr + ":" + ssStr;
-    }
+    });
   </script>
 </body>
 </html>
