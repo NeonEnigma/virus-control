@@ -23,11 +23,6 @@
 </head>
 <body>
 
-  <button class="admin-reset-btn" id="resetTimerBtn">Neustart Timer</button>
-  <div class="timer-area">
-    <div id="globalTimer" class="invisible">Timer inaktiv</div>
-    <button id="startTimerBtn">Timer starten</button>
-  </div>
   <div id="login-container">
     <h2>Anmeldung</h2>
     <div id="error-message" class="error" style="display: none;"></div>
@@ -40,47 +35,38 @@
 
   <script type="module">
     // ==========================================================
-    // 2. Firebase initialisieren (IMMER ZUERST)
+    // 1. Firebase initialisieren
     // ==========================================================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    // NEU: Importiere die nötigen Firebase-Funktionen für Auth und Realtime Database
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
     // Ihre Web-App-Konfiguration von Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q", // <-- Ersetzen Sie dies mit Ihren echten Daten
+      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
       authDomain: "escape-star.firebaseapp.com",
       projectId: "escape-star",
       storageBucket: "escape-star.firebasestorage.app",
       messagingSenderId: "764344736028",
       appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
-      // WICHTIG: Fügen Sie Ihre Datenbank-URL hinzu
       databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app/" 
     };
 
-    // Firebase App initialisieren
+    // Firebase App initialisieren und Dienste abrufen
     const app = initializeApp(firebaseConfig);
-    // NEU: Firebase-Dienste abrufen, die wir verwenden wollen
     const auth = getAuth(app);
     const db = getDatabase(app);
 
 
     // ==========================================================
-    // 3. Ihre Anwendungslogik (NACH der Initialisierung)
+    // 2. Anwendungslogik
     // ==========================================================
 
-    // DOM-Elemente holen (wie zuvor)
+    // DOM-Elemente für das Login holen
     const loginButton = document.getElementById("loginButton");
     const errorDiv = document.getElementById("error-message");
-    const globalTimerEl = document.getElementById("globalTimer");
-    const startTimerBtn = document.getElementById("startTimerBtn");
-    const resetTimerBtn = document.getElementById("resetTimerBtn");
     
-    let timerInterval = null;
-    const COUNTDOWN_SECONDS = 7200; // 120 Minuten
-
-    // --- ANGEPASST: Login-Logik mit Firebase Auth ---
+    // --- KORREKTE UND EINZIGE LOGIN-LOGIK ---
     loginButton.addEventListener("click", () => {
       const email = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
@@ -88,11 +74,26 @@
 
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-          // Login erfolgreich
+          // Login erfolgreich, jetzt prüfen wir, ob der User Admin ist.
           const user = userCredential.user;
-          //===============================================
+          const userRef = ref(db, 'users/' + user.uid);
 
-          window.location.href = "terminal.html"; // Weiterleiten
+          // Lese die Daten des Benutzers aus der Datenbank
+          onValue(userRef, (snapshot) => {
+            const userData = snapshot.val();
+            
+            // Prüfe, ob der isAdmin-Flag gesetzt ist und leite entsprechend weiter
+            if (userData && userData.isAdmin === true) {
+              console.log("Admin-Login erkannt. Leite zu admin.html weiter.");
+              window.location.href = "admin.html";
+            } else {
+              console.log("Standard-Benutzer-Login. Leite zu terminal.html weiter.");
+              window.location.href = "terminal.html";
+            }
+          }, {
+            // Wichtig: nur einmal lesen, da wir nur für die Weiterleitung prüfen
+            onlyOnce: true 
+          });
         })
         .catch((error) => {
           // Fehler beim Login
@@ -102,93 +103,6 @@
         });
     });
 
-
-    // --- ANGEPASST: Timer-Logik mit Firebase Realtime Database ---
-    const timerRef = ref(db, 'timer/countdownEnd'); // Ein Pfad in Ihrer Datenbank
-
-    // Button "Timer starten" klick
-    startTimerBtn.addEventListener("click", () => {
-      const endTime = Date.now() + COUNTDOWN_SECONDS * 1000;
-      // Den Endzeitpunkt in die Datenbank schreiben
-      set(timerRef, endTime)
-        .then(() => console.log("Timer in DB gestartet!"))
-        .catch(err => console.error("Fehler beim Starten des Timers:", err));
-    });
-
-    // Button "Timer Reset" klick
-    resetTimerBtn.addEventListener("click", () => {
-      const adminPass = prompt("Admin Passwort eingeben:");
-      if (adminPass === "GrünesZebra") { // Das können Sie so lassen oder auch in die DB legen
-        // Den Wert in der Datenbank löschen
-        set(timerRef, null)
-          .then(() => alert("Timer wurde zurückgesetzt!"));
-      } else {
-        alert("Falsches Admin-Passwort!");
-      }
-    });
-
-    // Diese Funktion lauscht auf Änderungen in der Datenbank
-    onValue(timerRef, (snapshot) => {
-      const endTime = snapshot.val();
-      clearInterval(timerInterval); // Bestehenden Intervall immer löschen
-
-      if (endTime) {
-        // Es gibt einen Endzeitpunkt -> Timer anzeigen und starten
-        globalTimerEl.classList.remove("invisible");
-        startTimerBtn.style.display = "none";
-        
-        const updateTimerDisplay = () => {
-          const now = Date.now();
-          const diffMs = endTime - now;
-
-          if (diffMs <= 0) {
-            clearInterval(timerInterval);
-            globalTimerEl.textContent = "00:00:00";
-            return;
-          }
-
-          const diffSec = Math.floor(diffMs / 1000);
-          const hh = Math.floor(diffSec / 3600);
-          const mm = Math.floor((diffSec % 3600) / 60);
-          const ss = diffSec % 60;
-          
-          globalTimerEl.textContent = 
-            `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-        };
-        
-        updateTimerDisplay(); // Sofort einmal aufrufen
-        timerInterval = setInterval(updateTimerDisplay, 1000); // Dann jede Sekunde
-
-      } else {
-        // Es gibt keinen Endzeitpunkt -> Timer als inaktiv anzeigen
-        globalTimerEl.textContent = "Timer inaktiv";
-        startTimerBtn.style.display = "inline-block";
-        globalTimerEl.classList.add("invisible");
-      }
-    });
-
-    // In Ihrer signInWithEmailAndPassword .then() Logik:
-.then((userCredential) => {
-  const user = userCredential.user;
-  const userRef = ref(db, 'users/' + user.uid);
-
-  // Lese die Daten des Benutzers aus der Datenbank
-  onValue(userRef, (snapshot) => {
-    const userData = snapshot.val();
-    
-    // Prüfe, ob der isAdmin-Flag gesetzt ist
-    if (userData && userData.isAdmin === true) {
-      console.log("Admin-Login erkannt. Leite zu admin.html weiter.");
-      window.location.href = "admin.html";
-    } else {
-      console.log("Standard-Benutzer-Login. Leite zu terminal.html weiter.");
-      window.location.href = "terminal.html";
-    }
-  }, {
-    // Wichtig: nur einmal lesen, da wir nur für die Weiterleitung prüfen
-    onlyOnce: true 
-  });
-})
   </script>
 </body>
 </html>
