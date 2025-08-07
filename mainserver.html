@@ -74,7 +74,7 @@
             initializeTokenGenerator(user); // Übergebe den 'user' an die Funktion
           } else {
             alert("Zugriff verweigert! Du musst erst alle drei Server-Rätsel auf dem Dashboard lösen.");
-            window.location.href = 'dashboard397297297924.html';
+            window.location.href = 'dashboard.html';
           }
         }).catch(error => { window.location.href = 'index.html'; });
       } else {
@@ -98,7 +98,7 @@
               globalTimerEl.textContent = "00:00";
               shutdownTimerEl.textContent = "00:00";
               clearInterval(mainTimerInterval);
-              window.location.href = "fail394950230583.html";
+              window.location.href = "fail.html";
               return;
             }
             const diffSec = Math.floor(diffMs / 1000);
@@ -147,7 +147,7 @@
           }).then(() => {
             console.log("Main Server Rätselstatus in Firebase gespeichert!");
             setTimeout(() => {
-              window.location.href = "virusdown2045830429.html";
+              window.location.href = "virusdown.html";
             }, 2000);
           });
           // ==========================================================
