@@ -17,8 +17,8 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    function showSuccessPage() { document.body.innerHTML=`<div class="success-container"><div class="success-icon">✓</div><h1 class="success-title">Webserver ist online</h1><p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p><p class="success-detail">Der Webserver wurde erfolgreich von schädlichem Code befreit und ist jetzt vollständig funktionsfähig. Alle Sicherheitsmaßnahmen wurden wiederhergestellt.</p><a href="dashboard397297297924.html" class="dashboard-btn">Zurück zum Dashboard</a></div>`; }
-    function showGamePage() { document.body.innerHTML=`<div id="page-content"><div class="container"><div class="header"><a href="dashboard397297297924.html" class="back-arrow">&#8592; Dashboard</a></div><div class="dashboard"><div class="heading"><h1>Server-Verwaltung – Labyrinth Rätsel</h1><p>Die Schildkröte muss alle Münzen sammeln!</p><p>Verwende: <code>turtle.up(3)</code>, <code>turtle.down(2)</code>, <code>turtle.left()</code>, <code>turtle.right()</code> und <code>turtle.collect()</code></p></div><div class="labyrinth-wrapper"><div id="labyrinth"><div id="cellsContainer"></div><div id="turtleElement">🐢</div></div><div id="scriptContainer"><textarea id="scriptInput" placeholder="Gib hier dein Script ein, z. B.:\nturtle.right(2);\nturtle.down(3);\nturtle.collect();"></textarea><button class="button" id="runScriptBtn">Script ausführen</button><div id="errorDisplay"></div></div></div><div id="coinCounter">Gesammelte Münzen: 0</div></div></div></div>`; }
+    function showSuccessPage() { document.body.innerHTML=`<div class="success-container"><div class="success-icon">✓</div><h1 class="success-title">Webserver ist online</h1><p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p><p class="success-detail">Der Webserver wurde erfolgreich von schädlichem Code befreit und ist jetzt vollständig funktionsfähig. Alle Sicherheitsmaßnahmen wurden wiederhergestellt.</p><a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a></div>`; }
+    function showGamePage() { document.body.innerHTML=`<div id="page-content"><div class="container"><div class="header"><a href="dashboard.html" class="back-arrow">&#8592; Dashboard</a></div><div class="dashboard"><div class="heading"><h1>Server-Verwaltung – Labyrinth Rätsel</h1><p>Die Schildkröte muss alle Münzen sammeln!</p><p>Verwende: <code>turtle.up(3)</code>, <code>turtle.down(2)</code>, <code>turtle.left()</code>, <code>turtle.right()</code> und <code>turtle.collect()</code></p></div><div class="labyrinth-wrapper"><div id="labyrinth"><div id="cellsContainer"></div><div id="turtleElement">🐢</div></div><div id="scriptContainer"><textarea id="scriptInput" placeholder="Gib hier dein Script ein, z. B.:\nturtle.right(2);\nturtle.down(3);\nturtle.collect();"></textarea><button class="button" id="runScriptBtn">Script ausführen</button><div id="errorDisplay"></div></div></div><div id="coinCounter">Gesammelte Münzen: 0</div></div></div></div>`; }
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -79,7 +79,7 @@
                   labyrinthCompleted: true
                 }).then(() => {
                   console.log("Webserver-Rätsel-Status in Firebase gespeichert!");
-                  window.location.href = "success3920193484.html";
+                  window.location.href = "success.html";
                 });
               }
             } else { showError("Keine Münze hier!"); }
