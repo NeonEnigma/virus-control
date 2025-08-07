@@ -97,7 +97,7 @@
               globalTimerEl.textContent = "00:00";
               shutdownTimerEl.textContent = "00:00";
               clearInterval(mainTimerInterval);
-              window.location.href = "fail394950230583.html";
+              window.location.href = "fail.html";
               return;
             }
 
@@ -166,7 +166,7 @@
           statusEl.textContent = "Erfolg! Der Virus wurde deaktiviert.";
           statusEl.classList.add("success");
           localStorage.setItem("virusDeactivated", "true"); // Dieses localStorage bleibt vorerst erhalten
-          setTimeout(() => { window.location.href = "virusdown2045830429.html"; }, 2000);
+          setTimeout(() => { window.location.href = "virusdown.html"; }, 2000);
         } else {
           statusEl.textContent = "Falscher Token! Zugriff verweigert.";
           statusEl.classList.add("error");

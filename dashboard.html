@@ -168,7 +168,7 @@
         if (diffMs <= 0) {
           shutdownTimerEl.textContent = "00:00";
           clearInterval(shutdownTimerInterval);
-          window.location.href = "fail394950230583.html"; // Weiterleitung bei Ablauf
+          window.location.href = "fail.html"; // Weiterleitung bei Ablauf
           return;
         }
 
@@ -238,7 +238,7 @@
       if (allCompleted) {
         accessMainBtn.classList.remove("deactivate-btn");
         accessMainBtn.classList.add("active-btn");
-        accessMainBtn.onclick = () => window.location.href = "mainserver394859320.html";
+        accessMainBtn.onclick = () => window.location.href = "mainserver.html";
       } else {
         accessMainBtn.classList.add("deactivate-btn");
         accessMainBtn.classList.remove("active-btn");
