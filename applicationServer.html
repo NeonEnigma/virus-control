@@ -54,7 +54,7 @@
           <div class="success-icon">✓</div>
           <h1 class="success-title">Application Server ist online</h1>
           <p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p>
-          <a href="dashboard397297297924.html" class="dashboard-btn">Zurück zum Dashboard</a>
+          <a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a>
         </div>
       `;
     }
@@ -62,7 +62,7 @@
     // Diese Funktion rendert die Rätsel-Seite
     function showPuzzlePage() {
       document.body.innerHTML = `
-        <div class="back-arrow" onclick="window.location.href='dashboard397297297924.html'">&#8592; Dashboard</div>
+        <div class="back-arrow" onclick="window.location.href='dashboard.html'">&#8592; Dashboard</div>
         <div class="dashboard" id="dashboardContent">
           <div class="heading"><h1>Kostenplanung</h1></div>
           <div class="description">
@@ -116,7 +116,7 @@
             applicationServerCompleted: true
           }).then(() => {
             console.log("Application-Server-Rätsel-Status in Firebase gespeichert!");
-            window.location.href = "success3920193484.html";
+            window.location.href = "success.html";
           });
           // ===============================================
 
