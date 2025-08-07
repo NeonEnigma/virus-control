@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
   <style>
     body { 
@@ -9,13 +10,14 @@
       color: #0f0; 
       font-family: monospace; 
       padding: 20px;
+      word-wrap: break-word; /* Verhindert horizontales Scrollen bei langen Wörtern */
     }
     h1, h2 {
       color: #0f0;
       text-shadow: 0 0 5px #0f0;
     }
     #admin-dashboard { 
-      display: none; /* Wird per Skript eingeblendet */
+      display: none;
     }
     .user-card {
       border: 2px solid #0f0;
@@ -30,6 +32,34 @@
     .user-card p {
       margin: 5px 0;
     }
+    
+    /* NEU: Flexbox-Layout für die Steuerungselemente */
+    .controls-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+      margin-top: 15px;
+    }
+    .timer-start-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-grow: 1; /* Nimmt verfügbaren Platz ein */
+    }
+    .timer-adjust-group {
+      display: flex;
+      gap: 10px;
+    }
+    .timer-input {
+      width: 80px;
+      padding: 6px;
+      background-color: #222;
+      color: #0f0;
+      border: 1px solid #0f0;
+      font-family: monospace;
+      border-radius: 4px;
+    }
     .user-card button {
       background: #000;
       border: 2px solid #0f0;
@@ -37,22 +67,47 @@
       padding: 6px 12px;
       font-family: monospace;
       cursor: pointer;
-      margin-right: 10px;
-      margin-top: 10px;
     }
     .user-card button:hover {
       background: #0f0;
       color: #000;
     }
     .timer-active {
-        color: #ff0; /* Gelb für laufende Timer */
+        color: #ff0;
         font-weight: bold;
     }
     .timer-inactive {
-        color: #888; /* Grau für inaktive Timer */
+        color: #888;
     }
     .solved-info {
-        color: #0ff; /* Cyan für gelöste Rätsel */
+        color: #0ff;
+    }
+
+    /* NEU: Media Query für Responsive Design auf mobilen Geräten */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+        font-size: 16px;
+      }
+      .user-card h3 {
+        font-size: 1.2em;
+      }
+      .controls-grid, .timer-adjust-group {
+        flex-direction: column;
+        align-items: stretch; /* Streckt Elemente auf volle Breite */
+      }
+      .user-card button {
+        width: 100%;
+        padding: 12px;
+        box-sizing: border-box; /* Stellt sicher, dass Padding in der Breite enthalten ist */
+      }
+      .timer-input {
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+        padding: 10px;
+        margin-bottom: 5px;
+      }
     }
   </style>
 </head>
@@ -87,11 +142,9 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
-
-    // Globale Variable für unseren zentralen Timer-Updater
     let masterTimerInterval = null;
 
-    // "Türsteher"-Skript zur Berechtigungsprüfung
+    // "Türsteher"-Skript
     onAuthStateChanged(auth, (user) => {
       if (user) {
         const userRef = ref(db, 'users/' + user.uid);
@@ -100,13 +153,9 @@
           if (userData && userData.isAdmin === true) {
             document.getElementById('loading-message').style.display = 'none';
             document.getElementById('admin-dashboard').style.display = 'block';
-            
             initializeDashboard();
-
-            // Starte den zentralen Timer-Updater, der jede Sekunde läuft
             if (masterTimerInterval) clearInterval(masterTimerInterval);
             masterTimerInterval = setInterval(updateAllTimersOnPage, 1000);
-
           } else {
             window.location.href = 'index.html';
           }
@@ -143,18 +192,27 @@
           if (user.solvedStats && user.solvedStats.remainingTimeOnSolve) {
             solvedStatusHTML = `<p class="solved-info">Gelöst mit ${Math.floor(user.solvedStats.remainingTimeOnSolve / 60)} min Restzeit.</p>`;
           }
+          
+          // NEU: Lese die gespeicherte Dauer oder setze einen Standardwert (z.B. 120 Minuten)
+          const initialDurationInMinutes = (user.timer && user.timer.initialDuration) ? Math.round(user.timer.initialDuration / 60) : 120;
 
           const userCard = document.createElement('div');
           userCard.className = 'user-card';
+          // NEU: Angepasstes HTML mit Input-Feld
           userCard.innerHTML = `
             <h3>${user.email}</h3>
             ${timerStatusHTML}
             ${solvedStatusHTML}
-            <div>
-              <button class="start-btn" data-uid="${uid}">Start / Neustart (2h)</button>
-              <button class="add-time-btn" data-uid="${uid}">+10 Min</button>
-              <button class="subtract-time-btn" data-uid="${uid}">-10 Min</button>
-              <button class="stop-btn" data-uid="${uid}">Stopp</button>
+            <div class="controls-grid">
+              <div class="timer-start-group">
+                <input type="number" class="timer-input" id="timer-input-${uid}" placeholder="Minuten" value="${initialDurationInMinutes}">
+                <button class="start-btn" data-uid="${uid}">Start</button>
+              </div>
+              <div class="timer-adjust-group">
+                <button class="add-time-btn" data-uid="${uid}">+10 Min</button>
+                <button class="subtract-time-btn" data-uid="${uid}">-10 Min</button>
+                <button class="stop-btn" data-uid="${uid}">Stopp</button>
+              </div>
             </div>
           `;
           
@@ -163,81 +221,36 @@
       });
     }
 
-    // Aktualisiert alle Timer-Anzeigen auf der Seite
-    function updateAllTimersOnPage() {
-      const activeTimerElements = document.querySelectorAll('.timer-active[data-end-time]');
-      
-      activeTimerElements.forEach(timerEl => {
-        const endTime = parseInt(timerEl.dataset.endTime, 10);
-        const now = Date.now();
-        const diffMs = endTime - now;
-
-        if (diffMs <= 0) {
-          timerEl.textContent = "Timer abgelaufen";
-          timerEl.classList.remove('timer-active');
-          timerEl.classList.add('timer-inactive');
-          timerEl.removeAttribute('data-end-time');
-          return;
-        }
-
-        const diffSec = Math.floor(diffMs / 1000);
-        const hh = Math.floor(diffSec / 3600);
-        const mm = Math.floor((diffSec % 3600) / 60);
-        const ss = diffSec % 60;
-        
-        timerEl.textContent = 
-          `Läuft: ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-      });
-    }
+    function updateAllTimersOnPage() { /* ... unverändert ... */ const t=document.querySelectorAll(".timer-active[data-end-time]");t.forEach(t=>{const e=parseInt(t.dataset.endTime,10),n=Date.now(),o=e-n;if(o<=0)return t.textContent="Timer abgelaufen",t.classList.remove("timer-active"),t.classList.add("timer-inactive"),void t.removeAttribute("data-end-time");const a=Math.floor(o/1e3),i=Math.floor(a/3600),d=Math.floor(a%3600/60),l=a%60;t.textContent=`Läuft: ${String(i).padStart(2,"0")}:${String(d).padStart(2,"0")}:${String(l).padStart(2,"0")}`})}
 
     // Event-Handling für alle Buttons
     document.getElementById('user-list').addEventListener('click', (e) => {
       if (e.target.tagName !== 'BUTTON') return;
-
       const uid = e.target.dataset.uid;
       if (!uid) return;
       
       const targetUserTimerRef = ref(db, `users/${uid}/timer`);
 
+      // NEU: Angepasste Logik für den Start-Button
       if (e.target.classList.contains('start-btn')) {
-        const newEndTime = Date.now() + 7200 * 1000;
-        set(targetUserTimerRef, { endTime: newEndTime, initialDuration: 7200 });
+        const inputEl = document.getElementById(`timer-input-${uid}`);
+        if (!inputEl) return;
+
+        const minutes = parseInt(inputEl.value, 10);
+        if (isNaN(minutes) || minutes <= 0) {
+          alert("Bitte eine gültige, positive Minutenzahl eingeben.");
+          return;
+        }
+
+        const durationInSeconds = minutes * 60;
+        const newEndTime = Date.now() + durationInSeconds * 1000;
+
+        // Speichere die Endzeit UND die ursprüngliche Dauer
+        set(targetUserTimerRef, { endTime: newEndTime, initialDuration: durationInSeconds });
       }
 
-      if (e.target.classList.contains('add-time-btn')) {
-        get(targetUserTimerRef).then((snapshot) => {
-          const timerData = snapshot.val();
-          if (timerData && timerData.endTime && timerData.endTime > Date.now()) {
-            const newEndTime = timerData.endTime + 10 * 60 * 1000;
-            set(targetUserTimerRef, { ...timerData, endTime: newEndTime });
-          } else {
-            alert("Timer ist nicht aktiv. Bitte zuerst starten.");
-          }
-        });
-      }
-      
-      // ==========================================================
-      // NEUE LOGIK FÜR DEN "-10 MIN" BUTTON
-      // ==========================================================
-      if (e.target.classList.contains('subtract-time-btn')) {
-        get(targetUserTimerRef).then((snapshot) => {
-          const timerData = snapshot.val();
-          if (timerData && timerData.endTime && timerData.endTime > Date.now()) {
-            const newEndTime = timerData.endTime - 10 * 60 * 1000; // 10 Minuten abziehen
-            
-            // Sicherheitsprüfung: Timer nicht ins Negative laufen lassen
-            if (newEndTime <= Date.now()) {
-              // Wenn die Zeit abgelaufen wäre, den Timer einfach stoppen
-              set(targetUserTimerRef, null);
-            } else {
-              set(targetUserTimerRef, { ...timerData, endTime: newEndTime });
-            }
-          } else {
-            alert("Timer ist nicht aktiv. Zeit kann nicht abgezogen werden.");
-          }
-        });
-      }
-
+      if (e.target.classList.contains('add-time-btn')) { /* ... unverändert ... */ get(targetUserTimerRef).then(t=>{const e=t.val();e&&e.endTime&&e.endTime>Date.now()?set(targetUserTimerRef,{...e,endTime:e.endTime+6e5}):alert("Timer ist nicht aktiv. Bitte zuerst starten.")})}
+      if (e.target.classList.contains('subtract-time-btn')) { /* ... unverändert ... */ get(targetUserTimerRef).then(t=>{const e=t.val();e&&e.endTime&&e.endTime>Date.now()?Date.now()>=e.endTime-6e5?set(targetUserTimerRef,null):set(targetUserTimerRef,{...e,endTime:e.endTime-6e5}):alert("Timer ist nicht aktiv. Zeit kann nicht abgezogen werden.")})}
       if (e.target.classList.contains('stop-btn')) {
         set(targetUserTimerRef, null);
       }
