@@ -1,4 +1,4 @@
-name: Obfuscate Inline JavaScript in HTML
+name: Obfuscate and Deploy
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-obfuscate:
     permissions:
-      contents: write
+      contents: write # Diese Berechtigung ist korrekt und notwendig
       
     runs-on: ubuntu-latest
 
@@ -33,44 +33,64 @@ jobs:
           const JavaScriptObfuscator = require('javascript-obfuscator');
 
           const DIST_DIR = './dist';
-          // NEU: Name der Datei, die NICHT verschleiert werden soll
-          const EXCLUDE_FILE = 'mainserver.html';
+          const EXCLUDE_FILES = ['mainserver.html', 'virusdown.html']; // ## GEÄNDERT: Mehrere Dateien als Array
 
           // Funktion zum Verschleiern von JS-Code
           function obfuscate(jsCode) {
-            return JavaScriptObfuscator.obfuscate(jsCode, {
+            // ## GEÄNDERT: Sicherere Optionen, die ES-Modul-Imports nicht zerstören
+            const options = {
               compact: true,
-              selfDefending: true,
-            }).getObfuscatedCode();
+              controlFlowFlattening: true, // Macht den Code-Fluss schwerer lesbar
+              controlFlowFlatteningThreshold: 0.75,
+              deadCodeInjection: true, // Fügt nutzlosen Code hinzu
+              deadCodeInjectionThreshold: 0.4,
+              debugProtection: false, // true kann zu Problemen auf manchen Browsern führen
+              disableConsoleOutput: true, // Deaktiviert console.log etc.
+              identifierNamesGenerator: 'hexadecimal',
+              log: false,
+              renameGlobals: false, // Wichtig: Globale Variablen nicht umbenennen
+              rotateStringArray: true,
+              selfDefending: false, // WICHTIG: Auf false setzen, da dies die Imports zerstört
+              shuffleStringArray: true,
+              splitStrings: true,
+              stringArray: true,
+              stringArrayThreshold: 0.75,
+              transformObjectKeys: true,
+              unicodeEscapeSequence: false
+            };
+            return JavaScriptObfuscator.obfuscate(jsCode, options).getObfuscatedCode();
           }
 
           async function main() {
             await fs.mkdir(DIST_DIR, { recursive: true });
             const htmlFiles = glob.sync('**/*.html', { ignore: ['node_modules/**', `${DIST_DIR}/**`] });
-            console.log(`Found ${htmlFiles.length} HTML file(s).`);
+            console.log(`Found ${htmlFiles.length} HTML file(s) to process.`);
 
             for (const file of htmlFiles) {
               const destPath = path.join(DIST_DIR, file);
               await fs.mkdir(path.dirname(destPath), { recursive: true });
 
-              // NEU: Prüfen, ob es die zu exkludierende Datei ist
-              if (file === EXCLUDE_FILE) {
+              // ## GEÄNDERT: Robuste Prüfung, ob eine Datei ausgeschlossen werden soll
+              if (EXCLUDE_FILES.includes(path.basename(file))) {
                 console.log(`Copying '${file}' without obfuscation.`);
                 await fs.copyFile(file, destPath);
-              } else {
-                console.log(`Processing and obfuscating '${file}'.`);
-                let content = await fs.readFile(file, 'utf-8');
-                const regex = /<script(?![^>]*src=)>([\s\S]*?)<\/script>/gi;
-                
-                content = content.replace(regex, (match, scriptContent) => {
-                  if (scriptContent.trim().length === 0) return match;
-                  console.log(`  -> Obfuscating an inline script in ${file}`);
-                  const obfuscatedContent = obfuscate(scriptContent);
-                  return `<script>${obfuscatedContent}</script>`;
-                });
-
-                await fs.writeFile(destPath, content);
+                continue; // Springe zur nächsten Datei
               }
+              
+              console.log(`Processing and obfuscating '${file}'.`);
+              let content = await fs.readFile(file, 'utf-8');
+              
+              // ## GEÄNDERT: Regex, der explizit nach <script type="module"> sucht
+              const regex = /<script type="module">([\s\S]*?)<\/script>/gi;
+              
+              content = content.replace(regex, (match, scriptContent) => {
+                if (scriptContent.trim().length === 0) return match;
+                console.log(`  -> Obfuscating inline module script in ${file}`);
+                const obfuscatedContent = obfuscate(scriptContent);
+                return `<script type="module">${obfuscatedContent}</script>`;
+              });
+
+              await fs.writeFile(destPath, content);
             }
             console.log('HTML processing finished.');
           }
@@ -87,8 +107,6 @@ jobs:
         run: node obfuscate-html.js
 
       # 6. Alle anderen wichtigen Dateien (CSS, Bilder, etc.) kopieren
-      # Dieser Schritt ist weiterhin korrekt, da er alle HTML-Dateien ignoriert,
-      # die ja bereits durch unser Skript verarbeitet wurden.
       - name: Copy other assets (CSS, images, etc.)
         run: rsync -av --exclude='*.html' --exclude='*.js' --exclude='node_modules' --exclude='.git' --exclude='obfuscate-html.js' --exclude='package*.json' --exclude='dist' . ./dist/
 
