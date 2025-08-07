@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <title>Virus deaktiviert - Erfolg!</title>
   <style>
-    /* Ihr CSS bleibt unverändert */
+    /* Ihr komplettes CSS bleibt hier unverändert. */
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; }
-    body { font-family: monospace; color: #fdfdfd; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    body { font-family: monospace; color: #fdfdfd; display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: radial-gradient(circle at 50% 50%, rgba(0, 90, 0, 0.7), transparent 400px), linear-gradient(to bottom, #000, #001800); }
     .success-container { width: 90%; max-width: 800px; padding: 50px 30px; background-color: rgba(0, 20, 0, 0.8); border-radius: 20px; box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); border: 2px solid rgb(0, 200, 0); text-align: center; animation: pulse 2s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.8); } 50% { box-shadow: 0 0 70px rgba(0, 255, 0, 1); } 100% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.8); } }
     h1 { font-size: 3.5rem; margin: 0 0 20px 0; color: rgb(0, 255, 0); text-transform: uppercase; letter-spacing: 3px; }
@@ -26,16 +26,13 @@
   </style>
 </head>
 <body>
-
+  
   <div id="page-content" style="display: none;">
     <div class="fireworks" id="fireworks"></div>
     <div class="success-container">
       <h1>Mission erfolgreich</h1>
       <h2>SAP-Virus neutralisiert</h2>
-      <div class="terminal">
-        <p class="terminal-text" id="terminal-text"></p>
-        <span class="cursor"></span>
-      </div>
+      <div class="terminal"><p class="terminal-text" id="terminal-text"></p><span class="cursor"></span></div>
       <div class="status-container">
         <div class="status-line"><span class="status-icon"></span><span class="status-text">Viruscode deaktiviert</span></div>
         <div class="status-line"><span class="status-icon"></span><span class="status-text">Infizierte Server bereinigt</span></div>
@@ -68,25 +65,21 @@
     // "Türsteher"-Skript
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Prüfe, ob das Main-Server-Rätsel gelöst wurde
         const userRef = ref(db, 'users/' + user.uid);
         get(userRef).then((snapshot) => {
-          if (snapshot.exists()) {
-            const userData = snapshot.val();
-            const puzzles = userData.puzzles || {};
-            
-            // ZUGANGSKONTROLLE
-            if (userData.isAdmin === true || puzzles.mainServerCompleted === true) {
-              console.log("Zugriff auf Erfolgsseite gewährt.");
-              document.getElementById('page-content').style.display = 'block';
-              initializeSuccessAnimation();
-            } else {
-              console.log("Zugriff verweigert, Main-Server-Rätsel nicht gelöst.");
-              alert("Zugriff verweigert!");
-              window.location.href = 'dashboard397297297924.html';
-            }
+          if (!snapshot.exists()) { window.location.href = 'index.html'; return; }
+          const userData = snapshot.val();
+          const puzzles = userData.puzzles || {};
+
+          // ZUGANGSKONTROLLE
+          if (userData.isAdmin === true || puzzles.virusDeactivated === true) {
+            // Zugriff erlaubt
+            document.getElementById('page-content').style.display = 'block';
+            initializeAnimations();
           } else {
-            window.location.href = 'index.html';
+            // Zugriff verweigert
+            alert("Zugriff verweigert! Du musst erst den Virus auf dem Main Server deaktivieren.");
+            window.location.href = 'mainserver394859320.html';
           }
         });
       } else {
@@ -94,37 +87,20 @@
       }
     });
 
-    // Die Logik für die Animationen, die nur nach erfolgreicher Prüfung ausgeführt wird
-    function initializeSuccessAnimation() {
-      // Terminal-Text-Animation
+    // Die Animationen werden nur gestartet, wenn der Zugriff erlaubt ist.
+    function initializeAnimations() {
       const terminalElement = document.getElementById('terminal-text');
       const text = `> VIRUS_DEACTIVATION_SEQUENCE_INITIATED\n> IDENTIFYING_VIRUS_SIGNATURES...COMPLETE\n> NEUTRALIZING_MALICIOUS_CODE...COMPLETE\n> RESTORING_SECURITY_PROTOCOLS...COMPLETE\n> SYSTEM_SECURE: All threats eliminated. Great job, hacker!`;
       let i = 0;
       const typeText = () => { if (i < text.length) { terminalElement.textContent += text.charAt(i++); setTimeout(typeText, Math.random() * 30 + 20); } };
       setTimeout(typeText, 500);
+      createFireworks();
+    }
 
-      // Feuerwerksanimation
-      const fireworksContainer = document.getElementById('fireworks');
-      const colors = ['#00ff00', '#88ff88', '#00aa00', '#aaffaa', '#ffffff'];
-      function createFirework() {
-        if (document.hidden) return;
-        const x = Math.random() * window.innerWidth;
-        const y = Math.random() * window.innerHeight * 0.5;
-        for (let i = 0; i < 30; i++) {
-          const particle = document.createElement('div');
-          particle.classList.add('firework');
-          particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-          particle.style.left = `${x}px`;
-          particle.style.top = `${y}px`;
-          const angle = Math.random() * Math.PI * 2;
-          const distance = Math.random() * 100 + 50;
-          particle.animate([ { transform: 'translate(0, 0) scale(1)', opacity: 1 }, { transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0)`, opacity: 0 } ], { duration: 1000 + Math.random() * 1000, easing: 'cubic-bezier(0, .9, .57, 1)', delay: Math.random() * 200 });
-          fireworksContainer.appendChild(particle);
-          setTimeout(() => { particle.remove(); }, 2000);
-        }
-        setTimeout(createFirework, Math.random() * 1000 + 300);
-      }
-      for (let i = 0; i < 5; i++) { setTimeout(createFirework, i * 300); }
+    function createFireworks() {
+      const f = document.getElementById('fireworks'); const c = ['#00ff00','#88ff88','#00aa00','#aaffaa','#ffffff'];
+      function createFw() { if (document.hidden) return; const x = Math.random()*window.innerWidth, y = Math.random()*window.innerHeight*0.5; for (let i=0; i<30; i++) { const p = document.createElement('div'); p.className='firework'; p.style.backgroundColor=c[Math.floor(Math.random()*c.length)]; p.style.left=`${x}px`; p.style.top=`${y}px`; const a = Math.random()*Math.PI*2, d = Math.random()*100+50; p.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px) scale(0)`,opacity:0}],{duration:1000+Math.random()*1000,easing:'cubic-bezier(0,.9,.57,1)',delay:Math.random()*200}); f.appendChild(p); setTimeout(() => p.remove(), 2000); } setTimeout(createFw, Math.random()*1000+300); }
+      for (let i=0; i<5; i++) { setTimeout(createFw, i*300); }
     }
   </script>
 </body>
