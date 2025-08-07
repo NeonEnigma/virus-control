@@ -3,57 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <title>Server-Verwaltung – Labyrinth Rätsel</title>
-  <style>
-    /* Ihr komplettes CSS bleibt hier unverändert. */
-    .connected { color: #fff; border-radius: 100px; padding: 2px 6px; margin-left: 5px; font-weight: normal; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; }
-    body { font-family: monospace; color: #fdfdfd; display: flex; flex-direction: column; }
-    .active-btn { background-color: rgb(255, 0, 0); color: #000; cursor: pointer; padding: 10px 20px; border-radius: 6px; font-size: 1rem; font-weight: 600; border: none; margin-bottom: 15px; margin-top: 30px; transition: background-color 0.2s, transform 0.2s; }
-    .active-btn:hover { background-color: rgb(206, 1, 1); transform: scale(1.02); }
-    .dashboard { flex: 1; display: flex; flex-direction: column; }
-    .heading { padding-left: 20px; padding-top: 20px; }
-    .text { padding-left: 20px; padding-bottom: 20px; color: #a5a5a5; }
-    .heading h1 { margin: 0; font-size: 2rem; font-weight: 600; letter-spacing: 1px; text-align: left; }
-    .main-rows { flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 0 20px 20px 20px; box-sizing: border-box; }
-    .top-row { display: flex; flex-wrap: wrap; gap: 20px; box-sizing: border-box; }
-    .bottom-row { display: flex; gap: 20px; box-sizing: border-box; align-items: flex-start; }
-    .box { background-color: #1d0101; border-radius: 20px; padding: 20px; box-sizing: border-box; text-align: center; box-shadow: 0 4px 12px rgba(18, 1, 65, 0.3); transition: transform 0.2s, box-shadow 0.2s; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .box:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5); }
-    .black-box { background-color: #000 !important; }
-    .box h2, .box h1, .box p { margin: 0; }
-    .box h2 { margin-bottom: 15px; }
-    .server-status { font-size: 0.9rem; color: rgb(255, 0, 0); padding-bottom: 10px; }
-    .server-status-main { font-size: 1.0rem; color: rgb(255, 0, 0); padding-bottom: 10px; }
-    .connection-group-main { width: 80%; text-align: left; margin: 30px auto; padding-left: 90px; }
-    .connection-group { width: 80%; text-align: left; margin: 30px auto; padding-left: 20px; }
-    .main-server { color: rgb(255, 0, 0); text-align: left; font-size: 2rem; font-weight: 600; padding-bottom: 30px; }
-    .square { width: 300px; height: 300px; flex: 0 0 auto; }
-    .flex-grow { flex: 1; }
-    .servers-box { width: 100%; height: 480px; max-height: 480px; overflow-y: auto; border: 1px solid #ccc; }
-    .virus-box.square_bottom { width: 480px; height: 480px; flex-shrink: 0; border: 1px solid rgb(255, 0, 0); }
-    .part { border: 1px solid rgb(255, 0, 0); }
-    .part::before, .shutdown::before, .servers-box::before, .virus-box::before { content: ""; position: absolute; inset: 0; border-radius: 20px; pointer-events: none; box-shadow: 0 0 15px rgba(0, 255, 0, 0.3); opacity: 0; transition: opacity 0.3s; }
-    .part:hover::before, .shutdown:hover::before, .servers-box:hover::before, .virus-box:hover::before { opacity: 1; }
-    .shutdown::before, .servers-box::before { box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
-    .status-btn { background-color: rgb(255, 0, 0); color: #000; padding: 10px 20px; border-radius: 6px; font-size: 1rem; font-weight: 600; border: none; cursor: pointer; transition: background-color 0.2s, transform 0.2s; }
-    .status-btn:hover { background-color: rgb(171, 21, 21); transform: scale(1.02); }
-    .shutdown .title { color: rgb(255, 255, 255); font-weight: 500; margin-bottom: 8px; font-size: 3rem; letter-spacing: 0.5px; }
-    .shutdown .timer { font-size: 7rem; font-weight: 600; }
-    .label-vertical { position: absolute; top: 50%; left: 15px; transform: translate(0, -50%) rotate(-90deg); font-size: 1rem; font-weight: 600; white-space: nowrap; }
-    .map { width: 75%; background-color: #444; border-radius: 8px; position: relative; overflow: hidden; }
-    .virus-box h2 { margin-bottom: 15px; font-size: 1.1rem; font-weight: 500; }
-    .deactivate-btn { background-color: #777; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 1rem; font-weight: 600; border: none; margin-bottom: 15px; margin-top: 30px; cursor: pointer; transition: background-color 0.2s, transform 0.2s; }
-    .success { background-color: rgba(51, 172, 51, 0.318) !important; border-color: #0f0 !important; color: #0f0 !important; }
-    .success .server-status { color: #0f0 !important; }
-    .success .status-btn { background-color: #0f0 !important; }
-    .success .status-btn:hover { background-color: #0a0 !important; }
-  </style>
+  <style>/* Ihr CSS bleibt unverändert */.connected{color:#fff;border-radius:100px;padding:2px 6px;margin-left:5px;font-weight:400}html,body{margin:0;padding:0;width:100%;height:100%;background-color:#000}body{font-family:monospace;color:#fdfdfd;display:flex;flex-direction:column}.active-btn{background-color:red;color:#000;cursor:pointer;padding:10px 20px;border-radius:6px;font-size:1rem;font-weight:600;border:none;margin-bottom:15px;margin-top:30px;transition:background-color .2s,transform .2s}.active-btn:hover{background-color:#ce0101;transform:scale(1.02)}.dashboard{flex:1;display:flex;flex-direction:column}.heading{padding-left:20px;padding-top:20px}.text{padding-left:20px;padding-bottom:20px;color:#a5a5a5}.heading h1{margin:0;font-size:2rem;font-weight:600;letter-spacing:1px;text-align:left}.main-rows{flex:1;display:flex;flex-direction:column;gap:20px;padding:0 20px 20px;box-sizing:border-box}.top-row{display:flex;flex-wrap:wrap;gap:20px;box-sizing:border-box}.bottom-row{display:flex;gap:20px;box-sizing:border-box;align-items:flex-start}.box{background-color:#1d0101;border-radius:20px;padding:20px;box-sizing:border-box;text-align:center;box-shadow:0 4px 12px rgba(18,1,65,.3);transition:transform .2s,box-shadow .2s;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center}.box:hover{transform:translateY(-3px);box-shadow:0 8px 16px rgba(0,0,0,.5)}.black-box{background-color:#000!important}.box h1,.box h2,.box p{margin:0}.box h2{margin-bottom:15px}.server-status{font-size:.9rem;color:red;padding-bottom:10px}.server-status-main{font-size:1rem;color:red;padding-bottom:10px}.connection-group-main{width:80%;text-align:left;margin:30px auto;padding-left:90px}.connection-group{width:80%;text-align:left;margin:30px auto;padding-left:20px}.main-server{color:red;text-align:left;font-size:2rem;font-weight:600;padding-bottom:30px}.square{width:300px;height:300px;flex:0 0 auto}.flex-grow{flex:1}.servers-box{width:100%;height:480px;max-height:480px;overflow-y:auto;border:1px solid #ccc}.virus-box.square_bottom{width:480px;height:480px;flex-shrink:0;border:1px solid red}.part{border:1px solid red}.part::before,.servers-box::before,.shutdown::before,.virus-box::before{content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;box-shadow:0 0 15px rgba(0,255,0,.3);opacity:0;transition:opacity .3s}.part:hover::before,.servers-box:hover::before,.shutdown:hover::before,.virus-box:hover::before{opacity:1}.servers-box::before,.shutdown::before{box-shadow:0 0 15px rgba(255,255,255,.2)}.status-btn{background-color:red;color:#000;padding:10px 20px;border-radius:6px;font-size:1rem;font-weight:600;border:none;cursor:pointer;transition:background-color .2s,transform .2s}.status-btn:hover{background-color:#ab1515;transform:scale(1.02)}.shutdown .title{color:#fff;font-weight:500;margin-bottom:8px;font-size:3rem;letter-spacing:.5px}.shutdown .timer{font-size:7rem;font-weight:600}.label-vertical{position:absolute;top:50%;left:15px;transform:translate(0,-50%) rotate(-90deg);font-size:1rem;font-weight:600;white-space:nowrap}.map{width:75%;background-color:#444;border-radius:8px;position:relative;overflow:hidden}.virus-box h2{margin-bottom:15px;font-size:1.1rem;font-weight:500}.deactivate-btn{background-color:#777;color:#fff;padding:10px 20px;border-radius:6px;font-size:1rem;font-weight:600;border:none;margin-bottom:15px;margin-top:30px;cursor:pointer;transition:background-color .2s,transform .2s}.success{background-color:rgba(51,172,51,.318)!important;border-color:#0f0!important;color:#0f0!important}.success .server-status{color:#0f0!important}.success .status-btn{background-color:#0f0!important}.success .status-btn:hover{background-color:#0a0!important}</style>
 </head>
 <body>
 
-  <div id="page-content" style="display: none;"> <div class="dashboard">
-      <div class="heading">
-        <h1>Willkommen, John!</h1>
+  <div id="page-content" style="display: none;">
+    <div class="dashboard">
+      <div class="heading"><h1>Willkommen, John!</h1></div>
+      <div class="text"><p>Verwalte hier deinen SAP-Virus.</p></div>
+      <div class="main-rows">
+        <div class="top-row">
+          <div id="webserverBox" class="box part square"><h2>Webserver</h2><div class="connection-group"><p class="server-status">Status: infiziert</p><p class="server-status">Firewall: down</p><p class="server-status">Ports: offen</p></div><button class="status-btn" onclick="window.location.href='webserver39482840133.html'">Server-Verwaltung</button></div>
+          <div id="datenbankBox" class="box part square"><h2>Datenbank</h2><div class="connection-group"><p class="server-status">Status: infiziert</p><p class="server-status">Firewall: down</p><p class="server-status">Ports: offen</p></div><button class="status-btn" onclick="window.location.href='datenbank94820820.html'">Datenbank verwalten</button></div>
+          <div id="applicationServerBox" class="box part square"><h2>Applikation-Server</h2><div class="connection-group"><p class="server-status">Status: infiziert</p><p class="server-status">Firewall: down</p><p class="server-status">Ports: offen</p></div><button class="status-btn" onclick="window.location.href='applicationServer394920192.html'">App-Verwaltung</button></div>
+          <div class="box shutdown flex-grow black-box"><div class="title">Shutdown in</div><div class="timer" id="shutdownTimer">--:--</div></div>
+        </div>
+        <div class="bottom-row">
+          <div class="box servers-box black-box"><span class="label-vertical">Infizierte Server</span><img src="image.jpg" height="100%"></div>
+          <div class="box virus-box square_bottom"><div class="connection-group-main"><p class="main-server">Main Server</p><p class="server-status-main">Connecting to Webserver...</p><p class="server-status-main">Connecting to Database...</p><p class="server-status-main">Connecting to Application...</p><button id="accessMainBtn" class="deactivate-btn">Access main</button></div></div>
+        </div>
       </div>
-      <div class="text">
-        <p>Ver
+    </div>
+  </div>
+    
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+    const firebaseConfig = { /* ... Ihre Konfiguration ... */ apiKey:"AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",authDomain:"escape-star.firebaseapp.com",projectId:"escape-star",storageBucket:"escape-star.firebasestorage.app",messagingSenderId:"764344736028",appId:"1:764344736028:web:9111f0a62220f15d7c42d9",databaseURL:"https://escape-star-default-rtdb.europe-west1.firebasedatabase.app" };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    let shutdownTimerInterval = null;
+
+    // "Türsteher": Prüft, ob der Benutzer angemeldet und berechtigt ist.
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const userRef = ref(db, 'users/' + user.uid);
+        get(userRef).then(snapshot => {
+          if (!snapshot.exists()) {
+            window.location.href = 'index.html';
+            return;
+          }
+          const userData = snapshot.val();
+          const puzzles = userData.puzzles || {};
+
+          // DIE NEUE ZUGANGSKONTROLLE
+          if (userData.isAdmin === true || puzzles.terminalCompleted === true) {
+            document.getElementById('page-content').style.display = 'block';
+            startRealtimeListeners(user.uid);
+          } else {
+            alert("Zugriff verweigert! Du musst zuerst das Terminal-Rätsel lösen.");
+            window.location.href = 'terminal.html';
+          }
+        });
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+
+    function startRealtimeListeners(uid) {
+      const userRef = ref(db, 'users/' + uid);
+      onValue(userRef, (snapshot) => {
+        if (!snapshot.exists()) return;
+        const userData = snapshot.val();
+        updateShutdownTimer(userData.timer);
+        updateUiWithPuzzleStatus(userData.puzzles);
+      });
+    }
+    
+    function updateShutdownTimer(timerData) { /* ... unverändert ... */ const e=document.getElementById("shutdownTimer");clearInterval(shutdownTimerInterval);if(!timerData||!timerData.endTime){e.textContent="00:00";return}const t=timerData.endTime;const n=()=>{const o=Date.now(),d=t-o;if(d<=0){e.textContent="00:00";clearInterval(shutdownTimerInterval);window.location.href="fail394950230583.html";return}const i=Math.floor(d/1e3),l=Math.floor(i/60),r=i%60;e.textContent=`${String(l).padStart(2,"0")}:${String(r).padStart(2,"0")}`,e.style.color=i<=600?"red":"#fdfdfd"};n(),shutdownTimerInterval=setInterval(n,1e3)}
+    function updateUiWithPuzzleStatus(puzzles) { /* ... unverändert ... */ const e={labyrinthCompleted:puzzles?.labyrinthCompleted||!1,datenbankCompleted:puzzles?.datenbankCompleted||!1,applicationServerCompleted:puzzles?.applicationServerCompleted||!1};function t(t,n){const o=document.getElementById(t);if(!o)return;if(n){o.classList.add("success");const t=o.querySelectorAll(".connection-group p.server-status");t.length>=3&&(t[0].textContent="Status: healthy",t[1].textContent="Firewall: up",t[2].textContent="Ports: restricted")}else{o.classList.remove("success");const t=o.querySelectorAll(".connection-group p.server-status");t.length>=3&&(t[0].textContent="Status: infiziert",t[1].textContent="Firewall: down",t[2].textContent="Ports: offen")}}t("webserverBox",e.labyrinthCompleted),t("datenbankBox",e.datenbankCompleted),t("applicationServerBox",e.applicationServerCompleted);const n=document.querySelectorAll(".connection-group-main p.server-status-main");n.length>=3&&(o(n[0],"Webserver",e.labyrinthCompleted),o(n[1],"Database",e.datenbankCompleted),o(n[2],"Application",e.applicationServerCompleted));const d=document.getElementById("accessMainBtn"),i=e.labyrinthCompleted&&e.datenbankCompleted&&e.applicationServerCompleted;d.disabled=!i,i?(d.classList.remove("deactivate-btn"),d.classList.add("active-btn"),d.onclick=()=>window.location.href="mainserver394859320.html"):(d.classList.add("deactivate-btn"),d.classList.remove("active-btn"),d.onclick=null);function o(e,t,n){e.innerHTML=n?`${t}: <span class='connected'>connected</span>`:`Connecting to ${t}...`}}
+  </script>
+</body>
+</html>
