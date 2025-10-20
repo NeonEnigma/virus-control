@@ -61,7 +61,9 @@
           get(userRef).then((snapshot) => {
             if (snapshot.exists()) {
               const userData = snapshot.val();
-              if (userData && userData.isAdmin === true) {
+              const role = userData?.role;
+              const hasAdminAccess = role === "super-admin" || role === "restricted-admin" || userData?.isAdmin === true;
+              if (hasAdminAccess) {
                 window.location.href = "admin.html";
               } else {
                 window.location.href = "terminal.html";

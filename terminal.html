@@ -28,7 +28,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
     // NEU: 'update' wird zum Speichern benötigt
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
@@ -48,7 +48,7 @@
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        initializeTimer(user.uid);
+        initializeTimer(user);
         // Die gesamte Terminal-Logik wird jetzt erst initialisiert,
         // damit sie Zugriff auf das 'user'-Objekt hat.
         initializeTerminal(user); 
@@ -57,7 +57,9 @@
       }
     });
     
-    function initializeTimer(uid) {
+    function initializeTimer(authUser) {
+      const uid = authUser.uid;
+      const playerName = authUser.displayName || authUser.email || uid;
       const userTimerRef = ref(db, 'users/' + uid + '/timer');
       const displayEl = document.getElementById("globalTimer");
       onValue(userTimerRef, (snapshot) => {
@@ -71,7 +73,51 @@
             if (diffMs <= 0) {
               displayEl.textContent = "00:00:00";
               clearInterval(timerInterval);
-              window.location.href = "fail.html";
+              const puzzleRef = ref(db, 'users/' + uid + '/puzzles/virusDeactivated');
+              const lastGameRef = ref(db, 'users/' + uid + '/lastGame');
+              const totalSeconds = (timerData && typeof timerData.initialDuration === "number") ? Math.floor(timerData.initialDuration) : null;
+              const remainingSecondsAtEnd = Math.max(0, Math.floor(((timerData?.endTime ?? now) - now) / 1000));
+              let hasWon = false;
+              get(puzzleRef).then((snapshot) => {
+                hasWon = snapshot.exists() && snapshot.val() === true;
+                if (!hasWon) {
+                  return update(lastGameRef, {
+                    finishedAt: now,
+                    result: "lose",
+                    remainingSeconds: remainingSecondsAtEnd,
+                    totalSeconds: totalSeconds ?? null,
+                    playerName,
+                    playerUid: uid
+                  });
+                }
+                return null;
+              }).catch((error) => {
+                console.error("Fehler beim Prüfen des Spielstatus:", error);
+              }).finally(async () => {
+                if (!hasWon) {
+                  try {
+                    const timerUpdate = {
+                      pausedRemainingSeconds: 0,
+                      endTime: null,
+                      status: "lose-paused"
+                    };
+                    const initialForTimer = Number.isFinite(totalSeconds)
+                      ? totalSeconds
+                      : (Number.isFinite(timerData?.initialDuration) ? Math.floor(timerData.initialDuration) : null);
+                    if (Number.isFinite(initialForTimer)) {
+                      timerUpdate.initialDuration = initialForTimer;
+                    }
+                    await update(ref(db, 'users/' + uid + '/timer'), timerUpdate);
+                  } catch (e) {
+                    console.error("Timer konnte nicht als verloren markiert werden:", e);
+                  }
+                }
+                if (hasWon) {
+                  window.location.href = "virusdown.html";
+                } else {
+                  window.location.href = "fail.html";
+                }
+              });
               return;
             }
             const diffSec = Math.floor(diffMs / 1000);
@@ -82,10 +128,22 @@
           };
           updateTimerDisplay();
           timerInterval = setInterval(updateTimerDisplay, 1000);
+        } else if (timerData && Number.isFinite(timerData.pausedRemainingSeconds)) {
+          const remaining = Math.max(0, Math.floor(timerData.pausedRemainingSeconds));
+          displayEl.textContent = formatRemaining(remaining);
         } else {
           displayEl.textContent = "Kein Timer";
         }
       });
+    }
+
+    function formatRemaining(totalSeconds) {
+      const seconds = Math.max(0, Math.floor(totalSeconds));
+      const hh = Math.floor(seconds / 3600);
+      const mm = Math.floor((seconds % 3600) / 60);
+      const ss = seconds % 60;
+      const mmss = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+      return hh > 0 ? `${String(hh).padStart(2, '0')}:${mmss}` : mmss;
     }
 
     // Die gesamte Terminal-Logik wird jetzt in eine Funktion gepackt
