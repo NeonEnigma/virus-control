@@ -40,6 +40,13 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
+// Disable ETags to prevent 304 responses (Force 200 OK)
+app.set('etag', false);
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+});
+
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100 // limit each IP to 100 requests per windowMs
@@ -72,24 +79,35 @@ app.get('/api/test', (req, res) => {
     res.send('Virus Control Backend is running.');
 });
 
-// Database connection
-db.authenticate()
-    .then(async () => {
-        console.log('Database connected...');
+// Unified Startup Function
+const startServer = async () => {
+    try {
+        // 1. Connect to Database
+        await db.authenticate();
+        console.log('>>> DEBUG: Database connected...');
 
-        // Auto-seed if configured
+        // 2. Sync Database (Alert: true updates the schema if columns are missing)
+        console.log('>>> DEBUG: Syncing Database...');
+        await db.sync({ alter: true });
+        console.log('>>> DEBUG: Database synced (Schema updated)');
+
+        // 3. Auto-Seed
         if (process.env.AUTO_SEED === 'true') {
-            console.log('Auto-seeding database...');
+            console.log('>>> DEBUG: Auto-seeding database...');
             const email = process.env.SEED_EMAIL || 'admin@example.com';
             const pass = process.env.SEED_PASSWORD || 'password123';
             await seed(email, pass);
+            console.log('>>> DEBUG: Seeding complete');
         }
-    })
-    .catch(err => console.log('Error: ' + err));
 
-// Sync models (in development, use { force: true } carefully)
-db.sync().then(() => {
-    console.log('Database synced');
-});
+        // 4. Start Server
+        app.listen(PORT, () => {
+            console.log(`>>> SERVER STARTED on port ${PORT}`);
+        });
 
-app.listen(PORT, console.log(`Server started on port ${PORT}`));
+    } catch (err) {
+        console.error('>>> CRITICAL STARTUP ERROR:', err);
+    }
+};
+
+startServer();

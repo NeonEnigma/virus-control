@@ -8,22 +8,28 @@ export const api = {
     token: localStorage.getItem('token'),
 
     setToken(token) {
+        console.log('>>> DEBUG: Setting Token:', token ? 'Token exists' : 'No Token');
         this.token = token;
         localStorage.setItem('token', token);
     },
 
     logout() {
+        console.log('>>> DEBUG: Logging out...');
         this.token = null;
         localStorage.removeItem('token');
         window.location.href = 'index.html';
     },
 
     async request(endpoint, method = 'GET', body = null) {
+        console.log(`>>> DEBUG: Requesting ${endpoint} [${method}]`);
         const headers = {
             'Content-Type': 'application/json'
         };
         if (this.token) {
+            console.log('>>> DEBUG: Attaching Token to header');
             headers['x-auth-token'] = this.token;
+        } else {
+            console.warn('>>> DEBUG: No token found for this request');
         }
 
         const config = {
@@ -37,12 +43,15 @@ export const api = {
 
         try {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
             if (response.status === 401) {
+                console.warn('>>> DEBUG: 401 Unauthorized received');
                 this.logout();
                 return Promise.reject('Unauthorized');
             }
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error('>>> DEBUG: API Error:', errorData);
                 throw new Error(errorData.message || 'API Error');
             }
             return await response.json();
@@ -55,6 +64,7 @@ export const api = {
     login(email, password) {
         return this.request('/auth/login', 'POST', { email, password })
             .then(data => {
+                console.log('>>> DEBUG: Login successful, received token');
                 this.setToken(data.token);
                 return data.user;
             });
