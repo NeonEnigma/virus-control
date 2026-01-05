@@ -4,8 +4,8 @@ const Group = require('./Group');
 
 const User = db.define('user', {
     id: {
-        type: Sequelize.STRING,
-        defaultValue: Sequelize.UUIDV4, // Keeps generating UUIDs for new ones, but allows strings
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
         primaryKey: true
     },
     email: {
@@ -26,14 +26,14 @@ const User = db.define('user', {
         defaultValue: false
     },
     groupId: {
-        type: Sequelize.STRING, // Changed from UUID to STRING for compatibility
+        type: Sequelize.UUID,
         references: {
             model: Group,
             key: 'id'
         }
     },
     assignedUserUid: {
-        type: Sequelize.STRING, // Changed from UUID to STRING for compatibility
+        type: Sequelize.UUID,
         allowNull: true
     },
     // Timer fields

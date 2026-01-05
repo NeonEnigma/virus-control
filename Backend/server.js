@@ -90,9 +90,9 @@ const startServer = async () => {
         await db.authenticate();
         console.log('>>> DEBUG: Database connected...');
 
-        // 2. Sync Database (Alert: true updates the schema if columns are missing)
+        // 2. Sync Database
         console.log('>>> DEBUG: Syncing Database...');
-        await db.sync({ alter: true });
+        await db.sync();
         console.log('>>> DEBUG: Database synced (Schema updated)');
 
         // 3. Auto-Seed
