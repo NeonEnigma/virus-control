@@ -8,7 +8,23 @@ const User = db.define('user', {
         defaultValue: Sequelize.UUIDV4, // Keeps generating UUIDs for new ones, but allows strings
         primaryKey: true
     },
-    // ...
+    email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true
+    },
+    password: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    role: {
+        type: Sequelize.ENUM('super-admin', 'restricted-admin', 'user'),
+        defaultValue: 'user'
+    },
+    isAdmin: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+    },
     groupId: {
         type: Sequelize.STRING, // Changed from UUID to STRING for compatibility
         references: {
