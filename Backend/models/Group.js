@@ -3,7 +3,7 @@ const db = require('../config/database');
 
 const Group = db.define('group', {
     id: {
-        type: Sequelize.UUID,
+        type: Sequelize.STRING,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true
     },

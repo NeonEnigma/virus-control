@@ -4,36 +4,20 @@ const Group = require('./Group');
 
 const User = db.define('user', {
     id: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4, // Or keep string if migrating Firebase UIDs directly
+        type: Sequelize.STRING,
+        defaultValue: Sequelize.UUIDV4, // Keeps generating UUIDs for new ones, but allows strings
         primaryKey: true
     },
-    email: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true
-    },
-    password: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    role: {
-        type: Sequelize.ENUM('super-admin', 'restricted-admin', 'user'),
-        defaultValue: 'user'
-    },
-    isAdmin: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false
-    },
+    // ...
     groupId: {
-        type: Sequelize.UUID,
+        type: Sequelize.STRING, // Changed from UUID to STRING for compatibility
         references: {
             model: Group,
             key: 'id'
         }
     },
     assignedUserUid: {
-        type: Sequelize.UUID,
+        type: Sequelize.STRING, // Changed from UUID to STRING for compatibility
         allowNull: true
     },
     // Timer fields
