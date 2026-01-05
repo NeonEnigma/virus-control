@@ -37,7 +37,11 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+    origin: '*', // Allow all origins (or be specific if needed)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+}));
 app.use(express.json());
 
 // Disable ETags to prevent 304 responses (Force 200 OK)

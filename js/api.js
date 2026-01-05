@@ -27,7 +27,8 @@ export const api = {
         };
         if (this.token) {
             console.log('>>> DEBUG: Attaching Token to header');
-            headers['x-auth-token'] = this.token;
+            // headers['x-auth-token'] = this.token; // Legacy
+            headers['Authorization'] = `Bearer ${this.token}`;
         } else {
             console.warn('>>> DEBUG: No token found for this request');
         }

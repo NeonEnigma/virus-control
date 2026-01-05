@@ -37,7 +37,8 @@
          initializeTerminal(currentUser);
        } catch (e) {
          console.error("Auth error", e);
-         window.location.href = 'index.html';
+         document.body.innerHTML = `<h2 style="color:red; text-align:center; margin-top:50px;">Zugriff verweigert oder Ladefehler</h2><p style="text-align:center; color:#0f0;">${e.message}</p><div style="text-align:center;"><button onclick="window.location.href='index.html'" style="padding:10px; background:#000; color:#0f0; border:1px solid #0f0; cursor:pointer;">Zurück zum Login</button></div>`;
+         // window.location.href = 'index.html'; // REMOVED TO PREVENT LOOP
        }
     })();
     

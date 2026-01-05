@@ -49,7 +49,8 @@
             }
         } catch (e) {
             console.error("Auth error", e);
-            window.location.href = 'index.html';
+            document.body.innerHTML = `<h2 style="color:red; text-align:center; margin-top:50px;">Fehler beim Laden (Auth)</h2><p style="text-align:center; color:#fff;">${e.message}</p><div style="text-align:center;"><button onclick="window.location.href='index.html'" style="padding:10px; background:red; color:white; border:none; cursor:pointer;">Zurück zum Login</button></div>`;
+            // window.location.href = 'index.html'; // REMOVED TO PREVENT LOOP
         }
     }
 
