@@ -92,7 +92,7 @@ const startServer = async () => {
 
         // 2. Sync Database
         console.log('>>> DEBUG: Syncing Database...');
-        await db.sync();
+        await db.sync({ alter: true });
         console.log('>>> DEBUG: Database synced (Schema updated)');
 
         // 3. Auto-Seed
