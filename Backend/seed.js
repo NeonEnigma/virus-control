@@ -2,12 +2,13 @@ const db = require('./config/database');
 const User = require('./models/User');
 const bcrypt = require('bcryptjs');
 
-async function seed() {
+async function seed(email = 'admin@example.com', password = 'password123') {
     await db.authenticate();
     await db.sync(); // Ensure tables exist
 
-    const email = 'admin@example.com';
-    const password = 'password123';
+    // Use arguments or fallback
+    // const email = process.argv[2] || 'admin@example.com';
+    // const password = process.argv[3] || 'password123';
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -36,8 +37,9 @@ async function seed() {
     } catch (e) {
         console.error('Seeding error:', e);
     } finally {
-        process.exit();
+        // process.exit(); // Do not exit when running from server
     }
 }
 
-seed();
+// seed();
+module.exports = seed;

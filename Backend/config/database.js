@@ -16,8 +16,22 @@ let dbPort = process.env.DB_PORT || 5432;
 if (process.env.VCAP_SERVICES) {
     try {
         const vcap = JSON.parse(process.env.VCAP_SERVICES);
-        // Adapting to typical CF Postgres service structure (e.g., 'postgresql', 'postgres', 'elephantsql')
-        const pgService = vcap['postgresql'] ? vcap['postgresql'][0] : (vcap['postgres'] ? vcap['postgres'][0] : null);
+
+        let pgService = null;
+
+        // Strategy 1: Look for service with name 'escape-db' in any group
+        for (const serviceLabel in vcap) {
+            const tempService = vcap[serviceLabel].find(s => s.name === 'escape-db');
+            if (tempService) {
+                pgService = tempService;
+                break;
+            }
+        }
+
+        // Strategy 2: Fallback to first postgres entry if not found by name
+        if (!pgService) {
+            pgService = vcap['postgresql'] ? vcap['postgresql'][0] : (vcap['postgres'] ? vcap['postgres'][0] : null);
+        }
 
         if (pgService && pgService.credentials) {
             dbName = pgService.credentials.database || pgService.credentials.name || dbName;
@@ -25,6 +39,7 @@ if (process.env.VCAP_SERVICES) {
             dbPass = pgService.credentials.password || dbPass;
             dbHost = pgService.credentials.host || pgService.credentials.hostname || dbHost;
             dbPort = pgService.credentials.port || dbPort;
+            console.log(`Using Database Service: ${pgService.name} at ${dbHost}`);
         }
     } catch (e) {
         console.error("Error parsing VCAP_SERVICES", e);

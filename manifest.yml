@@ -4,7 +4,7 @@ applications:
     memory: 1024M
     buildpacks:
       - nodejs_buildpack
-    command: node server.js
+    command: node Backend/server.js
     services:
       - escape-db
     env:

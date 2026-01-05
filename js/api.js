@@ -1,4 +1,8 @@
-const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:8080/api' : '/api';
+// REPLACE 'YOUR_BTP_BACKEND_URL' with your actual BTP application URL (e.g., https://virus-control.cfapps.eu10.hana.ondemand.com)
+// AND ensure you do NOT have a trailing slash at the end.
+const API_BASE_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:8080/api'
+    : 'http://cfapps.eu12.hana.ondemand.com';
 
 export const api = {
     token: localStorage.getItem('token'),

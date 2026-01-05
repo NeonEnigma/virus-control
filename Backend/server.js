@@ -1,7 +1,22 @@
+console.log('>>> DEBUG: Starting Server Process...');
+try {
+    console.log('>>> DEBUG: Directory:', __dirname);
+    console.log('>>> DEBUG: CWD:', process.cwd());
+    const fs = require('fs');
+    console.log('>>> DEBUG: Root Files:', fs.readdirSync(process.cwd()));
+} catch (e) { console.error(e); }
+
 const express = require('express');
+console.log('>>> DEBUG: Express loaded');
 const cors = require('cors');
 const dotenv = require('dotenv');
+console.log('>>> DEBUG: Loading Database Config...');
 const db = require('./config/database');
+console.log('>>> DEBUG: Database Config Loaded');
+const path = require('path');
+console.log('>>> DEBUG: Loading Seed Script...');
+const seed = require('./seed');
+console.log('>>> DEBUG: All Imports Complete');
 
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -10,6 +25,16 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// Global Error Handlers for debugging crashes
+process.on('uncaughtException', (err) => {
+    console.error('CRITICAL ERROR (Uncaught Exception):', err);
+    // Keep internal logging alive briefly if possible, but 137 might kill it anyway
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('CRITICAL ERROR (Unhandled Rejection):', reason);
+});
 
 app.use(helmet());
 app.use(cors());
@@ -38,14 +63,28 @@ app.get('/api/public/overview', async (req, res) => {
     }
 });
 
+// Serve static files from root directory (where HTML files are)
+// Assuming app structure: /root/Backend/server.js -> /root/index.html
+app.use(express.static(path.join(__dirname, '../')));
+
 // Test route
-app.get('/', (req, res) => {
+app.get('/api/test', (req, res) => {
     res.send('Virus Control Backend is running.');
 });
 
 // Database connection
 db.authenticate()
-    .then(() => console.log('Database connected...'))
+    .then(async () => {
+        console.log('Database connected...');
+
+        // Auto-seed if configured
+        if (process.env.AUTO_SEED === 'true') {
+            console.log('Auto-seeding database...');
+            const email = process.env.SEED_EMAIL || 'admin@example.com';
+            const pass = process.env.SEED_PASSWORD || 'password123';
+            await seed(email, pass);
+        }
+    })
     .catch(err => console.log('Error: ' + err));
 
 // Sync models (in development, use { force: true } carefully)
