@@ -17,7 +17,9 @@ export const api = {
         console.log('>>> DEBUG: Logging out...');
         this.token = null;
         localStorage.removeItem('token');
-        window.location.href = 'index.html';
+        // window.location.href = 'index.html'; // REMOVED because it causes loops on 401. 
+        // Let the caller handle the UI update or redirect if explicitly requested.
+        console.log('>>> DEBUG: Token cleared. Redirect disabled to prevent loops.');
     },
 
     async request(endpoint, method = 'GET', body = null) {

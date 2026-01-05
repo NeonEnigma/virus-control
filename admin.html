@@ -169,7 +169,8 @@
 
        } catch (e) {
          console.error(e);
-         window.location.href = "index.html";
+         document.body.innerHTML = `<h2 style="color:red; text-align:center;">Admin Auth Error</h2><p style="text-align:center;">${e.message}</p><div style="text-align:center;"><button onclick="window.location.href='index.html'">Zurück zum Login</button></div>`;
+         // window.location.href = "index.html"; // REMOVED
        }
     }
 

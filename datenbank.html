@@ -30,12 +30,12 @@
              window.location.href = 'terminal.html';
         }
       } catch (e) {
-          console.error(e);
-          window.location.href = 'index.html';
+          console.error("Auth error", e);
+          document.body.innerHTML = `<h2 style="color:red; text-align:center;">Auth Error (Database)</h2><p style="text-align:center;">${e.message}</p><div style="text-align:center;"><button onclick="window.location.href='index.html'">Login</button></div>`;
+          // window.location.href = 'index.html'; // REMOVED
       }
     })();
 
     function initializePuzzle(user) { /* ... Ihre Rätsel-Logik, unverändert ... */ const e=[["A+B","A","D+E","B","A+C","A","A+B"],["A+B","A","A+C","A","D+E","B","A+B"],["A+C","A","A+B","A","D+E","B","A+B"],["A+B","B","D+E","A","A+C","A","A+B"],["A+B","A","D+E","B","A+B","A","A+C"],["A+B","B","D+E","A","A+B","A","A+C"]];function t(t){return t.replace(/\s+/g,"").toUpperCase()}function n(e,n){const o=[t(e),t(n)];return o.sort(),o.join("+")}function o(){const a=n(document.getElementById("step1a").value,document.getElementById("step1b").value),i=t(document.getElementById("step2").value),d=n(document.getElementById("step3a").value,document.getElementById("step3b").value),l=t(document.getElementById("step4").value),r=n(document.getElementById("step5a").value,document.getElementById("step5b").value),c=t(document.getElementById("step6").value),s=n(document.getElementById("step7a").value,document.getElementById("step7b").value),u=[a,i,d,l,r,c,s];e.some(t=>t.every((e,t)=>e===u[t]))?api.request('/game/puzzles', 'PUT', {datenbankCompleted:!0}).then(()=>{console.log("Datenbank-Rätsel-Status gespeichert!"),window.location.href="success.html"}).catch(e=>document.getElementById("errorDisplay").textContent="Fehler beim Speichern!"):document.getElementById("errorDisplay").textContent="Falsche Lösung! Der Datentransfer ist fehlgeschlagen. Bitte überprüfe deine Eingaben."}document.getElementById("solutionButton").addEventListener("click",o)}
   </script>
 </body>
-</html>

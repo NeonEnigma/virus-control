@@ -28,8 +28,9 @@
              window.location.href = 'terminal.html';
         }
       } catch (e) {
-        console.error(e);
-        window.location.href = 'index.html';
+        console.error("Auth error", e);
+        document.body.innerHTML = `<h2 style="color:red; text-align:center;">Auth Error (Webserver)</h2><p style="text-align:center;">${e.message}</p><div style="text-align:center;"><button onclick="window.location.href='index.html'">Login</button></div>`;
+        // window.location.href = 'index.html'; // REMOVED
       }
     })();
 
