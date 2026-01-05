@@ -30,11 +30,17 @@ exports.getMe = async (req, res) => {
 // Update user (e.g. assign group)
 exports.updateUser = async (req, res) => {
     try {
-        const { groupId, role, assignedUserUid } = req.body;
+        const { groupId, role, assignedUserUid, timerEndTime, timerInitialDuration, timerPausedRemaining, timerStatus, lastGame, solvedStats } = req.body;
         const updateFields = {};
         if (groupId !== undefined) updateFields.groupId = groupId;
         if (role !== undefined) updateFields.role = role;
         if (assignedUserUid !== undefined) updateFields.assignedUserUid = assignedUserUid;
+        if (timerEndTime !== undefined) updateFields.timerEndTime = timerEndTime;
+        if (timerInitialDuration !== undefined) updateFields.timerInitialDuration = timerInitialDuration;
+        if (timerPausedRemaining !== undefined) updateFields.timerPausedRemaining = timerPausedRemaining;
+        if (timerStatus !== undefined) updateFields.timerStatus = timerStatus;
+        if (lastGame !== undefined) updateFields.lastGame = lastGame;
+        if (solvedStats !== undefined) updateFields.solvedStats = solvedStats;
 
         await User.update(updateFields, { where: { id: req.params.id } });
         res.json({ message: 'User updated' });
