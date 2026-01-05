@@ -88,6 +88,8 @@ db.authenticate()
     .catch(err => console.log('Error: ' + err));
 
 // Sync models (in development, use { force: true } carefully)
-// db.sync();
+db.sync().then(() => {
+    console.log('Database synced');
+});
 
 app.listen(PORT, console.log(`Server started on port ${PORT}`));
