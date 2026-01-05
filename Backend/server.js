@@ -91,8 +91,8 @@ const startServer = async () => {
         console.log('>>> DEBUG: Database connected...');
 
         // 2. Sync Database
-        console.log('>>> DEBUG: Syncing Database...');
-        await db.sync({ alter: true });
+        console.log('>>> DEBUG: Syncing Database (FORCE PREPARED)...');
+        await db.sync({ force: true });
         console.log('>>> DEBUG: Database synced (Schema updated)');
 
         // 3. Auto-Seed

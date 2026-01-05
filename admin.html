@@ -94,6 +94,10 @@
           <select id="new-user-group">
             <option value="">Keine Gruppe</option>
           </select>
+          <label style="display:inline-flex; align-items:center; margin-top:10px;">
+            <input type="checkbox" id="new-user-super-admin" style="width:auto; margin-right:8px;">
+            Als Super-Admin anlegen?
+          </label>
           <button type="submit">Nutzer erstellen</button>
           <p class="form-feedback" id="create-user-feedback"></p>
         </form>
@@ -267,7 +271,7 @@
         await api.request('/auth/register', 'POST', {
           email, 
           password, 
-          role: 'user', 
+          role: document.getElementById("new-user-super-admin")?.checked ? 'super-admin' : 'user', 
           groupId: groupSelect?.value || null
         });
         setFeedback(feedback, "Nutzer erfolgreich erstellt.");
@@ -326,6 +330,21 @@
       if (event.target.tagName !== "BUTTON") return;
       const button = event.target;
       const uid = button.dataset.uid;
+      
+      if (button.classList.contains("delete-user-btn")) {
+        if (confirm("Möchtest du diesen Nutzer wirklich unwiderruflich löschen?")) {
+           try {
+             await api.request(`/users/${uid}`, 'DELETE');
+             alert("Nutzer gelöscht.");
+             loadData();
+           } catch (e) {
+             console.error(e);
+             alert("Löschen fehlgeschlagen: " + e.message);
+           }
+        }
+        return;
+      }
+      
       if (!uid || !state.users[uid]) return;
 
       const isTimerAction =
@@ -580,6 +599,11 @@
               </label>
             `;
           }
+        }
+
+        // Add Delete Button for Super Admins
+        if (isSuperAdmin) {
+           cardHtml += `<button class="delete-user-btn" data-uid="${uid}" style="margin-top:10px; border-color:red; color:red;">Nutzer löschen</button>`;
         }
 
         if (role === "user") {
