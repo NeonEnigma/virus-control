@@ -64,8 +64,8 @@ app.get('/api/public/overview', async (req, res) => {
 });
 
 // Serve static files from root directory (where HTML files are)
-// Assuming app structure: /root/Backend/server.js -> /root/index.html
-app.use(express.static(path.join(__dirname, '../')));
+// Serve static files - REMOVED because Frontend is on GitHub Pages
+// app.use(express.static(path.join(__dirname, '../')));
 
 // Test route
 app.get('/api/test', (req, res) => {

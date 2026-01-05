@@ -2,7 +2,7 @@
 // AND ensure you do NOT have a trailing slash at the end.
 const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:8080/api'
-    : 'http://cfapps.eu12.hana.ondemand.com';
+    : 'https://virus-control-backend.cfapps.eu12.hana.ondemand.com/api';
 
 export const api = {
     token: localStorage.getItem('token'),
