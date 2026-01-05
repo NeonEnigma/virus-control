@@ -8,41 +8,30 @@
 <body>
   
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { api } from './js/api.js';
 
-    const firebaseConfig = { /* ... Ihre Konfiguration ... */ apiKey:"AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",authDomain:"escape-star.firebaseapp.com",projectId:"escape-star",storageBucket:"escape-star.firebasestorage.app",messagingSenderId:"764344736028",appId:"1:764344736028:web:9111f0a62220f15d7c42d9",databaseURL:"https://escape-star-default-rtdb.europe-west1.firebasedatabase.app" };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-
-    function showSuccessPage() { document.body.innerHTML=`<div class="success-container"><div class="success-icon">✓</div><h1 class="success-title">Webserver ist online</h1><p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p><p class="success-detail">Der Webserver wurde erfolgreich von schädlichem Code befreit und ist jetzt vollständig funktionsfähig. Alle Sicherheitsmaßnahmen wurden wiederhergestellt.</p><a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a></div>`; }
-    function showGamePage() { document.body.innerHTML=`<div id="page-content"><div class="container"><div class="header"><a href="dashboard.html" class="back-arrow">&#8592; Dashboard</a></div><div class="dashboard"><div class="heading"><h1>Server-Verwaltung – Labyrinth Rätsel</h1><p>Die Schildkröte muss alle Münzen sammeln!</p><p>Verwende: <code>turtle.up(3)</code>, <code>turtle.down(2)</code>, <code>turtle.left()</code>, <code>turtle.right()</code> und <code>turtle.collect()</code></p></div><div class="labyrinth-wrapper"><div id="labyrinth"><div id="cellsContainer"></div><div id="turtleElement">🐢</div></div><div id="scriptContainer"><textarea id="scriptInput" placeholder="Gib hier dein Script ein, z. B.:\nturtle.right(2);\nturtle.down(3);\nturtle.collect();"></textarea><button class="button" id="runScriptBtn">Script ausführen</button><div id="errorDisplay"></div></div></div><div id="coinCounter">Gesammelte Münzen: 0</div></div></div></div>`; }
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const userRef = ref(db, 'users/' + user.uid);
-        get(userRef).then(snapshot => {
-          if (!snapshot.exists()) { window.location.href = 'index.html'; return; }
-          const userData = snapshot.val();
-          const puzzles = userData.puzzles || {};
-          if (userData.isAdmin === true || puzzles.terminalCompleted === true) {
-            if (puzzles && puzzles.labyrinthCompleted === true) {
-              showSuccessPage();
-            } else {
-              showGamePage();
-              initializeLabyrinth(user);
-            }
-          } else {
-            alert("Zugriff verweigert! Du musst zuerst das Terminal-Rätsel lösen.");
-            window.location.href = 'terminal.html';
-          }
-        });
-      } else {
+    // Simple Gatekeeper
+    (async function init() {
+      try {
+        const user = await api.request('/users/me');
+        const puzzles = user.puzzles || {};
+        
+        if (user.isAdmin === true || puzzles.terminalCompleted === true) {
+             if (puzzles.labyrinthCompleted === true) {
+                 showSuccessPage();
+             } else {
+                 showGamePage();
+                 initializeLabyrinth(user);
+             }
+        } else {
+             alert("Zugriff verweigert! Du musst zuerst das Terminal-Rätsel lösen.");
+             window.location.href = 'terminal.html';
+        }
+      } catch (e) {
+        console.error(e);
         window.location.href = 'index.html';
       }
-    });
+    })();
 
     // ==========================================================
     // KORRIGIERTE LABYRINTH-LOGIK
@@ -74,13 +63,15 @@
               clearError();
               updateTurtlePosition();
               if (coinCount === 3) {
-                const userPuzzlesRef = ref(db, 'users/' + user.uid + '/puzzles');
-                update(userPuzzlesRef, {
-                  labyrinthCompleted: true
-                }).then(() => {
-                  console.log("Webserver-Rätsel-Status in Firebase gespeichert!");
-                  window.location.href = "success.html";
-                });
+              if (coinCount === 3) {
+                // Save progress
+                api.request('/game/puzzles', 'PUT', { labyrinthCompleted: true })
+                .then(() => {
+                   console.log("Webserver-Rätsel-Status gespeichert!");
+                   window.location.href = "success.html";
+                })
+                .catch(err => showError("Fehler beim Speichern: " + err));
+              }
               }
             } else { showError("Keine Münze hier!"); }
             setTimeout(resolve, 500);

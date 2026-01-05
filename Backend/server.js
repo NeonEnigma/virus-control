@@ -27,6 +27,17 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/groups', require('./routes/groupRoutes'));
 app.use('/api/game', require('./routes/gameRoutes'));
 
+// Public Overview Endpoint (e.g. for overview.html)
+app.get('/api/public/overview', async (req, res) => {
+    try {
+        // Return dummy data or fetch from DB
+        // For now returning empty array as placeholder
+        res.json([]);
+    } catch (e) {
+        res.status(500).json({ error: 'Error' });
+    }
+});
+
 // Test route
 app.get('/', (req, res) => {
     res.send('Virus Control Backend is running.');

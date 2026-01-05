@@ -43,49 +43,29 @@
   </div>
   
   <script type="module">
-    // Firebase initialisieren
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
-      authDomain: "escape-star.firebaseapp.com",
-      projectId: "escape-star",
-      storageBucket: "escape-star.firebasestorage.app",
-      messagingSenderId: "764344736028",
-      appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
-      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+    import { api } from './js/api.js';
 
     // "Türsteher"-Skript
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const userRef = ref(db, 'users/' + user.uid);
-        get(userRef).then((snapshot) => {
-          if (!snapshot.exists()) { window.location.href = 'index.html'; return; }
-          const userData = snapshot.val();
-          const puzzles = userData.puzzles || {};
+    (async function init() {
+      try {
+        const user = await api.request('/users/me');
+        const puzzles = user.puzzles || {};
 
-          // ZUGANGSKONTROLLE
-          if (userData.isAdmin === true || puzzles.virusDeactivated === true) {
-            // Zugriff erlaubt
-            document.getElementById('page-content').style.display = 'block';
-            initializeAnimations();
-          } else {
-            // Zugriff verweigert
-            alert("Zugriff verweigert!");
-            window.location.href = 'mainserver.html';
-          }
-        });
-      } else {
-        window.location.href = 'index.html';
+        // ZUGANGSKONTROLLE
+        if (user.isAdmin === true || puzzles.virusDeactivated === true) {
+             // Zugriff erlaubt
+             document.getElementById('page-content').style.display = 'block';
+             initializeAnimations();
+        } else {
+             // Zugriff verweigert
+             alert("Zugriff verweigert!");
+             window.location.href = 'mainserver.html';
+        }
+      } catch (e) {
+          console.error(e);
+          window.location.href = 'index.html';
       }
-    });
+    })();
 
     // Die Animationen werden nur gestartet, wenn der Zugriff erlaubt ist.
     function initializeAnimations() {

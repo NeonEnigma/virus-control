@@ -8,49 +8,65 @@
 <body>
   
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { api } from './js/api.js';
 
-    const firebaseConfig = { /* ... Ihre Konfiguration ... */ apiKey:"AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",authDomain:"escape-star.firebaseapp.com",projectId:"escape-star",storageBucket:"escape-star.firebasestorage.app",messagingSenderId:"764344736028",appId:"1:764344736028:web:9111f0a62220f15d7c42d9",databaseURL:"https://escape-star-default-rtdb.europe-west1.firebasedatabase.app" };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+    function showSuccessPage() {
+       document.body.innerHTML=`<div class="success-container"><div class="success-icon">✓</div><h1 class="success-title">Application Server ist online</h1><p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p><a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a></div>`;
+    }
 
-    function showSuccessPage() { /* ... unverändert ... */ document.body.innerHTML=`<div class="success-container"><div class="success-icon">✓</div><h1 class="success-title">Application Server ist online</h1><p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p><a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a></div>`}
-    function showPuzzlePage() { /* ... unverändert ... */ document.body.innerHTML=`<div class="back-arrow" onclick="window.location.href='dashboard.html'">&#8592; Dashboard</div><div class="dashboard" id="dashboardContent"><div class="heading"><h1>Kostenplanung</h1></div><div class="description"><p>IT kostet, deshalb habe ich meine Aufwendungen zweier Jahre grafisch verglichen. Jetzt habe ich aber vergessen, wie hoch meine jährliche Grenze ist. Sowohl mein Budget als auch meine Fixkosten haben sich über die Jahre nicht verändert.</p><p>Wie hoch ist mein Budget?</p></div><img src="Applikation-Server.png" height="65%"><div class="input-group">Budget in Euro:<input type="text" id="budget" maxlength="10" placeholder="€" required pattern="[0-9]+"><button id="solutionButton">Lösung prüfen</button><p class="error" id="errorDisplay"></p></div></div>`}
+    function showPuzzlePage(user) {
+       document.body.innerHTML=`<div class="back-arrow" onclick="window.location.href='dashboard.html'">&#8592; Dashboard</div><div class="dashboard" id="dashboardContent"><div class="heading"><h1>Kostenplanung</h1></div><div class="description"><p>IT kostet, deshalb habe ich meine Aufwendungen zweier Jahre grafisch verglichen. Jetzt habe ich aber vergessen, wie hoch meine jährliche Grenze ist. Sowohl mein Budget als auch meine Fixkosten haben sich über die Jahre nicht verändert.</p><p>Wie hoch ist mein Budget?</p></div><img src="Applikation-Server.png" height="65%"><div class="input-group">Budget in Euro:<input type="text" id="budget" maxlength="10" placeholder="€" required pattern="[0-9]+"><button id="solutionButton">Lösung prüfen</button><p class="error" id="errorDisplay"></p></div></div>`;
+       initializePuzzle(user);
+    }
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const userRef = ref(db, 'users/' + user.uid);
-        get(userRef).then(snapshot => {
-          if (!snapshot.exists()) {
-            window.location.href = 'index.html';
-            return;
-          }
-          const userData = snapshot.val();
-          const puzzles = userData.puzzles || {};
-
-          // DIE NEUE ZUGANGSKONTROLLE
-          if (userData.isAdmin === true || puzzles.terminalCompleted === true) {
-            // Zugriff erlaubt
-            if (puzzles && puzzles.applicationServerCompleted === true) {
-              showSuccessPage();
-            } else {
-              showPuzzlePage();
-              initializePuzzle(user);
+    async function init() {
+        try {
+            const user = await api.getCurrentUser();
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
             }
-          } else {
-            alert("Zugriff verweigert! Du musst zuerst das Terminal-Rätsel lösen.");
-            window.location.href = 'terminal.html';
-          }
-        });
-      } else {
-        window.location.href = 'index.html';
-      }
-    });
 
-    function initializePuzzle(user) { /* ... Ihre Rätsel-Logik, unverändert ... */ function e(){let t=document.getElementById("budget").value;if(["150k","150k€","150000","150000€"].includes(t.toLowerCase().trim())){const t=ref(db,"users/"+user.uid+"/puzzles");update(t,{applicationServerCompleted:!0}).then(()=>{console.log("Application-Server-Rätsel-Status in Firebase gespeichert!"),window.location.href="success.html"})}else{const t=document.getElementById("errorDisplay");t.textContent="Falsche Lösung! Bitte überprüfe deine Eingabe.",setTimeout(()=>{t.textContent=""},3e3)}}document.getElementById("solutionButton").addEventListener("click",e)}
+            const puzzles = user.puzzles || {};
+            // Access control
+            if (user.isAdmin || puzzles.terminalCompleted) {
+                if (puzzles.applicationServerCompleted) {
+                    showSuccessPage();
+                } else {
+                    showPuzzlePage(user);
+                }
+            } else {
+                alert("Zugriff verweigert! Du musst zuerst das Terminal-Rätsel lösen.");
+                window.location.href = 'terminal.html';
+            }
+        } catch (e) {
+            console.error("Auth check failed", e);
+            window.location.href = 'index.html';
+        }
+    }
+
+    function initializePuzzle(user) {
+        document.getElementById("solutionButton").addEventListener("click", () => {
+            let t = document.getElementById("budget").value;
+            if (["150k", "150k€", "150000", "150000€"].includes(t.toLowerCase().trim())) {
+                api.request('/game/puzzles', 'PUT', { applicationServerCompleted: true })
+                   .then(() => {
+                       console.log("Application-Server-Rätsel-Status gespeichert!");
+                       showSuccessPage();
+                   })
+                   .catch(err => {
+                       const el = document.getElementById("errorDisplay");
+                       el.textContent = "Fehler beim Speichern!";
+                   });
+            } else {
+                const el = document.getElementById("errorDisplay");
+                el.textContent = "Falsche Lösung! Bitte überprüfe deine Eingabe.";
+                setTimeout(() => { el.textContent = "" }, 3000);
+            }
+        });
+    }
+
+    init();
   </script>
 </body>
 </html>

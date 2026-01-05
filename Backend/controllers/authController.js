@@ -67,4 +67,18 @@ exports.login = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
+    res.status(500).json({ message: 'Server error', error: error.message });
+}
+};
+
+exports.getMe = async (req, res) => {
+    try {
+        const user = await User.findByPk(req.user.id, {
+            attributes: { exclude: ['password'] }
+        });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
 };

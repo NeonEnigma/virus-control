@@ -68,5 +68,9 @@ export const api = {
         return this.request('/game/start', 'POST', { userId, minutes });
     },
 
+    getCurrentUser() {
+        return this.request('/auth/me');
+    },
+
     // Add other methods as needed based on gameController logic
 };

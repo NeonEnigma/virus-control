@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Group = require('../models/Group');
 
 exports.startGame = async (req, res) => {
     try {
@@ -95,6 +96,108 @@ exports.addTime = async (req, res) => {
         } else {
             res.status(400).json({ message: 'Timer not active or paused' });
         }
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+exports.updatePuzzles = async (req, res) => {
+    try {
+        const user = await User.findByPk(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const currentPuzzles = user.puzzles || {};
+        const updates = req.body;
+
+        // Merge updates
+        const newPuzzles = { ...currentPuzzles, ...updates };
+
+        user.puzzles = newPuzzles;
+        await user.save();
+
+        res.json({ message: 'Puzzles updated', puzzles: newPuzzles });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+exports.finishGame = async (req, res) => {
+    try {
+        // The user ID should come from the authenticated user usually, 
+        // but if an admin finishes it for someone else, we might need userId in body.
+        // For now assume user finishes their own game or admin sends userId.
+        const userId = req.body.userId || req.user.id;
+        const { result, playerName } = req.body; // result: 'win' or 'lose'
+
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const now = new Date();
+        let remainingSeconds = 0;
+
+        // Calculate remaining seconds
+        if (user.timerEndTime) {
+            remainingSeconds = Math.max(0, (user.timerEndTime - now) / 1000);
+        } else if (user.timerPausedRemaining !== null) {
+            remainingSeconds = user.timerPausedRemaining;
+        }
+
+        const totalSeconds = user.timerInitialDuration;
+
+        // Update Puzzles (if win)
+        let newPuzzles = user.puzzles || {};
+        if (result === 'win') {
+            newPuzzles = { ...newPuzzles, virusDeactivated: true };
+        }
+
+        // Update Solved Stats (if win)
+        let newSolvedStats = user.solvedStats || {};
+        if (result === 'win') {
+            newSolvedStats = {
+                finishedAt: now,
+                remainingSeconds,
+                totalSeconds,
+                updatedAt: now
+            };
+        }
+
+        // Update Last Game
+        const lastGame = {
+            finishedAt: now,
+            result,
+            remainingSeconds,
+            totalSeconds,
+            playerName: playerName || user.email,
+            playerUid: user.id
+        };
+
+        // Pause Timer
+        const timerStatus = result === 'win' ? 'win-paused' : 'lose-paused';
+
+        // Perform updates on User
+        await user.update({
+            puzzles: newPuzzles,
+            solvedStats: newSolvedStats,
+            lastGame: lastGame,
+            timerStatus: timerStatus,
+            timerEndTime: null,
+            timerPausedRemaining: remainingSeconds
+        });
+
+        // Update Group if exists
+        if (user.groupId && result === 'win') {
+            const group = await Group.findByPk(user.groupId);
+            if (group && !group.completedAt) {
+                const completionDurationSec = (totalSeconds && remainingSeconds) ? Math.max(0, totalSeconds - remainingSeconds) : null;
+                await group.update({
+                    completedAt: now,
+                    completionDurationSec,
+                    completedBy: user.id
+                });
+            }
+        }
+
+        res.json({ message: 'Game finished', result, remainingSeconds });
+
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

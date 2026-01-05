@@ -8,49 +8,34 @@
 <body>
   
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-
-    const firebaseConfig = { /* ... Ihre Konfiguration ... */ apiKey:"AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",authDomain:"escape-star.firebaseapp.com",projectId:"escape-star",storageBucket:"escape-star.firebasestorage.app",messagingSenderId:"764344736028",appId:"1:764344736028:web:9111f0a62220f15d7c42d9",databaseURL:"https://escape-star-default-rtdb.europe-west1.firebasedatabase.app" };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+    import { api } from './js/api.js';
 
     function showSuccessPage() { /* ... unverändert ... */ document.body.innerHTML=`<div class="success-container"><div class="success-icon">✓</div><h1 class="success-title">Datenbank vollständig</h1><p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p><p>Alle Daten wurden erfolgreich übertragen.</p><a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a></div>`}
     function showPuzzlePage() { /* ... unverändert ... */ document.body.innerHTML=`<div class="container"><div class="header"><a href="dashboard.html" class="back-arrow">&#8592; Dashboard</a><div class="heading"><h1>Datentransfer-Optimierung</h1></div></div><div class="dashboard" id="dashboardContent"><div class="column left-column"><div class="description"><p>Mein verrückter Professor hat, damit wir das Arbeiten mit Datenbanken lernen, ein sehr seltsames Programm programmiert, in dem fünf verschiedene Dateitypen (API-Anfrage, Binärdatei, CSV-Tabelle, DAT-Archiv, Excel-Datei) über einen schmalbandigen Notfallkanal übertragen werden mussten. Die Aufgabe war es, alle Dateien möglichst schnell zu übertragen. Dabei gab es aber eine Besonderheit: Datenpakete mussten immer aus entweder einer oder zwei Dateien bestehen und einen bestimmten Token enthalten. Dieser kann weder kopiert noch alleine gesendet werden, sondern nur als „Anhang“ an eine Datei. Er hat es damals immer mit einer Brücke veranschaulicht, die man nur mit einem Schlüssel überqueren kann. Fünf Menschen wollen rüber, aber die Brücke hält nur das Gewicht von maximal zwei Menschen gleichzeitig aus. Wenn zwei auf die andere Seite gegangen sind, muss immer einer, der bereits auf der anderen Seite steht oder gerade angekommen ist, den Schlüssel zurückbringen. Zwei Menschen bzw. bei uns zwei Datenpakete brauchen als Paket immer so lange wie der langsamere Mensch bzw. die größere (und dadurch langsamere) Datei.</p><p>Die Datenübertragung folgt diesen Regeln:</p><ul><li>Es können nur zwei Dateien gleichzeitig übertragen werden</li><li>Das Authentifizierungstoken muss nach jedem Transfer zurückgeschickt werden</li><li>Die Übertragungszeit entspricht der langsamsten Datei im Paket</li><li>Alle fünf Dateien müssen in möglichst kurzer Zeit vollständig übertragen werden</li></ul><p>Die Übertragungszeiten betragen:</p><ul><li>API-Anfrage (A): 1 Minute</li><li>Binärdatei (B): 3 Minuten</li><li>CSV-Tabelle (C): 6 Minuten</li><li>DAT-Archiv (D): 8 Minuten</li><li>Excel-Datei (E): 12 Minuten</li></ul><p>Fülle die Lücken mit den <strong>Anfangsbuchstaben</strong> (A, B, C, D, E) in der optimalen Reihenfolge ein, um die Daten in minimal möglicher Zeit zu übertragen.</p><p>Bei Schritten mit zwei Feldern werden jeweils zwei Dateien gleichzeitig übertragen. Bei Schritten mit einem Feld wird nur das Authentifizierungstoken zurückgeschickt.</p></div></div><div class="column right-column"><div class="input-group"><div class="input-wrapper"><ol><li><div class="input-label">Transfer 1 (zwei Dateien gleichzeitig senden):</div><div class="input-fields"><input type="text" id="step1a" maxlength="1" placeholder="A"><input type="text" id="step1b" maxlength="1" placeholder="A"></div></li><li><div class="input-label">Rückübertragung Token:</div><div class="input-fields"><input type="text" id="step2" maxlength="1" placeholder="A"></div></li><li><div class="input-label">Transfer 2 (zwei Dateien gleichzeitig senden):</div><div class="input-fields"><input type="text" id="step3a" maxlength="1" placeholder="A"><input type="text" id="step3b" maxlength="1" placeholder="A"></div></li><li><div class="input-label">Rückübertragung Token:</div><div class="input-fields"><input type="text" id="step4" maxlength="1" placeholder="A"></div></li><li><div class="input-label">Transfer 3 (zwei Dateien gleichzeitig senden):</div><div class="input-fields"><input type="text" id="step5a" maxlength="1" placeholder="A"><input type="text" id="step5b" maxlength="1" placeholder="A"></div></li><li><div class="input-label">Rückübertragung Token:</div><div class="input-fields"><input type="text" id="step6" maxlength="1" placeholder="A"></div></li><li><div class="input-label">Transfer 4 (zwei Dateien gleichzeitig senden):</div><div class="input-fields"><input type="text" id="step7a" maxlength="1" placeholder="A"><input type="text" id="step7b" maxlength="1" placeholder="A"></div></li></ol><div style="text-align: center; width: 100%;"><button id="solutionButton">Lösung prüfen</button></div></div><p class="error" id="errorDisplay"></p></div></div></div></div>`}
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const userRef = ref(db, 'users/' + user.uid);
-        get(userRef).then(snapshot => {
-          if (!snapshot.exists()) {
-            window.location.href = 'index.html';
-            return;
-          }
-          const userData = snapshot.val();
-          const puzzles = userData.puzzles || {};
+    (async function init() {
+      try {
+        const user = await api.request('/users/me');
+        const puzzles = user.puzzles || {};
 
-          // DIE NEUE ZUGANGSKONTROLLE
-          if (userData.isAdmin === true || puzzles.terminalCompleted === true) {
-            // Zugriff erlaubt
-            if (puzzles && puzzles.datenbankCompleted === true) {
-              showSuccessPage();
-            } else {
-              showPuzzlePage();
-              initializePuzzle(user);
-            }
-          } else {
-            alert("Zugriff verweigert! Du musst zuerst das Terminal-Rätsel lösen.");
-            window.location.href = 'terminal.html';
-          }
-        });
-      } else {
-        window.location.href = 'index.html';
+        if (user.isAdmin === true || puzzles.terminalCompleted === true) {
+             if (puzzles.datenbankCompleted === true) {
+                 showSuccessPage();
+             } else {
+                 showPuzzlePage();
+                 initializePuzzle(user);
+             }
+        } else {
+             alert("Zugriff verweigert! Du musst zuerst das Terminal-Rätsel lösen.");
+             window.location.href = 'terminal.html';
+        }
+      } catch (e) {
+          console.error(e);
+          window.location.href = 'index.html';
       }
-    });
+    })();
 
-    function initializePuzzle(user) { /* ... Ihre Rätsel-Logik, unverändert ... */ const e=[["A+B","A","D+E","B","A+C","A","A+B"],["A+B","A","A+C","A","D+E","B","A+B"],["A+C","A","A+B","A","D+E","B","A+B"],["A+B","B","D+E","A","A+C","A","A+B"],["A+B","A","D+E","B","A+B","A","A+C"],["A+B","B","D+E","A","A+B","A","A+C"]];function t(t){return t.replace(/\s+/g,"").toUpperCase()}function n(e,n){const o=[t(e),t(n)];return o.sort(),o.join("+")}function o(){const a=n(document.getElementById("step1a").value,document.getElementById("step1b").value),i=t(document.getElementById("step2").value),d=n(document.getElementById("step3a").value,document.getElementById("step3b").value),l=t(document.getElementById("step4").value),r=n(document.getElementById("step5a").value,document.getElementById("step5b").value),c=t(document.getElementById("step6").value),s=n(document.getElementById("step7a").value,document.getElementById("step7b").value),u=[a,i,d,l,r,c,s];e.some(t=>t.every((e,t)=>e===u[t]))?update(ref(db,"users/"+user.uid+"/puzzles"),{datenbankCompleted:!0}).then(()=>{console.log("Datenbank-Rätsel-Status in Firebase gespeichert!"),window.location.href="success.html"}):document.getElementById("errorDisplay").textContent="Falsche Lösung! Der Datentransfer ist fehlgeschlagen. Bitte überprüfe deine Eingaben."}document.getElementById("solutionButton").addEventListener("click",o)}
+    function initializePuzzle(user) { /* ... Ihre Rätsel-Logik, unverändert ... */ const e=[["A+B","A","D+E","B","A+C","A","A+B"],["A+B","A","A+C","A","D+E","B","A+B"],["A+C","A","A+B","A","D+E","B","A+B"],["A+B","B","D+E","A","A+C","A","A+B"],["A+B","A","D+E","B","A+B","A","A+C"],["A+B","B","D+E","A","A+B","A","A+C"]];function t(t){return t.replace(/\s+/g,"").toUpperCase()}function n(e,n){const o=[t(e),t(n)];return o.sort(),o.join("+")}function o(){const a=n(document.getElementById("step1a").value,document.getElementById("step1b").value),i=t(document.getElementById("step2").value),d=n(document.getElementById("step3a").value,document.getElementById("step3b").value),l=t(document.getElementById("step4").value),r=n(document.getElementById("step5a").value,document.getElementById("step5b").value),c=t(document.getElementById("step6").value),s=n(document.getElementById("step7a").value,document.getElementById("step7b").value),u=[a,i,d,l,r,c,s];e.some(t=>t.every((e,t)=>e===u[t]))?api.request('/game/puzzles', 'PUT', {datenbankCompleted:!0}).then(()=>{console.log("Datenbank-Rätsel-Status gespeichert!"),window.location.href="success.html"}).catch(e=>document.getElementById("errorDisplay").textContent="Fehler beim Speichern!"):document.getElementById("errorDisplay").textContent="Falsche Lösung! Der Datentransfer ist fehlgeschlagen. Bitte überprüfe deine Eingaben."}document.getElementById("solutionButton").addEventListener("click",o)}
   </script>
 </body>
 </html>

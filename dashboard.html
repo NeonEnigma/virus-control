@@ -27,54 +27,130 @@
   </div>
     
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { api } from './js/api.js';
 
-    const firebaseConfig = { /* ... Ihre Konfiguration ... */ apiKey:"AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",authDomain:"escape-star.firebaseapp.com",projectId:"escape-star",storageBucket:"escape-star.firebasestorage.app",messagingSenderId:"764344736028",appId:"1:764344736028:web:9111f0a62220f15d7c42d9",databaseURL:"https://escape-star-default-rtdb.europe-west1.firebasedatabase.app" };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
     let shutdownTimerInterval = null;
+    let pollInterval = null;
 
     // "Türsteher": Prüft, ob der Benutzer angemeldet und berechtigt ist.
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const userRef = ref(db, 'users/' + user.uid);
-        get(userRef).then(snapshot => {
-          if (!snapshot.exists()) {
+    async function init() {
+        try {
+            const user = await api.request('/users/me');
+            const puzzles = user.puzzles || {};
+
+            // ZUGANGSKONTROLLE
+            if (user.isAdmin === true || puzzles.terminalCompleted === true) {
+                document.getElementById('page-content').style.display = 'block';
+                startPolling();
+                updateUi(user);
+            } else {
+                alert("Zugriff verweigert! Du musst zuerst das Terminal-Rätsel lösen.");
+                window.location.href = 'terminal.html';
+            }
+        } catch (e) {
+            console.error("Auth error", e);
             window.location.href = 'index.html';
-            return;
-          }
-          const userData = snapshot.val();
-          const puzzles = userData.puzzles || {};
+        }
+    }
 
-          // DIE NEUE ZUGANGSKONTROLLE
-          if (userData.isAdmin === true || puzzles.terminalCompleted === true) {
-            document.getElementById('page-content').style.display = 'block';
-            startRealtimeListeners(user.uid);
-          } else {
-            alert("Zugriff verweigert! Du musst zuerst das Terminal-Rätsel lösen.");
-            window.location.href = 'terminal.html';
-          }
-        });
-      } else {
-        window.location.href = 'index.html';
-      }
-    });
+    function startPolling() {
+        pollInterval = setInterval(async () => {
+            try {
+                const user = await api.request('/users/me');
+                updateUi(user);
+            } catch(e) {
+                console.error("Polling error", e);
+            }
+        }, 2000); // Poll every 2s for responsive UI
+    }
 
-    function startRealtimeListeners(uid) {
-      const userRef = ref(db, 'users/' + uid);
-      onValue(userRef, (snapshot) => {
-        if (!snapshot.exists()) return;
-        const userData = snapshot.val();
-        updateShutdownTimer(userData.timer);
+    function updateUi(userData) {
+        if (!userData) return;
+        updateShutdownTimer(userData);
         updateUiWithPuzzleStatus(userData.puzzles);
-      });
     }
     
-    function updateShutdownTimer(timerData) { /* ... unverändert ... */ const e=document.getElementById("shutdownTimer");clearInterval(shutdownTimerInterval);if(!timerData||!timerData.endTime){e.textContent="00:00";return}const t=timerData.endTime;const n=()=>{const o=Date.now(),d=t-o;if(d<=0){e.textContent="00:00";clearInterval(shutdownTimerInterval);window.location.href="fail.html";return}const i=Math.floor(d/1e3),l=Math.floor(i/60),r=i%60;e.textContent=`${String(l).padStart(2,"0")}:${String(r).padStart(2,"0")}`,e.style.color=i<=600?"red":"#fdfdfd"};n(),shutdownTimerInterval=setInterval(n,1e3)}
-    function updateUiWithPuzzleStatus(puzzles) { /* ... unverändert ... */ const e={labyrinthCompleted:puzzles?.labyrinthCompleted||!1,datenbankCompleted:puzzles?.datenbankCompleted||!1,applicationServerCompleted:puzzles?.applicationServerCompleted||!1};function t(t,n){const o=document.getElementById(t);if(!o)return;if(n){o.classList.add("success");const t=o.querySelectorAll(".connection-group p.server-status");t.length>=3&&(t[0].textContent="Status: healthy",t[1].textContent="Firewall: up",t[2].textContent="Ports: restricted")}else{o.classList.remove("success");const t=o.querySelectorAll(".connection-group p.server-status");t.length>=3&&(t[0].textContent="Status: infiziert",t[1].textContent="Firewall: down",t[2].textContent="Ports: offen")}}t("webserverBox",e.labyrinthCompleted),t("datenbankBox",e.datenbankCompleted),t("applicationServerBox",e.applicationServerCompleted);const n=document.querySelectorAll(".connection-group-main p.server-status-main");n.length>=3&&(o(n[0],"Webserver",e.labyrinthCompleted),o(n[1],"Database",e.datenbankCompleted),o(n[2],"Application",e.applicationServerCompleted));const d=document.getElementById("accessMainBtn"),i=e.labyrinthCompleted&&e.datenbankCompleted&&e.applicationServerCompleted;d.disabled=!i,i?(d.classList.remove("deactivate-btn"),d.classList.add("active-btn"),d.onclick=()=>window.location.href="mainserver.html"):(d.classList.add("deactivate-btn"),d.classList.remove("active-btn"),d.onclick=null);function o(e,t,n){e.innerHTML=n?`${t}: <span class='connected'>connected</span>`:`Connecting to ${t}...`}}
+    function updateShutdownTimer(userData) { 
+        const e=document.getElementById("shutdownTimer");
+        // Clear existing interval to avoid duplicates if called often, 
+        // OR better: just update the end time logic. 
+        // The original code created a local interval. Let's simplify.
+        // We can just calc remaining time here since we poll every 2s, 
+        // but for smooth seconds, local interval is better.
+        
+        // logic adapted from original but safe for re-entry
+        if (!userData || userData.timerStatus !== 'active' || !userData.timerEndTime) {
+             if (shutdownTimerInterval) { clearInterval(shutdownTimerInterval); shutdownTimerInterval = null; }
+             e.textContent = "00:00"; 
+             return; 
+        }
+
+        const t = new Date(userData.timerEndTime).getTime();
+        
+        // Only start local ticker if not running
+        if (!shutdownTimerInterval) {
+            const n = () => {
+                const o=Date.now(),d=t-o;
+                if(d<=0){
+                    e.textContent="00:00";
+                    clearInterval(shutdownTimerInterval); 
+                    shutdownTimerInterval = null;
+                    window.location.href="fail.html";
+                    return;
+                }
+                const i=Math.floor(d/1e3),l=Math.floor(i/60),r=i%60;
+                e.textContent=`${String(l).padStart(2,"0")}:${String(r).padStart(2,"0")}`;
+                e.style.color=i<=600?"red":"#fdfdfd";
+            };
+            n();
+            shutdownTimerInterval = setInterval(n, 1000);
+        }
+    }
+
+    function updateUiWithPuzzleStatus(puzzles) { 
+        const e = {
+            labyrinthCompleted: puzzles?.labyrinthCompleted||!1,
+            datenbankCompleted: puzzles?.datenbankCompleted||!1,
+            applicationServerCompleted: puzzles?.applicationServerCompleted||!1
+        };
+        function t(t,n){
+            const o=document.getElementById(t);
+            if(!o)return;
+            if(n){
+                o.classList.add("success");
+                const t=o.querySelectorAll(".connection-group p.server-status");
+                t.length>=3&&(t[0].textContent="Status: healthy",t[1].textContent="Firewall: up",t[2].textContent="Ports: restricted");
+            }else{
+                o.classList.remove("success");
+                const t=o.querySelectorAll(".connection-group p.server-status");
+                t.length>=3&&(t[0].textContent="Status: infiziert",t[1].textContent="Firewall: down",t[2].textContent="Ports: offen");
+            }
+        }
+        t("webserverBox",e.labyrinthCompleted);
+        t("datenbankBox",e.datenbankCompleted);
+        t("applicationServerBox",e.applicationServerCompleted);
+        
+        const n=document.querySelectorAll(".connection-group-main p.server-status-main");
+        n.length>=3&&(o(n[0],"Webserver",e.labyrinthCompleted),o(n[1],"Database",e.datenbankCompleted),o(n[2],"Application",e.applicationServerCompleted));
+        
+        const d=document.getElementById("accessMainBtn"),i=e.labyrinthCompleted&&e.datenbankCompleted&&e.applicationServerCompleted;
+        d.disabled=!i;
+        if(i){
+            d.classList.remove("deactivate-btn");
+            d.classList.add("active-btn");
+            d.onclick=()=>window.location.href="mainserver.html";
+        }else{
+            d.classList.add("deactivate-btn");
+            d.classList.remove("active-btn");
+            d.onclick=null;
+        }
+        
+        function o(e,t,n){
+            e.innerHTML=n?`${t}: <span class='connected'>connected</span>`:`Connecting to ${t}...`;
+        }
+    }
+
+    init();
   </script>
 </body>
 </html>

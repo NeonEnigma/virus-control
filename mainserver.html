@@ -58,149 +58,119 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getDatabase, ref, onValue, get, update, set } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { api } from './js/api.js';
 
-    //=================================================================
-    // Tippe showFlag() in die Console um den Token zu bekommen
-    //=================================================================
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
-      authDomain: "escape-star.firebaseapp.com",
-      projectId: "escape-star",
-      storageBucket: "escape-star.firebasestorage.app",
-      messagingSenderId: "764344736028",
-      appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
-      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
     let mainTimerInterval = null;
+    let pollInterval = null;
+    let currentUser = null;
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const userRef = ref(db, 'users/' + user.uid);
-        get(userRef).then((snapshot) => {
-          if (!snapshot.exists()) { window.location.href = 'index.html'; return; }
-          const userData = snapshot.val();
-          const puzzles = userData.puzzles || {};
-          const hasSolvedAllPuzzles = puzzles.labyrinthCompleted === true && puzzles.datenbankCompleted === true && puzzles.applicationServerCompleted === true;
-          if (userData.isAdmin === true || hasSolvedAllPuzzles) {
-            document.getElementById('page-content').style.display = 'block';
-            initializeMainTimer(user.uid);
-            initializeTokenGenerator(user);
-          } else {
-            alert("Zugriff verweigert! Du musst erst alle drei Server-Rätsel auf dem Dashboard lösen.");
-            window.location.href = 'dashboard.html';
-          }
-        }).catch(() => { window.location.href = 'index.html'; });
-      } else {
-        window.location.href = 'index.html';
-      }
-    });
+    async function init() {
+        try {
+            currentUser = await api.getCurrentUser();
+            if (!currentUser) throw new Error("No user");
 
-    function initializeMainTimer(uid) {
-      const userTimerRef = ref(db, 'users/' + uid + '/timer');
-      onValue(userTimerRef, (snapshot) => {
-        const timerData = snapshot.val();
-        clearInterval(mainTimerInterval);
-        if (timerData && timerData.endTime) {
-          const endTime = timerData.endTime;
-          const tick = () => {
-            const now = Date.now();
-            const diffMs = endTime - now;
-            const globalTimerEl = document.getElementById("globalTimer");
-            const shutdownTimerEl = document.getElementById("shutdownTimer");
-            globalTimerEl.style.color = "rgb(255, 0, 0)";
-            if (diffMs <= 0) {
-              globalTimerEl.textContent = "00:00";
-              shutdownTimerEl.textContent = "00:00";
-              clearInterval(mainTimerInterval);
+            const puzzles = currentUser.puzzles || {};
+            const hasSolvedAllPuzzles = puzzles.labyrinthCompleted && puzzles.datenbankCompleted && puzzles.applicationServerCompleted;
 
-              // Ergebnis + Timer-Pause bei Ablauf (LOSE, falls nicht vorher gewonnen)
-              const puzzleRef = ref(db, 'users/' + uid + '/puzzles/virusDeactivated');
-              const lastGameRef = ref(db, 'users/' + uid + '/lastGame');
-              const initialSeconds = (timerData && typeof timerData.initialDuration === "number") ? Math.floor(timerData.initialDuration) : null;
-              const remainingSecondsAtEnd = 0; // abgelaufen
-              const playerName = auth.currentUser?.displayName || auth.currentUser?.email || uid;
-              let hasWon = false;
-
-              get(puzzleRef).then((snap) => {
-                hasWon = snap.exists() && snap.val() === true;
-                if (!hasWon) {
-                  return update(lastGameRef, {
-                    finishedAt: now,
-                    result: "lose",
-                    remainingSeconds: remainingSecondsAtEnd,
-                    totalSeconds: initialSeconds ?? null,
-                    playerName,
-                    playerUid: uid
-                  });
-                }
-                return null;
-              }).catch((error) => {
-                console.error("Fehler beim Speichern des Fehlschlags:", error);
-              }).finally(async () => {
-                // Timer als pausiert (0s) speichern – wichtige Info für Admin-Ansicht
-                try {
-                  await update(ref(db, 'users/' + uid + '/timer'), {
-                    pausedRemainingSeconds: 0,
-                    endTime: null,
-                    status: "lose-paused",
-                    ...(Number.isFinite(initialSeconds) ? { initialDuration: initialSeconds } : {})
-                  });
-                } catch (_) {}
-
-                if (hasWon) {
-                  window.location.href = "virusdown.html";
-                } else {
-                  window.location.href = "fail.html";
-                }
-              });
-              return;
+            if (currentUser.isAdmin || hasSolvedAllPuzzles) {
+                document.getElementById('page-content').style.display = 'block';
+                initializeMainTimer(currentUser);
+                initializeTokenGenerator(currentUser);
+                pollInterval = setInterval(updateTimerStatus, 3000); // Poll status every 3s
+            } else {
+                alert("Zugriff verweigert! Du musst erst alle drei Server-Rätsel auf dem Dashboard lösen.");
+                window.location.href = 'dashboard.html';
             }
-            const diffSec = Math.floor(diffMs / 1000);
-            const mm = Math.floor(diffSec / 60);
-            const ss = diffSec % 60;
-            const timeStr = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-            globalTimerEl.textContent = timeStr;
-            shutdownTimerEl.textContent = timeStr;
-            shutdownTimerEl.style.color = (diffSec <= 600) ? "#ff0000" : "rgb(255, 0, 0)";
-          };
-          tick();
-          mainTimerInterval = setInterval(tick, 1000);
-        } else if (timerData && Number.isFinite(timerData.pausedRemainingSeconds)) {
-          const remaining = Math.max(0, Math.floor(timerData.pausedRemainingSeconds));
-          const formatted = formatTimerDisplay(remaining);
-          const globalTimerEl = document.getElementById("globalTimer");
-          const shutdownTimerEl = document.getElementById("shutdownTimer");
-          globalTimerEl.textContent = formatted;
-          shutdownTimerEl.textContent = formatted;
-          const pausedColor = timerData.status === "win-paused" ? "#0f0" : "rgb(255, 0, 0)";
-          globalTimerEl.style.color = pausedColor;
-          shutdownTimerEl.style.color = pausedColor;
-        } else {
-          const globalTimerEl = document.getElementById("globalTimer");
-          const shutdownTimerEl = document.getElementById("shutdownTimer");
-          globalTimerEl.textContent = "--:--";
-          shutdownTimerEl.textContent = "--:--";
-          globalTimerEl.style.color = "rgb(255, 0, 0)";
-          shutdownTimerEl.style.color = "rgb(255, 0, 0)";
+        } catch (e) {
+            console.error(e);
+            window.location.href = 'index.html';
         }
-      });
+    }
+
+    async function updateTimerStatus() {
+        try {
+            const user = await api.getCurrentUser();
+            currentUser = user; // Update local user state
+            handleTimerData(user);
+        } catch(e) {
+            console.error("Timer update failed", e);
+        }
+    }
+
+    function initializeMainTimer(user) {
+        handleTimerData(user);
+        // Local tick update based on last known data
+        mainTimerInterval = setInterval(() => {
+            if (currentUser && currentUser.timerStatus === 'active' && currentUser.timerEndTime) {
+                renderTimer(new Date(currentUser.timerEndTime));
+            }
+        }, 1000);
+    }
+
+    function handleTimerData(user) {
+        if (user.timerStatus === 'active' && user.timerEndTime) {
+            renderTimer(new Date(user.timerEndTime));
+        } else if (user.timerStatus === 'paused' || user.timerStatus === 'lose-paused' || user.timerStatus === 'win-paused') {
+             const remaining = user.timerPausedRemaining !== null ? user.timerPausedRemaining : 0;
+             renderStaticTimer(remaining, user.timerStatus);
+        } else {
+             renderStaticTimer(0, 'idle');
+        }
+    }
+
+    function renderTimer(endTime) {
+        const now = new Date();
+        const diffMs = endTime - now;
+        const globalTimerEl = document.getElementById("globalTimer");
+        const shutdownTimerEl = document.getElementById("shutdownTimer");
+        
+        if (diffMs <= 0) {
+            // Timer expired locally, check if we need to trigger lose
+            clearInterval(mainTimerInterval);
+            globalTimerEl.textContent = "00:00";
+            shutdownTimerEl.textContent = "00:00";
+            triggerLose();
+            return;
+        }
+
+        const diffSec = Math.floor(diffMs / 1000);
+        const mm = Math.floor(diffSec / 60);
+        const ss = diffSec % 60;
+        const timeStr = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+        
+        globalTimerEl.textContent = timeStr;
+        shutdownTimerEl.textContent = timeStr;
+        globalTimerEl.style.color = "rgb(255, 0, 0)";
+        shutdownTimerEl.style.color = (diffSec <= 600) ? "#ff0000" : "rgb(255, 0, 0)";
+    }
+
+    function renderStaticTimer(seconds, status) {
+        const mm = Math.floor(seconds / 60);
+        const ss = Math.floor(seconds % 60);
+        const timeStr = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+        const globalTimerEl = document.getElementById("globalTimer");
+        const shutdownTimerEl = document.getElementById("shutdownTimer");
+
+        globalTimerEl.textContent = timeStr;
+        shutdownTimerEl.textContent = timeStr;
+        
+        const color = (status === 'win-paused') ? '#0f0' : 'rgb(255, 0, 0)';
+        globalTimerEl.style.color = color;
+        shutdownTimerEl.style.color = color;
+    }
+
+    function triggerLose() {
+        // Double check with server status before showing fail
+        api.request('/game/finish', 'POST', { result: 'lose' })
+        .then(() => {
+            window.location.href = "fail.html";
+        })
+        .catch(err => console.error("Error triggering lose", err));
     }
 
     function formatTimerDisplay(totalSeconds) {
-      const seconds = Math.max(0, Math.floor(totalSeconds));
-      const hh = Math.floor(seconds / 3600);
-      const mm = Math.floor((seconds % 3600) / 60);
-      const ss = seconds % 60;
-      const base = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-      return hh > 0 ? `${String(hh).padStart(2, '0')}:${base}` : base;
+       // Helper if needed, but render functions handle it
+       return "";
     }
 
     function initializeTokenGenerator(user) {
@@ -221,7 +191,6 @@
       function mulberry32(a) { return function() { var t = a += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; } }
       function generateToken() { const r = mulberry32(0x5eed); return Math.floor(r() * 10000000000).toString(16); }
 
-      // Tippe showFlag() in die Console um den Token zu bekommen
       window.showFlag = function() {
         const token = generateToken();
         alert(`Here's your token: ${token}`);
@@ -238,8 +207,8 @@
           statusEl.textContent = "Erfolg! Der Virus wurde deaktiviert.";
           statusEl.classList.add("success");
           try {
-            await finalizeWin(user.uid);           // einheitlicher Pfad
-            setTimeout(() => { window.location.href = "virusdown.html"; }, 500);
+             await api.request('/game/finish', 'POST', { result: 'win' });
+             setTimeout(() => { window.location.href = "virusdown.html"; }, 500);
           } catch (error) {
             console.error("Fehler beim Speichern des Erfolgs:", error);
             statusEl.textContent = "Erfolg konnte nicht gespeichert werden. Bitte erneut versuchen.";
@@ -253,93 +222,9 @@
       }
     }
 
-    // ====== Zentrale Finalisierung für WIN (idempotent) ======
-    async function finalizeWin(uid) {
-      // Wenn lastGame.result bereits existiert → nichts tun (idempotent)
-      const resSnap = await get(ref(db, 'users/' + uid + '/lastGame/result'));
-      if (resSnap.exists()) return;
+    init();
+  </script>
 
-      const now = Date.now();
-      const [userSnap, timerSnap] = await Promise.all([
-        get(ref(db, 'users/' + uid)),
-        get(ref(db, 'users/' + uid + '/timer'))
-      ]);
-
-      const userData = userSnap.exists() ? userSnap.val() : {};
-      const timerData = timerSnap.exists() ? timerSnap.val() : null;
-
-      // Restzeit bestimmen: bevorzugt endTime, sonst pausedRemainingSeconds, sonst 0
-      let remainingSeconds = null;
-      if (timerData?.endTime) {
-        remainingSeconds = Math.max(0, Math.floor((timerData.endTime - now) / 1000));
-      } else if (Number.isFinite(timerData?.pausedRemainingSeconds)) {
-        remainingSeconds = Math.max(0, Math.floor(timerData.pausedRemainingSeconds));
-      } else {
-        remainingSeconds = 0;
-      }
-
-      const totalSeconds = Number.isFinite(timerData?.initialDuration)
-        ? Math.floor(timerData.initialDuration)
-        : null;
-
-      const playerName = userData?.displayName || userData?.username || userData?.email || uid;
-
-      const ops = [];
-
-      // Flags + Stats
-      ops.push(
-        update(ref(db, 'users/' + uid + '/puzzles'), { virusDeactivated: true }),
-        update(ref(db, 'users/' + uid + '/solvedStats'), {
-          finishedAt: now,
-          remainingSeconds: remainingSeconds ?? null,
-          totalSeconds: totalSeconds ?? null,
-          updatedAt: now
-        })
-      );
-
-      // lastGame inkl. Restzeit & Metadaten
-      ops.push(
-        update(ref(db, 'users/' + uid + '/lastGame'), {
-          finishedAt: now,
-          result: "win",
-          remainingSeconds: remainingSeconds ?? null,
-          totalSeconds: totalSeconds ?? null,
-          playerName,
-          playerUid: uid
-        })
-      );
-
-      // Timer pausieren (kein endTime mehr)
-      const pausedTimerPayload = {
-        pausedAt: now,
-        pausedRemainingSeconds: remainingSeconds ?? 0,
-        status: "win-paused"
-      };
-      if (Number.isFinite(timerData?.initialDuration)) {
-        pausedTimerPayload.initialDuration = timerData.initialDuration;
-      }
-      ops.push(set(ref(db, 'users/' + uid + '/timer'), pausedTimerPayload));
-
-      // Gruppe (falls vorhanden) nur einmalig als abgeschlossen markieren
-      if (userData && userData.groupId) {
-        const groupRef = ref(db, 'groups/' + userData.groupId);
-        const groupSnap = await get(groupRef);
-        const groupData = groupSnap.exists() ? groupSnap.val() : {};
-        if (!groupData.completedAt) {
-          const elapsedSeconds =
-            (totalSeconds != null && remainingSeconds != null)
-              ? Math.max(totalSeconds - remainingSeconds, 0)
-              : null;
-          ops.push(update(groupRef, {
-            completedAt: now,
-            completionDurationSec: elapsedSeconds ?? null,
-            completedBy: uid
-          }));
-        }
-      }
-
-      await Promise.all(ops);
-    }
   </script>
 </body>
 </html>

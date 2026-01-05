@@ -52,6 +52,18 @@ const User = db.define('user', {
     timerStatus: {
         type: Sequelize.STRING,
         defaultValue: 'idle'
+    },
+    puzzles: {
+        type: Sequelize.JSON,
+        defaultValue: {}
+    },
+    lastGame: {
+        type: Sequelize.JSON,
+        defaultValue: {}
+    },
+    solvedStats: {
+        type: Sequelize.JSON,
+        defaultValue: {}
     }
 });
 
