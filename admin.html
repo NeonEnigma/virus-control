@@ -334,9 +334,11 @@
     }
 
     async function handleUserListClick(event) {
-      if (event.target.tagName !== "BUTTON") return;
-      const button = event.target;
+      const button = event.target.closest("button");
+      if (!button) return; // Not a button click
+      
       const uid = button.dataset.uid;
+      // ... rest of function ... (implicit)
       if (!uid || !state.users[uid]) return;
 
       const isTimerAction =
