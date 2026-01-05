@@ -51,11 +51,9 @@ app.use((req, res, next) => {
     next();
 });
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 2000 // limit each IP to 2000 requests per windowMs (increased for testing)
-});
-app.use(limiter);
+// Rate Limiter REMOVED by user request
+// const limiter = rateLimit({ ... });
+// app.use(limiter);
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
