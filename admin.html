@@ -184,7 +184,18 @@
          
          // Convert arrays to objects for compatibility with existing render functions if possible, 
          // OR update render functions. Given the complexity of existing code, let's map array to object by ID.
-         state.users = usersData.reduce((acc, u) => { acc[u.id] = u; return acc; }, {});
+         state.users = usersData.reduce((acc, u) => { 
+             // Map flat timer fields to nested object for compatibility
+             u.timer = {
+                 endTime: u.timerEndTime,
+                 initialDuration: u.timerInitialDuration,
+                 pausedRemainingSeconds: u.timerPausedRemaining,
+                 timerStatus: u.timerStatus, // Ensure status is mapped
+                 status: u.timerStatus // Legacy support
+             };
+             acc[u.id] = u; 
+             return acc; 
+         }, {});
          state.groups = groupsData.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
 
          renderUserList();
