@@ -304,20 +304,21 @@
       }
 
       try {
-        const credentials = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-        await set(ref(db, `users/${credentials.user.uid}`), {
-          email, role: "restricted-admin", isAdmin: true,
-          groupId, assignedUserUid: assignedUid || null,
-          createdAt: Date.now(), createdBy: state.currentUser?.uid || null
+        await api.request('/auth/register', 'POST', {
+            email,
+            password,
+            role: 'restricted-admin',
+            groupId,
+            assignedUserUid: assignedUid || null
         });
-        await signOut(secondaryAuth);
 
         setFeedback(feedback, "Eingeschränkten Admin erstellt.");
         emailInput.value = ""; passwordInput.value = ""; groupSelect.value = "";
         if (assignedSelect) assignedSelect.innerHTML = '<option value="">Kein Nutzer</option>';
+        loadData();
       } catch (error) {
         console.error("Fehler beim Anlegen eines eingeschränkten Admins:", error);
-        setFeedback(feedback, parseFirebaseError(error));
+        setFeedback(feedback, error.message || "Fehler beim Anlegen");
       }
     }
 

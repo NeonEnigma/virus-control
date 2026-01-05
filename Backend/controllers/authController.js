@@ -4,7 +4,7 @@ const User = require('../models/User');
 
 exports.register = async (req, res) => {
     try {
-        const { email, password, role, groupId } = req.body;
+        const { email, password, role, groupId, assignedUserUid } = req.body;
 
         // Check if user exists
         const existingUser = await User.findOne({ where: { email } });
@@ -21,7 +21,8 @@ exports.register = async (req, res) => {
             email,
             password: hashedPassword,
             role: role || 'user',
-            groupId: groupId || null
+            groupId: groupId || null,
+            assignedUserUid: assignedUserUid || null
         });
 
         res.status(201).json({ message: 'User registered successfully', userId: user.id });
