@@ -135,89 +135,71 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getDatabase, ref, onValue, set, get, update, push } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+    import { api } from './js/api.js';
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
-      authDomain: "escape-star.firebaseapp.com",
-      projectId: "escape-star",
-      storageBucket: "escape-star.firebasestorage.app",
-      messagingSenderId: "764344736028",
-      appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
-      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
-    };
+    const state = { currentUser: null, users: [], groups: [] }; // Changed from {} to [] for users/groups for simpler mapping, or keep {} if index by ID is needed. 
+    // Adapting to array returns from API:
+    // API returns arrays for users and groups. We can index them if needed.
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
-    const secondaryAuth = getAuth(secondaryApp);
-
-    const state = { currentUser: null, users: {}, groups: {} };
     let masterTimerInterval = null;
-    let listenersInitialized = false;
-    let formsInitialized = false;
+    let pollingInterval = null;
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) { window.location.href = "index.html"; return; }
+    async function initAdmin() {
+       try {
+         const me = await api.request('/users/me');
+         if (me.role !== 'super-admin' && me.role !== 'restricted-admin') {
+            window.location.href = "terminal.html";
+            return;
+         }
+         state.currentUser = me;
+         document.getElementById("loading-message").style.display = "none";
+         document.getElementById("admin-dashboard").style.display = "block";
 
-      try {
-        const snapshot = await get(ref(db, `users/${user.uid}`));
-        if (!snapshot.exists()) { window.location.href = "index.html"; return; }
+         setupForms();
+         
+         // Initial Load
+         await loadData();
 
-        const userData = snapshot.val() || {};
-        let resolvedRole = userData.role;
-        if (!resolvedRole) {
-          resolvedRole = userData.isAdmin ? "super-admin" : "user";
-          await update(ref(db, `users/${user.uid}`), { role: resolvedRole });
-        }
-        if (resolvedRole !== "super-admin" && resolvedRole !== "restricted-admin") {
-          window.location.href = "terminal.html"; return;
-        }
+         // Poll data every 5 seconds
+         pollingInterval = setInterval(loadData, 5000);
+         
+         // Timer update every second for UI
+         if (masterTimerInterval) clearInterval(masterTimerInterval);
+         masterTimerInterval = setInterval(updateAllTimersOnPage, 1000);
 
-        state.currentUser = { ...userData, uid: user.uid, role: resolvedRole };
-        document.getElementById("loading-message").style.display = "none";
-        document.getElementById("admin-dashboard").style.display = "block";
+       } catch (e) {
+         console.error(e);
+         window.location.href = "index.html";
+       }
+    }
 
-        setupForms();
-        setupRealtimeListeners();
+    async function loadData() {
+       try {
+         const [usersData, groupsData] = await Promise.all([
+           api.getUsers(),
+           api.request('/groups')
+         ]);
+         
+         // Convert arrays to objects for compatibility with existing render functions if possible, 
+         // OR update render functions. Given the complexity of existing code, let's map array to object by ID.
+         state.users = usersData.reduce((acc, u) => { acc[u.id] = u; return acc; }, {});
+         state.groups = groupsData.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
 
-        if (masterTimerInterval) clearInterval(masterTimerInterval);
-        masterTimerInterval = setInterval(updateAllTimersOnPage, 1000);
-      } catch (error) {
-        console.error("Fehler beim Laden der Benutzerdaten:", error);
-        window.location.href = "index.html";
-      }
-    });
+         renderUserList();
+         // refreshCreationFormUserOptions(); // logic might need update if depend on secondary auth
+         renderGroupOptions();
+         renderCompletedGroups(); // might need adaptation
+         // renderLastGames(); // might need adaptation
+       } catch (e) {
+         console.error("Error loading data", e);
+       }
+    }
+    
+    // Start
+    initAdmin();
 
     function setupRealtimeListeners() {
-      if (listenersInitialized) return;
-      listenersInitialized = true;
-
-      const usersRef = ref(db, "users");
-      onValue(usersRef, (snapshot) => {
-        state.users = snapshot.val() || {};
-
-        if (state.currentUser && state.users[state.currentUser.uid]) {
-          const refreshed = state.users[state.currentUser.uid];
-          state.currentUser = { ...refreshed, uid: state.currentUser.uid, role: refreshed.role || state.currentUser.role };
-        }
-
-        renderUserList();
-        refreshCreationFormUserOptions();
-        renderLastGames();
-      });
-
-      const groupsRef = ref(db, "groups");
-      onValue(groupsRef, (snapshot) => {
-        state.groups = snapshot.val() || {};
-        renderGroupOptions();
-        renderUserList();
-        renderCompletedGroups();
-        renderLastGames();
-      });
+      // Replaced by polling in initAdmin
     }
 
     function setupForms() {
@@ -247,7 +229,7 @@
       }
     }
 
-    function handleCreateGroup(event) {
+    async function handleCreateGroup(event) {
       event.preventDefault();
       const nameInput = document.getElementById("new-group-name");
       const feedback = document.getElementById("group-feedback");
@@ -256,11 +238,15 @@
       const groupName = nameInput.value.trim();
       if (!groupName) { setFeedback(feedback, "Bitte einen Gruppennamen eingeben."); return; }
 
-      const groupsRef = ref(db, "groups");
-      const newGroupRef = push(groupsRef);
-      set(newGroupRef, { name: groupName, createdAt: Date.now() })
-        .then(() => { setFeedback(feedback, `Gruppe "${groupName}" erstellt.`); nameInput.value = ""; })
-        .catch((error) => { console.error("Fehler beim Anlegen der Gruppe:", error); setFeedback(feedback, "Fehler beim Anlegen der Gruppe."); });
+      try {
+        await api.createGroup(groupName);
+        setFeedback(feedback, `Gruppe "${groupName}" erstellt.`); 
+        nameInput.value = "";
+        loadData(); // Refresh
+      } catch (error) {
+        console.error("Fehler beim Anlegen der Gruppe:", error); 
+        setFeedback(feedback, "Fehler beim Anlegen der Gruppe.");
+      }
     }
 
     async function handleCreateUser(event) {
@@ -276,18 +262,18 @@
       if (!email || !password) { setFeedback(feedback, "E-Mail und Passwort dürfen nicht leer sein."); return; }
 
       try {
-        const credentials = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-        await set(ref(db, `users/${credentials.user.uid}`), {
-          email, role: "user", isAdmin: false,
-          groupId: groupSelect?.value || null,
-          createdAt: Date.now(), createdBy: state.currentUser?.uid || null
+        await api.request('/auth/register', 'POST', {
+          email, 
+          password, 
+          role: 'user', 
+          groupId: groupSelect?.value || null
         });
-        await signOut(secondaryAuth);
         setFeedback(feedback, "Nutzer erfolgreich erstellt.");
         emailInput.value = ""; passwordInput.value = ""; if (groupSelect) groupSelect.value = "";
+        loadData();
       } catch (error) {
         console.error("Fehler beim Anlegen eines Nutzers:", error);
-        setFeedback(feedback, parseFirebaseError(error));
+        setFeedback(feedback, error.message || "Fehler");
       }
     }
 

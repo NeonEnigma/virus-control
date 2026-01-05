@@ -27,23 +27,7 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyB4L9_yyWFxzeRy6eEuSGgsspIRp6rrX3Q",
-      authDomain: "escape-star.firebaseapp.com",
-      projectId: "escape-star",
-      storageBucket: "escape-star.firebasestorage.app",
-      messagingSenderId: "764344736028",
-      appId: "1:764344736028:web:9111f0a62220f15d7c42d9",
-      databaseURL: "https://escape-star-default-rtdb.europe-west1.firebasedatabase.app"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+    import { api } from './js/api.js';
 
     const loginButton = document.getElementById("loginButton");
     const errorDiv = document.getElementById("error-message");
@@ -53,33 +37,17 @@
       const password = document.getElementById("password").value.trim();
       errorDiv.style.display = "none";
 
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          const userRef = ref(db, 'users/' + user.uid);
-
-          get(userRef).then((snapshot) => {
-            if (snapshot.exists()) {
-              const userData = snapshot.val();
-              const role = userData?.role;
-              const hasAdminAccess = role === "super-admin" || role === "restricted-admin" || userData?.isAdmin === true;
-              if (hasAdminAccess) {
-                window.location.href = "admin.html";
-              } else {
-                window.location.href = "terminal.html";
-              }
-            } else {
-              window.location.href = "terminal.html";
-            }
-          }).catch((error) => {
-            console.error("Fehler beim Lesen der Benutzerdaten:", error);
-            alert("Ein Berechtigungs-Fehler ist aufgetreten.");
-          });
+      api.login(email, password)
+        .then((user) => {
+           if (user.role === 'super-admin' || user.role === 'restricted-admin' || user.isAdmin) {
+             window.location.href = "admin.html";
+           } else {
+             window.location.href = "terminal.html";
+           }
         })
         .catch((error) => {
           errorDiv.style.display = "block";
-          errorDiv.textContent = "Falsche E-Mail oder Passwort!";
-          console.error("Login-Fehler:", error);
+          errorDiv.textContent = error.message || "Falsche E-Mail oder Passwort!";
         });
     });
   </script>
