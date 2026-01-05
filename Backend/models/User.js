@@ -33,7 +33,7 @@ const User = db.define('user', {
         }
     },
     assignedUserUid: {
-        type: Sequelize.UUID,
+        type: Sequelize.STRING, // Changed from UUID to STRING to avoid casting errors with legacy data
         allowNull: true
     },
     // Timer fields

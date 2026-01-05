@@ -55,13 +55,16 @@ const config = {
     dialect: 'postgres',
     port: dbPort,
     logging: false,
-    dialectOptions: {
-        ssl: {
-            require: true,
-            rejectUnauthorized: false
-        }
-    }
+    dialectOptions: {}
 };
+
+// Enable SSL if running in Cloud Foundry (VCAP_SERVICES) or widely requested
+if (process.env.VCAP_SERVICES || process.env.DB_SSL === 'true') {
+    config.dialectOptions.ssl = {
+        require: true,
+        rejectUnauthorized: false
+    };
+}
 
 let sequelize;
 if (dbUri) {

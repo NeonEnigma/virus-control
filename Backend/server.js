@@ -110,7 +110,10 @@ const startServer = async () => {
         });
 
     } catch (err) {
-        console.error('>>> CRITICAL STARTUP ERROR:', err);
+        console.error('>>> CRITICAL STARTUP ERROR:', err.message);
+        console.error('>>> ERROR TYPE:', typeof err);
+        console.error('>>> FULL ERROR OBJ:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+        console.error(err.stack);
     }
 };
 
