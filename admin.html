@@ -341,7 +341,7 @@
         }
       }
 
-      // const timerRef = ref(db, `users/${uid}/timer`); // REMOVED legacy firebase ref
+      const timerRef = ref(db, `users/${uid}/timer`);
 
       if (button.classList.contains("start-btn")) {
         const inputEl = document.getElementById(`timer-input-${uid}`);
@@ -1011,7 +1011,7 @@
         if (!targetUser) return false;
         const role = resolveRole(targetUser);
         return role === "user" &&
-          state.currentUser.assignedUserUid == uid && // Use loose equality for ID matching
+          state.currentUser.assignedUserUid === uid &&
           targetUser.groupId &&
           targetUser.groupId === state.currentUser.groupId;
       }
