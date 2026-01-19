@@ -45,7 +45,10 @@ export const api = {
         }
 
         try {
+            console.log(`>>> DEBUG: Fetching ${API_BASE_URL}${endpoint}`);
             const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
+            console.log('>>> DEBUG: Response Status:', response.status);
 
             if (response.status === 401) {
                 console.warn('>>> DEBUG: 401 Unauthorized received');
@@ -57,7 +60,9 @@ export const api = {
                 console.error('>>> DEBUG: API Error:', errorData);
                 throw new Error(errorData.message || 'API Error');
             }
-            return await response.json();
+            const json = await response.json();
+            console.log('>>> DEBUG: Response JSON:', json);
+            return json;
         } catch (error) {
             console.error('Request failed:', error);
             throw error;
@@ -87,6 +92,18 @@ export const api = {
 
     getCurrentUser() {
         return this.request('/auth/me');
+    },
+
+    pauseGame(userId) {
+        return this.request('/game/pause', 'POST', { userId });
+    },
+
+    resumeGame(userId) {
+        return this.request('/game/resume', 'POST', { userId });
+    },
+
+    addTime(userId, minutes) {
+        return this.request('/game/add-time', 'POST', { userId, minutes });
     },
 
     // Add other methods as needed based on gameController logic

@@ -135,7 +135,7 @@
   </div>
 
   <script type="module">
-    import { api } from './js/api.js';
+    import { api } from './js/api.js?v=2';
 
     const state = { currentUser: null, users: [], groups: [] }; // Changed from {} to [] for users/groups for simpler mapping, or keep {} if index by ID is needed. 
     // Adapting to array returns from API:
@@ -334,12 +334,18 @@
     }
 
     async function handleUserListClick(event) {
+      // console.log(">>> DEBUG: Click detected in user-list", event.target);
       const button = event.target.closest("button");
       if (!button) return; // Not a button click
       
+      console.log(">>> DEBUG: Button clicked:", button.className, button.dataset);
+      
       const uid = button.dataset.uid;
       // ... rest of function ... (implicit)
-      if (!uid || !state.users[uid]) return;
+      if (!uid || !state.users[uid]) {
+          console.error(">>> DEBUG: Missing UID or User not found in state", uid);
+          return;
+      }
 
       const isTimerAction =
         button.classList.contains("start-btn") ||
@@ -357,20 +363,18 @@
       // const timerRef = ref(db, `users/${uid}/timer`); // REMOVED (Legacy)
 
       if (button.classList.contains("start-btn")) {
+        console.log(">>> DEBUG: Start Button Logic Triggered for UID:", uid);
         const inputEl = document.getElementById(`timer-input-${uid}`);
+        console.log(">>> DEBUG: Input Element:", inputEl);
         const minutes = parseInt(inputEl?.value ?? "0", 10);
-        if (!Number.isFinite(minutes) || minutes <= 0) { alert("Bitte eine gültige, positive Minutenzahl eingeben."); return; }
-        const durationInSeconds = minutes * 60;
-        const newEndTime = new Date(Date.now() + durationInSeconds * 1000).toISOString();
+        console.log(">>> DEBUG: Minutes parsed:", minutes);
         
+        if (!Number.isFinite(minutes) || minutes <= 0) { alert("Bitte eine gültige, positive Minutenzahl eingeben."); return; }
         try {
-          await api.request(`/users/${uid}`, 'PUT', {
-            timerEndTime: newEndTime,
-            timerInitialDuration: durationInSeconds,
-            timerStatus: 'active',
-            lastGame: null,
-            solvedStats: null
-          });
+          // Use dedicated start game endpoint
+          console.log(">>> DEBUG: Calling api.startGame...");
+          await api.startGame(uid, minutes);
+          console.log(">>> DEBUG: api.startGame success. Reloading data...");
           loadData(); // Refresh UI
         } catch (error) {
           console.error("Timer konnte nicht gestartet werden:", error);
@@ -381,21 +385,7 @@
 
       if (button.classList.contains("add-time-btn")) {
         try {
-          const user = state.users[uid];
-          const timerData = user?.timer || {}; // Assuming updated structure from backend
-          const now = Date.now();
-          const pEndTime = timerData.endTime ? new Date(timerData.endTime).getTime() : 0;
-
-          if (timerData.timerStatus === 'active' && pEndTime > now) {
-             const newEndTime = new Date(pEndTime + 600000).toISOString();
-             await api.request(`/users/${uid}`, 'PUT', { timerEndTime: newEndTime });
-          } else if (timerData.timerStatus === 'paused' && Number.isFinite(timerData.pausedRemainingSeconds)) { // Note mapping might be needed
-             const newRemaining = Math.max(0, Math.floor(timerData.pausedRemainingSeconds) + 600);
-             await api.request(`/users/${uid}`, 'PUT', { timerPausedRemaining: newRemaining });
-          } else {
-            alert("Timer ist nicht aktiv. Bitte zuerst starten.");
-            return;
-          }
+          await api.addTime(uid, 10);
            loadData(); // Refresh API
         } catch (error) {
           console.error("Zeit konnte nicht hinzugefügt werden:", error);
@@ -406,30 +396,7 @@
 
       if (button.classList.contains("subtract-time-btn")) {
         try {
-          const user = state.users[uid];
-          const timerData = user?.timer || {};
-          const now = Date.now();
-          const pEndTime = timerData.endTime ? new Date(timerData.endTime).getTime() : 0;
-
-          if (timerData.timerStatus === 'active' && pEndTime > now) {
-             let newTime = pEndTime - 600000;
-             if (now >= newTime) {
-                // Expired
-                await api.request(`/users/${uid}`, 'PUT', { timerEndTime: null, timerStatus: 'idle' });
-             } else {
-                await api.request(`/users/${uid}`, 'PUT', { timerEndTime: new Date(newTime).toISOString() });
-             }
-          } else if (timerData.timerStatus === 'paused' && Number.isFinite(timerData.pausedRemainingSeconds)) {
-             const newRemaining = Math.max(0, Math.floor(timerData.pausedRemainingSeconds) - 600);
-             if (newRemaining <= 0) {
-                 await api.request(`/users/${uid}`, 'PUT', { timerPausedRemaining: 0, timerStatus: 'idle' });
-             } else {
-                 await api.request(`/users/${uid}`, 'PUT', { timerPausedRemaining: newRemaining });
-             }
-          } else {
-             alert("Timer ist nicht aktiv. Zeit kann nicht abgezogen werden.");
-             return;
-          }
+          await api.addTime(uid, -10);
           loadData();
         } catch (error) {
           console.error("Zeit konnte nicht abgezogen werden:", error);
@@ -440,40 +407,19 @@
 
       if (button.classList.contains("pause-resume-btn")) {
         try {
-          const now = Date.now();
+          console.log(">>> DEBUG: Pause/Resume clicked for UID:", uid);
           const user = state.users[uid];
           const timerData = user?.timer || {};
+          console.log(">>> DEBUG: Current Timer Status:", timerData.timerStatus, timerData);
           
-          // Logic: If paused (pausedRemainingSeconds exists), resume. If active, pause (save remaining).
-          
-          if (timerData.timerStatus === 'paused' && Number.isFinite(timerData.pausedRemainingSeconds)) {
-             // RESUME
-             const pausedSeconds = Math.max(1, Math.floor(timerData.pausedRemainingSeconds));
-             const initialDuration = Number.isFinite(timerData.initialDuration) ? timerData.initialDuration : pausedSeconds;
-             const newEndTime = new Date(now + (pausedSeconds * 1000)).toISOString();
-             
-             await api.request(`/users/${uid}`, 'PUT', { 
-                 timerEndTime: newEndTime, 
-                 timerStatus: 'active',
-                 // initialDuration // usually keep original
-             });
-             
-          } else if (timerData.timerStatus === 'active' && timerData.endTime && new Date(timerData.endTime).getTime() > now) {
-             // PAUSE
-             const pEndTime = new Date(timerData.endTime).getTime();
-             const remainingSeconds = Math.max(0, Math.floor((pEndTime - now) / 1000));
-             
-             if (remainingSeconds <= 0) {
-                 await api.request(`/users/${uid}`, 'PUT', { timerStatus: 'idle', timerEndTime: null });
-             } else {
-                 const nextStatus = (timerData.status === "win-paused") ? "win-paused" : "paused"; // or just 'paused'
-                 await api.request(`/users/${uid}`, 'PUT', { 
-                     timerStatus: 'paused',
-                     timerPausedRemaining: remainingSeconds,
-                     // pausedAt: now // not strictly needed if we just track remaining
-                 });
-             }
+          if (timerData.timerStatus === 'paused') {
+             console.log(">>> DEBUG: Resuming game...");
+             await api.resumeGame(uid);
+          } else if (timerData.timerStatus === 'active') {
+             console.log(">>> DEBUG: Pausing game...");
+             await api.pauseGame(uid);
           } else {
+              console.warn(">>> DEBUG: Timer not active/paused. Status:", timerData.timerStatus);
               alert("Timer ist nicht aktiv.");
               return;
           }
@@ -634,10 +580,18 @@
       }
 
       if (timer && timer.endTime) {
-        const diffMs = timer.endTime - now;
-        if (diffMs > 0) {
+        const endTimeMs = new Date(timer.endTime).getTime();
+        const diffMs = endTimeMs - now;
+        
+        console.log(`>>> DEBUG: Timer for ${uid}: endTime=${timer.endTime}, endTimeMs=${endTimeMs}, now=${now}, diffMs=${diffMs}`);
+
+        if (Number.isNaN(endTimeMs)) {
+             statusHtml = `<p class="error">Fehler: Ungültiges Enddatum (${timer.endTime})</p>`;
+        } else if (diffMs > 0) {
           isActive = true;
-          statusHtml = `<p class="timer-active" data-end-time="${timer.endTime}" data-uid="${uid}">Lädt...</p>`;
+          const remainingSec = Math.floor(diffMs / 1000);
+          const initialText = "Läuft: " + formatDuration(remainingSec);
+          statusHtml = `<p class="timer-active" data-end-time="${timer.endTime}" data-uid="${uid}">${initialText}</p>`;
         } else {
           const totalSeconds = Number.isFinite(timer.initialDuration) ? Math.floor(timer.initialDuration) : null;
           const totalLabel = totalSeconds != null ? formatDuration(totalSeconds) : "--:--";
@@ -988,7 +942,7 @@
     function updateAllTimersOnPage() {
       const runningTimers = document.querySelectorAll(".timer-active[data-end-time]");
       runningTimers.forEach((el) => {
-        const endTime = parseInt(el.dataset.endTime, 10);
+        const endTime = new Date(el.dataset.endTime).getTime();
         const remainingMs = endTime - Date.now();
         if (Number.isNaN(endTime)) return;
 

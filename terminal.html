@@ -20,11 +20,34 @@
 </head>
 <body>
 
-  <div class="timer-area" id="globalTimer">Initialisiere...</div>
+  <div class="timer-area" id="globalTimer">Initialisiere... v4.0</div>
   <div id="terminal"></div>
 
   <script type="module">
-    import { api } from './js/api.js';
+    console.log(">>> VERSION 4.0 LOADED <<<");
+    import { api } from './js/api.js?v=3'; // Bump version
+    
+    // ...
+
+    // (inside checkSSHPassword)
+        if (password === "d4Gfdee") {
+          printLine("Zugriff gewährt. Speichere Fortschritt und leite zum Dashboard weiter ...");
+          
+          // BTP BACKEND CALL
+          api.request('/game/puzzles', 'POST', { terminalCompleted: true })
+            .then(() => {
+                console.log("Terminal-Rätsel Status gespeichert!");
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 1000);
+            })
+            .catch(err => {
+                console.error("Fehler beim Speichern:", err);
+                printLine("Fehler beim Speichern. Bitte Admin rufen.");
+            });
+
+        } else {
+    // ...
     
     // Simple mock for "user" object expected by terminal functions
     let currentUser = null; 
@@ -117,16 +140,19 @@
           
           // ==========================================================
           // HIER IST DIE ANPASSUNG: Speichere den Erfolg in Firebase
-          const userPuzzlesRef = ref(db, 'users/' + user.uid + '/puzzles');
-          update(userPuzzlesRef, {
-            terminalCompleted: true
-          }).then(() => {
-            console.log("Terminal-Rätsel Status in Firebase gespeichert!");
-            setTimeout(() => {
-              // HIER MUSS DER KORREKTE DATEINAME FÜR DAS DASHBOARD STEHEN
-              window.location.href = "dashboard.html";
-            }, 1000);
-          });
+          // ==========================================================
+          // Use API instead of Firebase
+          api.request('/game/puzzles', 'POST', { terminalCompleted: true })
+            .then(() => {
+                console.log("Terminal-Rätsel Status gespeichert!");
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 1000);
+            })
+            .catch(err => {
+                console.error("Fehler beim Speichern:", err);
+                printLine("Fehler beim Speichern des Fortschritts. Bitte Admin kontaktieren.");
+            });
           // ==========================================================
 
         } else {

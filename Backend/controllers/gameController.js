@@ -3,17 +3,25 @@ const Group = require('../models/Group');
 
 exports.startGame = async (req, res) => {
     try {
+        console.log('>>> DEBUG: startGame called', req.body);
         const { userId, minutes } = req.body;
-        // Only admin or the user themselves (if allowed) can start it. 
-        // Assuming admin control for now based on previous code context.
+        console.log(`>>> DEBUG: userId=${userId}, minutes=${minutes}, type=${typeof minutes}`);
 
         if (!userId || !minutes) return res.status(400).json({ message: 'Missing parameters' });
 
         const user = await User.findByPk(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const durationSec = minutes * 60;
+        const durationSec = parseInt(minutes) * 60;
+        console.log('>>> DEBUG: durationSec:', durationSec);
+
+        if (Number.isNaN(durationSec)) {
+            console.error('>>> DEBUG: durationSec is NaN!');
+            return res.status(400).json({ message: 'Invalid minutes' });
+        }
+
         const endTime = new Date(Date.now() + durationSec * 1000);
+        console.log('>>> DEBUG: Calculated endTime:', endTime);
 
         await user.update({
             timerEndTime: endTime,

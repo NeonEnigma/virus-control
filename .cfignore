@@ -5,3 +5,6 @@ Backend/node_modules/
 dist/
 .git/
 .gitignore
+Backend/
+node_modules/
+Backend/node_modules/
