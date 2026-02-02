@@ -1,0 +1,122 @@
+name: Obfuscate and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-obfuscate:
+    permissions:
+      contents: write # Diese Berechtigung ist korrekt und notwendig
+      
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Code herunterladen
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Node.js einrichten
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Das angepasste Skript (obfuscate-html.js) erstellen
+      - name: Create Obfuscation Script
+        run: |
+          cat <<'EOF' > obfuscate-html.js
+          const fs = require('fs').promises;
+          const path = require('path');
+          const glob = require('glob');
+          const JavaScriptObfuscator = require('javascript-obfuscator');
+
+          const DIST_DIR = './dist';
+          const EXCLUDE_FILES = ['mainserver.html', 'virusdown.html']; // ## GEÄNDERT: Mehrere Dateien als Array
+
+          // Funktion zum Verschleiern von JS-Code
+          function obfuscate(jsCode) {
+            // ## GEÄNDERT: Sicherere Optionen, die ES-Modul-Imports nicht zerstören
+            const options = {
+              compact: true,
+              controlFlowFlattening: true, // Macht den Code-Fluss schwerer lesbar
+              controlFlowFlatteningThreshold: 0.75,
+              deadCodeInjection: true, // Fügt nutzlosen Code hinzu
+              deadCodeInjectionThreshold: 0.4,
+              debugProtection: false, // true kann zu Problemen auf manchen Browsern führen
+              disableConsoleOutput: true, // Deaktiviert console.log etc.
+              identifierNamesGenerator: 'hexadecimal',
+              log: false,
+              renameGlobals: false, // Wichtig: Globale Variablen nicht umbenennen
+              rotateStringArray: true,
+              selfDefending: false, // WICHTIG: Auf false setzen, da dies die Imports zerstört
+              shuffleStringArray: true,
+              splitStrings: true,
+              stringArray: true,
+              stringArrayThreshold: 0.75,
+              transformObjectKeys: true,
+              unicodeEscapeSequence: false
+            };
+            return JavaScriptObfuscator.obfuscate(jsCode, options).getObfuscatedCode();
+          }
+
+          async function main() {
+            await fs.mkdir(DIST_DIR, { recursive: true });
+            const htmlFiles = glob.sync('**/*.html', { ignore: ['node_modules/**', `${DIST_DIR}/**`] });
+            console.log(`Found ${htmlFiles.length} HTML file(s) to process.`);
+
+            for (const file of htmlFiles) {
+              const destPath = path.join(DIST_DIR, file);
+              await fs.mkdir(path.dirname(destPath), { recursive: true });
+
+              // ## GEÄNDERT: Robuste Prüfung, ob eine Datei ausgeschlossen werden soll
+              if (EXCLUDE_FILES.includes(path.basename(file))) {
+                console.log(`Copying '${file}' without obfuscation.`);
+                await fs.copyFile(file, destPath);
+                continue; // Springe zur nächsten Datei
+              }
+              
+              console.log(`Processing and obfuscating '${file}'.`);
+              let content = await fs.readFile(file, 'utf-8');
+              
+              // ## GEÄNDERT: Regex, der explizit nach <script type="module"> sucht
+              const regex = /<script type="module">([\s\S]*?)<\/script>/gi;
+              
+              content = content.replace(regex, (match, scriptContent) => {
+                if (scriptContent.trim().length === 0) return match;
+                console.log(`  -> Obfuscating inline module script in ${file}`);
+                const obfuscatedContent = obfuscate(scriptContent);
+                return `<script type="module">${obfuscatedContent}</script>`;
+              });
+
+              await fs.writeFile(destPath, content);
+            }
+            console.log('HTML processing finished.');
+          }
+
+          main().catch(console.error);
+          EOF
+
+      # 4. Die nötigen Node.js-Pakete für unser Skript installieren
+      - name: Install Script Dependencies
+        run: npm install javascript-obfuscator glob
+
+      # 5. Unser erstelltes Skript ausführen
+      - name: Run Obfuscation Script
+        run: node obfuscate-html.js
+
+      # 6. Alle anderen wichtigen Dateien (CSS, Bilder, etc.) kopieren
+      - name: Copy other assets (CSS, images, etc.)
+        run: rsync -av --exclude='*.html' --exclude='*.js' --exclude='node_modules' --exclude='.git' --exclude='obfuscate-html.js' --exclude='package*.json' --exclude='dist' . ./dist/
+
+      # 7. Den fertigen Code in den 'release'-Branch pushen
+      - name: Push to release branch
+        run: |
+          cd dist
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Deploy obfuscated site to release branch"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:release

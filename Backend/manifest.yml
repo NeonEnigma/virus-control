@@ -1,0 +1,16 @@
+---
+applications:
+  - name: virus-control-backend
+    memory: 1024M
+    buildpacks:
+      - nodejs_buildpack
+    command: node server.js
+    services:
+      - escape-db
+    env:
+      JWT_SECRET: 2b2af7fc8f65aeaedbfe2e53fc4bd52f68c0dd74eeebd5d8509cbaa2f7e3ff94
+      NODE_ENV: production
+      AUTO_SEED: "true"
+      SEED_EMAIL: "collie-twig-yeah@duck.com"
+      SEED_PASSWORD: "8jT!7gYhD76#MWaoKvkCE@A8P"
+    timeout: 180
