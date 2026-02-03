@@ -144,9 +144,9 @@ exports.finishGame = async (req, res) => {
 
         // Calculate remaining seconds
         if (user.timerEndTime) {
-            remainingSeconds = Math.max(0, (user.timerEndTime - now) / 1000);
+            remainingSeconds = Math.max(0, Math.floor((user.timerEndTime - now) / 1000));
         } else if (user.timerPausedRemaining !== null) {
-            remainingSeconds = user.timerPausedRemaining;
+            remainingSeconds = Math.floor(user.timerPausedRemaining);
         }
 
         const totalSeconds = user.timerInitialDuration;
@@ -195,7 +195,11 @@ exports.finishGame = async (req, res) => {
         if (user.groupId && result === 'win') {
             const group = await Group.findByPk(user.groupId);
             if (group && !group.completedAt) {
-                const completionDurationSec = (totalSeconds && remainingSeconds) ? Math.max(0, totalSeconds - remainingSeconds) : null;
+                let completionDurationSec = null;
+                if (totalSeconds && remainingSeconds !== undefined) {
+                    completionDurationSec = Math.max(0, Math.floor(totalSeconds - remainingSeconds));
+                }
+
                 await group.update({
                     completedAt: now,
                     completionDurationSec,

@@ -1,9 +1,9 @@
 ---
 applications:
-  - name: virus-control-frontend
+  - name: virus-control
     memory: 64M
     buildpacks:
       - staticfile_buildpack
     path: .
-    host: virus-control-frontend
+    host: virus-control
     stack: cflinuxfs4
