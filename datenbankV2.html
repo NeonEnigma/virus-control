@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datenübertragungsrätsel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            font-family: monospace;
+            color: #fdfdfd;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 20px;
+            position: relative;
+            border-bottom: 1px solid #333;
+        }
+
+        .heading {
+            text-align: center;
+            margin-bottom: 20px;
+            margin-top: 20px;
+        }
+
+        .heading h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            color: #0f0;
+        }
+
+        .info {
+            text-align: left;
+            color: #afa;
+            margin: 20px auto;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            max-width: 1200px;
+            padding: 0 40px;
+        }
+
+        .info ul {
+            margin: 15px 0;
+            padding-left: 40px;
+        }
+
+        .info li {
+            margin: 8px 0;
+        }
+
+        .game-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin: 30px auto;
+            max-width: 1200px;
+            width: 90%;
+            padding: 20px;
+        }
+
+        .side {
+            flex: 1;
+            background: #111;
+            border: 2px solid #0f0;
+            border-radius: 10px;
+            min-height: 350px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .side h2 {
+            text-align: center;
+            color: #0f0;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .bridge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .canal {
+            width: 140px;
+            height: 100px;
+            background: #222;
+            border-radius: 10px;
+            border: 2px solid #0f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            padding: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+
+        .canal-items {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .token-display {
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #ff0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .controls button {
+            background-color: #0f0;
+            color: #000;
+            border: none;
+            border-radius: 7px;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .controls button:hover:not(:disabled) {
+            background-color: #6f6;
+        }
+
+        .controls button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .item {
+            padding: 10px 15px;
+            background: #222;
+            color: #0f0;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            transition: all 0.2s;
+            user-select: none;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .item:hover {
+            background-color: rgba(0, 255, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .item.selected {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+        }
+
+        .item.small {
+            padding: 5px 8px;
+            font-size: 0.85rem;
+        }
+
+        .status {
+            text-align: center;
+            margin: 20px auto;
+            padding: 15px;
+            background: #111;
+            border: 1px solid #0f0;
+            border-radius: 7px;
+            font-size: 1.1rem;
+            color: #0f0;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .status.warning {
+            border-color: #f00;
+            color: #f00;
+        }
+
+        .status.success {
+            border-color: #0f0;
+            color: #0f0;
+            font-size: 1.3rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .btn {
+            background-color: #0f0;
+            color: #000;
+            border: none;
+            border-radius: 7px;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin: 20px auto;
+            display: block;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: #6f6;
+        }
+
+        .stats {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1.1rem;
+            color: #afa;
+        }
+
+        @media (max-width: 900px) {
+            .game-area {
+                flex-direction: column;
+            }
+            
+            .side {
+                width: 100%;
+                min-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="back-arrow" onclick="window.location.href='dashboard.html'">&#8592; Dashboard</div>
+    <div class="container">
+        <div class="header">
+            <div class="heading">
+                <h1>DATENÜBERTRAGUNG</h1>
+            </div>
+            <div class="info">
+               <p>Um den Virus noch rechtzeitig deaktivieren zu können müssen fünf Dateien an den ZIEL-SERVER übertragen werden. Nur in der <strong>optimalen</strong> Zeit ist eine erfolgreiche Deaktivierung möglich. Dabei müssen jedoch einige Regeln befolgt werden.</p> 
+               <p><strong>Regeln:</strong></p>
+                <ul>
+                    <li>Es können nur zwei Dateien gleichzeitig übertragen werden</li>
+                    <li>Für die Datenübertragung muss mindestens eine Datei und der Token aufgewählt werden</li>
+                    <li>Der Authentifizeriungstoken muss in jedem Transfer vorhanden sein</li>
+                    <li>Die Übertragungszeit entspricht der langsamsten Datei im Paket</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="side" id="leftSide">
+                <h2>START-SERVER</h2>
+            </div>
+            
+            <div class="bridge">
+         <div class="canal" id="canal">
+                      <div class="canal-items" id="canalItems"></div>   
+                     <div class="token-display" id="tokenDisplay"></div>
+                </div>
+               
+                <div class="controls">
+                    <button onclick="transfer('left')" id="leftBtn">← ZURÜCK</button>
+                    <button onclick="transfer('right')" id="rightBtn">SENDEN →</button>
+                </div>
+            </div>
+            
+            <div class="side" id="rightSide">
+                <h2>ZIEL-SERVER</h2>
+            </div>
+        </div>
+        
+        <div class="status" id="status">Wähle bis zu 2 Dateien und das Token aus, dann übertrage!</div>
+        <div class="stats">
+            <div id="time">GESAMTZEIT: 0 Minuten</div>
+            <div id="transfers" style="margin-top: 5px;">ÜBERTRAGUNGEN: 0</div>
+        </div>
+        <button class="btn" onclick="resetGame()">NEUSTART</button>
+    </div>
+
+    <script type="module">
+        import { api } from './js/api.js';
+        const files = {
+            A: { name: 'API-Anfrage', time: 1, location: 'left', icon: '📄' },
+            B: { name: 'Binärdatei', time: 3, location: 'left', icon: '📦' },
+            C: { name: 'CSV-Tabelle', time: 6, location: 'left', icon: '📊' },
+            D: { name: 'DAT-Archiv', time: 8, location: 'left', icon: '🗄️' },
+            E: { name: 'Excel-Datei', time: 12, location: 'left', icon: '📈' }
+        };
+        
+        let token = { location: 'left' };
+        let canalLocation = 'left';
+        let selected = [];
+        let totalTime = 0;
+        let transferCount = 0;
+
+        async function init() {
+            try {
+                const user = await api.request('/users/me');
+                const puzzles = user.puzzles || {};
+
+                if (user.isAdmin === true || puzzles.terminalCompleted === true) {
+                     if (puzzles.datenbankCompleted === true) {
+                         showSuccessPage();
+                     } else {
+                         render();
+                         updateStatus();
+                     }
+                } else {
+                     alert("Zugriff verweigert! Du musst zuerst das Terminal-Rätsel lösen.");
+                     window.location.href = 'terminal.html';
+                }
+            } catch (e) {
+                 console.error("Auth error", e);
+                 document.body.innerHTML = `<h2 style="color:red; text-align:center;">Auth Error</h2><p style="text-align:center;">${e.message}</p><div style="text-align:center;"><button onclick="window.location.href='index.html'">Login</button></div>`;
+            }
+        }
+
+        function render() {
+            const leftSide = document.getElementById('leftSide');
+            const rightSide = document.getElementById('rightSide');
+            const canalItems = document.getElementById('canalItems');
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            
+            leftSide.innerHTML = '<h2>START-SERVER</h2>';
+            rightSide.innerHTML = '<h2>ZIEL-SERVER</h2>';
+            canalItems.innerHTML = '';
+            tokenDisplay.innerHTML = '';
+            
+            for (let key in files) {
+                const file = files[key];
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.innerHTML = `${file.icon} ${key}: ${file.name} (${file.time}m)`;
+                div.onclick = () => toggleSelect(key);
+                
+                if (selected.includes(key)) {
+                    div.classList.add('selected');
+                }
+                
+                if (file.location === 'left') {
+                    leftSide.appendChild(div);
+                } else if (file.location === 'right') {
+                    rightSide.appendChild(div);
+                } else if (file.location === 'canal') {
+                    const smallDiv = document.createElement('div');
+                    smallDiv.className = 'item small';
+                    smallDiv.innerHTML = `${file.icon} ${key}`;
+                    canalItems.appendChild(smallDiv);
+                }
+            }
+            
+            if (token.location === 'canal') {
+                tokenDisplay.innerHTML = '🔑 TOKEN';
+            } else if (token.location === 'left') {
+                const tokenDiv = document.createElement('div');
+                tokenDiv.className = 'item';
+                tokenDiv.innerHTML = '🔑 TOKEN';
+                tokenDiv.onclick = () => toggleSelect('token');
+                if (selected.includes('token')) {
+                    tokenDiv.classList.add('selected');
+                }
+                leftSide.appendChild(tokenDiv);
+            } else if (token.location === 'right') {
+                const tokenDiv = document.createElement('div');
+                tokenDiv.className = 'item';
+                tokenDiv.innerHTML = '🔑 TOKEN';
+                tokenDiv.onclick = () => toggleSelect('token');
+                if (selected.includes('token')) {
+                    tokenDiv.classList.add('selected');
+                }
+                rightSide.appendChild(tokenDiv);
+            }
+            
+            updateButtons();
+            document.getElementById('time').textContent = `GESAMTZEIT: ${totalTime} Minuten`;
+            document.getElementById('transfers').textContent = `ÜBERTRAGUNGEN: ${transferCount}`;
+        }
+
+        function toggleSelect(key) {
+            if (key === 'token') {
+                if (token.location !== canalLocation) return;
+            } else {
+                if (files[key].location !== canalLocation) return;
+            }
+            
+            const index = selected.indexOf(key);
+            if (index > -1) {
+                selected.splice(index, 1);
+            } else {
+                const fileCount = selected.filter(s => s !== 'token').length;
+                if (key === 'token' && !selected.includes('token')) {
+                    selected.push(key);
+                } else if (key !== 'token' && fileCount < 2) {
+                    selected.push(key);
+                }
+            }
+            render();
+        }
+
+        function transfer(direction) {
+            const selectedFiles = selected.filter(s => s !== 'token');
+            const hasToken = selected.includes('token');
+            
+            if (!hasToken) {
+                updateStatus('>>> TOKEN erforderlich! Dateien können nur mit dem Token übertragen werden!', 'warning');
+                return;
+            }
+            
+            if (selectedFiles.length === 0) {
+                updateStatus('>>> Wähle mindestens eine Datei aus!', 'warning');
+                return;
+            }
+            
+            if (selectedFiles.length > 2) {
+                updateStatus('>>> Maximal 2 Dateien gleichzeitig erlaubt!', 'warning');
+                return;
+            }
+            
+            for (let key of selectedFiles) {
+                files[key].location = 'canal';
+            }
+            if (hasToken) {
+                token.location = 'canal';
+            }
+            
+            canalLocation = direction;
+            
+            let maxTime = 0;
+            for (let key of selectedFiles) {
+                if (files[key].time > maxTime) {
+                    maxTime = files[key].time;
+                }
+                files[key].location = direction;
+            }
+            if (hasToken) {
+                token.location = direction;
+            }
+            
+            totalTime += maxTime;
+            transferCount++;
+            selected = [];
+            render();
+            
+            if (checkWin()) {
+                if (totalTime === 29) {
+                    updateStatus(`Die Optimale Lösung in ${totalTime} Minuten erreicht! )`, 'success');
+                    api.request('/game/puzzles', 'PUT', { datenbankCompleted: true })
+                        .then(() => {
+                            console.log("Datenbank-Rätsel Status gespeichert!");
+                            showSuccessPage();
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            updateStatus("Fehler beim Speichern: " + err, 'warning');
+                        });
+                } else if (totalTime < 29) {
+                    updateStatus(`⚠️ Fehler in der Berechnung! Zeit: ${totalTime} Min (sollte min. 29 sein)`, 'warning');
+                } else {
+                    updateStatus(`Nicht optimal! ${totalTime} Minuten - Versuche es nochmal!`, 'warning');
+                }
+            } else if (!checkValid()) {
+                updateStatus('⚠️ WARNUNG: Token muss zurückgeschickt werden!', 'warning');
+            } else {
+                updateStatus(`>>> Transfer abgeschlossen! (+${maxTime} Min)`);
+            }
+        }
+
+        function checkValid() {
+            const filesOnRight = Object.values(files).filter(f => f.location === 'right').length;
+            if (filesOnRight > 0 && filesOnRight < 5) {
+                return token.location === 'left' || token.location === 'canal';
+            }
+            return true;
+        }
+
+        function checkWin() {
+            return Object.values(files).every(f => f.location === 'right');
+        }
+
+        function updateStatus(msg, type) {
+            const status = document.getElementById('status');
+            if (msg) {
+                status.textContent = msg;
+                status.className = 'status ' + (type || '');
+            } else {
+                status.textContent = '>>> Wähle bis zu 2 Dateien und das Token aus, dann übertrage!';
+                status.className = 'status';
+            }
+        }
+
+        function updateButtons() {
+            document.getElementById('leftBtn').disabled = canalLocation === 'left';
+            document.getElementById('rightBtn').disabled = canalLocation === 'right';
+        }
+
+        function resetGame() {
+            for (let key in files) {
+                files[key].location = 'left';
+            }
+            token.location = 'left';
+            canalLocation = 'left';
+            selected = [];
+            totalTime = 0;
+            transferCount = 0;
+            init();
+        }
+        function showSuccessPage() {
+       document.body.innerHTML=`<div class="success-container"><div class="success-icon">✓</div><h1 class="success-title">Datenbank Server ist online</h1><p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p><a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a></div>`;
+    }
+        init();
+    </script>
+</body>
+</html>

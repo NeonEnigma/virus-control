@@ -9,6 +9,35 @@
   
   <script type="module">
     import { api } from './js/api.js';
+    console.log("Webserver Patch Loaded");
+
+    function showSuccessPage() {
+       document.body.innerHTML=`<div class="success-container"><div class="success-icon">✓</div><h1 class="success-title">Webserver ist sicher</h1><p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p><a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a></div>`;
+    }
+
+    function showGamePage() {
+       document.body.innerHTML = `
+         <div class="back-arrow" onclick="window.location.href='dashboard.html'">&#8592; Dashboard</div>
+         <div class="dashboard">
+            <div class="heading">
+                <h1>Webserver-Labyrinth</h1>
+                <p>Navigiere die Schildkröte zu den Münzen, um den Webserver zu patchen.</p>
+            </div>
+            <div id="coinCounter">Gesammelte Münzen: 0</div>
+            <div class="labyrinth-wrapper">
+                <div id="labyrinth">
+                    <div id="cellsContainer"></div>
+                    <div id="turtleElement">🐢</div>
+                </div>
+                <div id="scriptContainer">
+                    <textarea id="scriptInput" placeholder="Befehle:\n turtle.up();\n turtle.down();\n turtle.left();\n turtle.right();\n turtle.collect();"></textarea>
+                    <button id="runScriptBtn">Script ausführen</button>
+                    <div id="errorDisplay"></div>
+                </div>
+            </div>
+         </div>
+       `;
+    }
 
     // Simple Gatekeeper
     (async function init() {

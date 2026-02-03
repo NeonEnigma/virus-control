@@ -27,27 +27,7 @@
     console.log(">>> VERSION 4.0 LOADED <<<");
     import { api } from './js/api.js?v=3'; // Bump version
     
-    // ...
 
-    // (inside checkSSHPassword)
-        if (password === "d4Gfdee") {
-          printLine("Zugriff gewährt. Speichere Fortschritt und leite zum Dashboard weiter ...");
-          
-          // BTP BACKEND CALL
-          api.request('/game/puzzles', 'POST', { terminalCompleted: true })
-            .then(() => {
-                console.log("Terminal-Rätsel Status gespeichert!");
-                setTimeout(() => {
-                    window.location.href = "dashboard.html";
-                }, 1000);
-            })
-            .catch(err => {
-                console.error("Fehler beim Speichern:", err);
-                printLine("Fehler beim Speichern. Bitte Admin rufen.");
-            });
-
-        } else {
-    // ...
     
     // Simple mock for "user" object expected by terminal functions
     let currentUser = null; 
@@ -142,7 +122,7 @@
           // HIER IST DIE ANPASSUNG: Speichere den Erfolg in Firebase
           // ==========================================================
           // Use API instead of Firebase
-          api.request('/game/puzzles', 'POST', { terminalCompleted: true })
+          api.request('/game/puzzles', 'PUT', { terminalCompleted: true })
             .then(() => {
                 console.log("Terminal-Rätsel Status gespeichert!");
                 setTimeout(() => {
