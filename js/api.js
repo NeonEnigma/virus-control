@@ -114,5 +114,9 @@ export const api = {
         return this.request('/game/reset-all', 'POST');
     },
 
+    deleteUser(userId) {
+        return this.request(`/users/${userId}`, 'DELETE');
+    },
+
     // Add other methods as needed based on gameController logic
 };

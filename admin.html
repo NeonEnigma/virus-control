@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <style>
     body { background-color: #000; color: #0f0; font-family: monospace; padding: 20px; word-wrap: break-word; }
     h1, h2, h3 { color: #0f0; text-shadow: 0 0 5px #0f0; margin-top: 0; }
@@ -15,8 +18,10 @@
     input[type="text"], input[type="email"], input[type="password"], input[type="number"], select {
       width: 100%; padding: 6px; background-color: #111; color: #0f0; border: 1px solid #0f0; border-radius: 4px; font-family: monospace; margin-bottom: 10px; box-sizing: border-box;
     }
-    button { background: #000; border: 2px solid #0f0; color: #0f0; padding: 6px 12px; font-family: monospace; cursor: pointer; border-radius: 4px; }
+    button { background: #000; border: 2px solid #0f0; color: #0f0; padding: 6px 12px; font-family: monospace; cursor: pointer; border-radius: 4px; transition: background-color 0.2s; }
     button:hover { background: #0f0; color: #000; }
+    .reset-btn:hover { background-color: #002222 !important; color: #0ff !important; }
+    .delete-btn:hover { background-color: #220000 !important; color: #f00 !important; }
     .form-feedback { min-height: 18px; color: #0ff; font-size: 0.9rem; }
     .user-card { border: 2px solid #0f0; padding: 15px; margin-bottom: 20px; background-color: #050505; border-radius: 6px; }
     .user-card h3 { margin: 0 0 10px; color: #fff; }
@@ -170,6 +175,18 @@
         } catch (e) {
             console.error("Reset all failed", e);
             alert("Fehler beim globalen Reset: " + e.message);
+        }
+    }
+
+    async function handleDeleteUser(uid) {
+        if (!confirm("WARNUNG: User wirklich unwiderruflich LÖSCHEN?")) return;
+        try {
+            await api.deleteUser(uid);
+            alert("User gelöscht.");
+            loadData();
+        } catch (e) {
+            console.error("Delete failed", e);
+            alert("Fehler beim Löschen: " + e.message);
         }
     }
 
@@ -434,6 +451,12 @@
         return;
       }
 
+      if (button.classList.contains("delete-btn")) {
+          const uid = button.dataset.uid;
+          handleDeleteUser(uid);
+          return;
+      }
+      
       if (button.classList.contains("reset-btn")) {
           const uid = button.dataset.uid;
           handleResetUser(uid);
@@ -580,9 +603,12 @@
           const timerInfo = buildTimerInfo(user, uid);
           cardHtml += timerInfo.statusHtml;
           
-          if (isSuperAdmin) {
-             cardHtml += `<div style="margin-top:10px;"><button class="reset-btn" data-uid="${uid}" style="font-size:0.8rem; border-color:#f00; color:#f00;">Rätsel Reset</button></div>`;
-          }
+           if (isSuperAdmin) {
+             cardHtml += `<div style="margin-top:10px; display:flex; gap:10px;">
+                <button class="reset-btn" data-uid="${uid}" style="font-size:0.8rem; border-color:#0ff; color:#0ff;">Rätsel Reset</button>
+                <button class="delete-btn" data-uid="${uid}" style="font-size:0.8rem; border-color:#f00; color:#f00;">User Löschen</button>
+             </div>`;
+           }
 
           const canControl = isSuperAdmin || (isRestrictedAdmin && uid === state.currentUser.assignedUserUid && user.groupId === myGroupId);
           if (canControl) {

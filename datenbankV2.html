@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Datenübertragungsrätsel</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Datenbank-Transfer (Drag & Drop)</title>
     <style>
         * {
             margin: 0;
@@ -18,6 +21,24 @@
             font-family: monospace;
             color: #fdfdfd;
             min-height: 100vh;
+        }
+
+        .back-arrow {
+            text-decoration: none;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 15px;
+            color: #0f0;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 100;
+            background-color: rgba(0,0,0,.5);
+            border-radius: 5px;
+        }
+
+        .back-arrow:hover {
+            background-color: rgba(0,255,0,.2);
         }
 
         .container {
@@ -105,16 +126,16 @@
         .canal {
             width: 140px;
             height: 100px;
-            background: #222;
+            /* background removed */
             border-radius: 10px;
-            border: 2px solid #0f0;
+            /* border removed */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             gap: 5px;
             padding: 10px;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            /* box-shadow removed */
         }
 
         .canal-items {
@@ -257,6 +278,97 @@
                 min-height: 200px;
             }
         }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 20px;
+            background-color: #222;
+            border: 1px solid #0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            display: none; /* Hidden by default */
+            margin-top: 5px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #0f0;
+            width: 0;
+            /* Transition will be set dynamically via JS */
+        }
+        
+        .progress-bar.reverse {
+            position: absolute;
+            right: 0;
+            left: auto;
+        }
+
+        .bridge-time {
+            color: #0ff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            min-height: 1.5em;
+        }
+
+        /* Success Screen */
+        .success-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            color: #0f0;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .success-title {
+            color: #0f0;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .success-message {
+            color: #afa;
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+
+        .success-detail {
+            color: #8f8;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+
+        .dashboard-btn {
+            background-color: #0f0;
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .dashboard-btn:hover {
+            background-color: #6f6;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -284,15 +396,20 @@
             </div>
             
             <div class="bridge">
-         <div class="canal" id="canal">
-                      <div class="canal-items" id="canalItems"></div>   
+                <div id="bridgeTime" class="bridge-time">0 Min</div>
+                <div class="canal" id="canal">
+                     <div class="canal-items" id="canalItems"></div>   
                      <div class="token-display" id="tokenDisplay"></div>
+                     <div id="progressContainer" class="progress-container">
+                        <div id="progressBar" class="progress-bar"></div>
+                     </div>
                 </div>
                
                 <div class="controls">
-                    <button onclick="transfer('left')" id="leftBtn">← ZURÜCK</button>
+                    <button onclick="transfer('left')" id="leftBtn">← SENDEN</button>
                     <button onclick="transfer('right')" id="rightBtn">SENDEN →</button>
                 </div>
+                <button class="btn" onclick="resetGame()" style="padding: 10px 20px; font-size: 1rem; margin-top: 10px;">NEUSTART</button>
             </div>
             
             <div class="side" id="rightSide">
@@ -301,11 +418,7 @@
         </div>
         
         <div class="status" id="status">Wähle bis zu 2 Dateien und das Token aus, dann übertrage!</div>
-        <div class="stats">
-            <div id="time">GESAMTZEIT: 0 Minuten</div>
-            <div id="transfers" style="margin-top: 5px;">ÜBERTRAGUNGEN: 0</div>
-        </div>
-        <button class="btn" onclick="resetGame()">NEUSTART</button>
+
     </div>
 
     <script type="module">
@@ -403,8 +516,16 @@
             }
             
             updateButtons();
-            document.getElementById('time').textContent = `GESAMTZEIT: ${totalTime} Minuten`;
-            document.getElementById('transfers').textContent = `ÜBERTRAGUNGEN: ${transferCount}`;
+            // Update time in bridge
+            const bridgeTime = document.getElementById('bridgeTime');
+            if (bridgeTime) bridgeTime.textContent = `${totalTime} Min`;
+            
+            // Keep stats at bottom as well or remove if redundant? User asked for "over loading animation".
+            // Let's keep the detailed stats at bottom but maybe cleaner. 
+            const timeEl = document.getElementById('time');
+            if (timeEl) timeEl.textContent = `GESAMTZEIT: ${totalTime} Minuten`;
+            const transfersEl = document.getElementById('transfers');
+            if (transfersEl) transfersEl.textContent = `ÜBERTRAGUNGEN: ${transferCount}`;
         }
 
         function toggleSelect(key) {
@@ -428,7 +549,7 @@
             render();
         }
 
-        function transfer(direction) {
+        async function transfer(direction) {
             const selectedFiles = selected.filter(s => s !== 'token');
             const hasToken = selected.includes('token');
             
@@ -446,32 +567,76 @@
                 updateStatus('>>> Maximal 2 Dateien gleichzeitig erlaubt!', 'warning');
                 return;
             }
-            
-            for (let key of selectedFiles) {
-                files[key].location = 'canal';
-            }
-            if (hasToken) {
-                token.location = 'canal';
-            }
-            
-            canalLocation = direction;
-            
+
+            // Calculate max time for this transfer
             let maxTime = 0;
             for (let key of selectedFiles) {
-                if (files[key].time > maxTime) {
-                    maxTime = files[key].time;
-                }
+                if (files[key].time > maxTime) maxTime = files[key].time;
+            }
+
+            // 1. Setup Animation Elements
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const canalItems = document.getElementById('canalItems');
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const bridgeTime = document.getElementById('bridgeTime');
+
+            // Disable buttons
+            leftBtn.disabled = true;
+            rightBtn.disabled = true;
+
+            // Prepare UI for animation
+            canalItems.style.display = 'none';
+            tokenDisplay.style.display = 'none';
+            progressContainer.style.display = 'block';
+            updateStatus(`Übertragung läuft... (${maxTime} Min)`, 'info');
+
+            // Set Direction
+            if (direction === 'left') {
+                progressBar.classList.add('reverse'); // Fills from right to left visually
+            } else {
+                progressBar.classList.remove('reverse'); // Fills from left to right
+            }
+
+            // Reset Bar
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '0%';
+            
+            // Force reflow
+            void progressBar.offsetWidth;
+
+            // Start Animation
+            const durationMs = maxTime * 1000; // 1 min = 1 sec
+            progressBar.style.transition = `width ${durationMs}ms linear`;
+            progressBar.style.width = '100%';
+
+            // 2. Count time progressively
+            for (let i = 0; i < maxTime; i++) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                totalTime++;
+                bridgeTime.textContent = `${totalTime} Min`;
+            }
+
+            // 3. Update State
+            for (let key of selectedFiles) {
                 files[key].location = direction;
             }
             if (hasToken) {
                 token.location = direction;
             }
+            canalLocation = direction;
             
-            totalTime += maxTime;
             transferCount++;
             selected = [];
-            render();
-            
+
+            // 4. Update UI Final
+            progressContainer.style.display = 'none';
+            canalItems.style.display = 'flex';
+            tokenDisplay.style.display = 'block';
+            render(); // Will re-enable buttons and show items in new location
+
             if (checkWin()) {
                 if (totalTime === 29) {
                     updateStatus(`Die Optimale Lösung in ${totalTime} Minuten erreicht! )`, 'success');
@@ -492,7 +657,7 @@
             } else if (!checkValid()) {
                 updateStatus('⚠️ WARNUNG: Token muss zurückgeschickt werden!', 'warning');
             } else {
-                updateStatus(`>>> Transfer abgeschlossen! (+${maxTime} Min)`);
+                updateStatus(`>>> Transfer abgeschlossen!`);
             }
         }
 
@@ -537,7 +702,11 @@
         }
         function showSuccessPage() {
        document.body.innerHTML=`<div class="success-container"><div class="success-icon">✓</div><h1 class="success-title">Datenbank Server ist online</h1><p class="success-message">Firewall aktiviert • Ports gesichert • System geschützt</p><a href="dashboard.html" class="dashboard-btn">Zurück zum Dashboard</a></div>`;
+       setTimeout(() => window.location.href = 'dashboard.html', 2000);
     }
+        window.transfer = transfer;
+        window.resetGame = resetGame;
+        
         init();
     </script>
 </body>

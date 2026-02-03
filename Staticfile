@@ -1,8 +1,2 @@
 root: .
 directory: visible
-pushstate: enabled
-location_include: ["**/*.html", "**/*.js", "**/*.css"]
-header:
-  Cache-Control: "no-cache, no-store, must-revalidate"
-  Pragma: "no-cache"
-  Expires: "0"
