@@ -106,5 +106,13 @@ export const api = {
         return this.request('/game/add-time', 'POST', { userId, minutes });
     },
 
+    resetUserPuzzles(userId) {
+        return this.request(`/game/reset/${userId}`, 'POST');
+    },
+
+    resetAllPuzzles() {
+        return this.request('/game/reset-all', 'POST');
+    },
+
     // Add other methods as needed based on gameController logic
 };

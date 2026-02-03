@@ -74,7 +74,10 @@
 
   <div id="admin-dashboard">
     <section id="super-admin-section" class="admin-section">
-      <h2>Benutzer- und Gruppenverwaltung</h2>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2>Benutzer- und Gruppenverwaltung</h2>
+          <button onclick="document.dispatchEvent(new CustomEvent('admin:resetAll'))" style="background:#f00; color:#fff; border-color:#fff;">ALLE USER RESETTEN</button>
+      </div>
       <div class="form-grid">
         <form id="create-group-form" class="form-card">
           <h3>Neue Gruppe</h3>
@@ -135,7 +138,7 @@
   </div>
 
   <script type="module">
-    import { api } from './js/api.js?v=2';
+    import { api } from './js/api.js?v=6';
 
     const state = { currentUser: null, users: [], groups: [] }; // Changed from {} to [] for users/groups for simpler mapping, or keep {} if index by ID is needed. 
     // Adapting to array returns from API:
@@ -144,6 +147,31 @@
     let masterTimerInterval = null;
     let pollingInterval = null;
     let formsInitialized = false;
+
+    // --- RESET FUNCTIONS ---
+    async function handleResetUser(uid) {
+        if (!confirm("Wirklich alle Rätsel und den Timer dieses Users zurücksetzen?")) return;
+        try {
+            await api.resetUserPuzzles(uid);
+            alert("Rätsel zurückgesetzt.");
+            loadData();
+        } catch (e) {
+            console.error("Reset failed", e);
+            alert("Fehler beim Zurücksetzen: " + e.message);
+        }
+    }
+
+    async function handleResetAllPuzzles() {
+        if (!confirm("WARNUNG: Dies setzt ALLE Nutzer auf 'ungelöst' zurück! Fortfahren?")) return;
+        try {
+            await api.resetAllPuzzles();
+            alert("Alle Nutzer zurückgesetzt.");
+            loadData();
+        } catch (e) {
+            console.error("Reset all failed", e);
+            alert("Fehler beim globalen Reset: " + e.message);
+        }
+    }
 
     async function initAdmin() {
        try {
@@ -240,6 +268,7 @@
           populateAssignedUserSelect(assignedSelect, restrictedGroupSelect.value);
         });
       }
+      document.addEventListener('admin:resetAll', handleResetAllPuzzles);
     }
 
     async function handleCreateGroup(event) {
@@ -405,6 +434,12 @@
         return;
       }
 
+      if (button.classList.contains("reset-btn")) {
+          const uid = button.dataset.uid;
+          handleResetUser(uid);
+          return;
+      }
+
       if (button.classList.contains("pause-resume-btn")) {
         try {
           console.log(">>> DEBUG: Pause/Resume clicked for UID:", uid);
@@ -544,6 +579,10 @@
         if (role === "user") {
           const timerInfo = buildTimerInfo(user, uid);
           cardHtml += timerInfo.statusHtml;
+          
+          if (isSuperAdmin) {
+             cardHtml += `<div style="margin-top:10px;"><button class="reset-btn" data-uid="${uid}" style="font-size:0.8rem; border-color:#f00; color:#f00;">Rätsel Reset</button></div>`;
+          }
 
           const canControl = isSuperAdmin || (isRestrictedAdmin && uid === state.currentUser.assignedUserUid && user.groupId === myGroupId);
           if (canControl) {

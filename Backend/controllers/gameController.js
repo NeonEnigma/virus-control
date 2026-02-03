@@ -210,3 +210,44 @@ exports.finishGame = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
+exports.resetPuzzles = async (req, res) => {
+    try {
+        const { uid } = req.params;
+        const user = await User.findByPk(uid);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.puzzles = {};
+        user.solvedStats = {};
+        user.lastGame = {};
+        user.timerStatus = 'idle';
+        user.timerEndTime = null;
+        user.timerPausedRemaining = null;
+        user.timerInitialDuration = null;
+
+        await user.save();
+        res.json({ message: 'Puzzles and timer reset for user', uid });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+exports.resetAllPuzzles = async (req, res) => {
+    try {
+        const users = await User.findAll({ where: { role: 'user' } });
+        const updates = users.map(user => {
+            user.puzzles = {};
+            user.solvedStats = {};
+            user.lastGame = {};
+            user.timerStatus = 'idle';
+            user.timerEndTime = null;
+            user.timerPausedRemaining = null;
+            user.timerInitialDuration = null;
+            return user.save();
+        });
+        await Promise.all(updates);
+        res.json({ message: 'All users reset', count: updates.length });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};

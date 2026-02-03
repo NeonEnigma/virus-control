@@ -9,4 +9,6 @@ router.post('/resume', auth, gameController.resumeGame);
 router.post('/add-time', auth, gameController.addTime);
 router.put('/puzzles', auth, gameController.updatePuzzles);
 router.post('/finish', auth, gameController.finishGame);
+router.post('/reset/:uid', auth, gameController.resetPuzzles);
+router.post('/reset-all', auth, gameController.resetAllPuzzles);
 module.exports = router;
